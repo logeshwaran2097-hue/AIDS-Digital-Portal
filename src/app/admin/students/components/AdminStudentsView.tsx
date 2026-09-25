@@ -552,6 +552,12 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
       sections: [
         {
           heading: '1. ENROLLMENT OVERVIEW',
+          statsGrid: [
+            { label: 'Total Enrolled', value: `${students.length}`, badgeColor: 'blue' },
+            { label: 'Active Cadre', value: `${students.filter((s) => s.status.toLowerCase() === 'active').length}`, badgeColor: 'emerald' },
+            { label: 'Day Scholars', value: `${students.filter((s) => !s.residencyStatus || s.residencyStatus.toLowerCase().includes('day')).length}`, badgeColor: 'cyan' },
+            { label: 'Hostellers', value: `${students.filter((s) => s.residencyStatus?.toLowerCase().includes('hostel')).length}`, badgeColor: 'gold' },
+          ],
           body: [
             `Total Candidates Enrolled: ${students.length}`,
             `Department: Artificial Intelligence & Data Science`,
@@ -562,6 +568,23 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
         },
         {
           heading: '2. ENROLLED STUDENTS BATCH ROSTER',
+          table: {
+            headers: ['#', 'REGISTER NO', 'STUDENT NAME', 'COHORT / CLASS', 'CONTACT DETAILS', 'STATUS'],
+            rows: students.map((s, idx) => [
+              String(idx + 1),
+              s.registerNumber,
+              s.name,
+              `Yr ${s.year} · Sem ${s.semester} · Sec ${s.section}`,
+              s.phone || s.email || 'N/A',
+              {
+                text: s.status.toUpperCase(),
+                badge: true,
+                badgeType: s.status.toLowerCase() === 'active' ? 'success' : 'danger'
+              }
+            ]),
+            widths: [8, 28, 50, 32, 42, 26],
+            alignments: ['center', 'left', 'left', 'center', 'left', 'center']
+          },
           body: students.map(
             (s, idx) =>
               `${idx + 1}. [${s.registerNumber}] ${s.name} — Year ${s.year}, Sem ${s.semester}, Sec ${s.section} · Contact: ${s.phone || s.email || 'N/A'} · Status: ${s.status.toUpperCase()}`

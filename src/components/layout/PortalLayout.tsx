@@ -979,13 +979,62 @@ export function PortalLayout({
     window.location.href = '/login'
   }
 
+  // Instantly reset navigation state when pathname changes to new destination
+  useEffect(() => {
+    setIsNavigating(false)
+    setActivePath('')
+  }, [pathname])
+
+  // Safety fallback so loading state never remains stuck if a navigation fails or is aborted
+  useEffect(() => {
+    if (!isNavigating) return
+    const timer = setTimeout(() => {
+      setIsNavigating(false)
+      setActivePath('')
+    }, 5000)
+    return () => clearTimeout(timer)
+  }, [isNavigating])
+
+  // Intelligent idle prefetch of primary sibling routes for instantaneous menu navigation
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const prefetchRoutes = () => {
+      resolvedNavItems.forEach((item) => {
+        if (item.href && item.href !== pathname) {
+          try {
+            router.prefetch(item.href)
+          } catch {}
+        }
+      })
+    }
+    if ('requestIdleCallback' in window) {
+      const id = (window as any).requestIdleCallback(prefetchRoutes, { timeout: 1500 })
+      return () => (window as any).cancelIdleCallback(id)
+    } else {
+      const timer = setTimeout(prefetchRoutes, 600)
+      return () => clearTimeout(timer)
+    }
+  }, [pathname, resolvedNavItems, router])
+
   const handleNavClick = (href: string) => {
     setIsDrawerOpen(false)
-    setActivePath(href)
+    if (href && href !== pathname) {
+      setIsNavigating(true)
+      setActivePath(href)
+      try {
+        router.prefetch(href)
+      } catch {}
+    }
   }
 
   return (
     <div className="min-h-screen bg-[#f8fafd] text-[#071A3D] relative">
+      {/* Top Instant Navigation Progress Bar - Eliminates blank white loading screens */}
+      {isNavigating && (
+        <div className="fixed top-0 left-0 right-0 h-[3.5px] z-[9999] pointer-events-none overflow-hidden bg-blue-500/20 backdrop-blur-xs">
+          <div className="h-full w-full bg-gradient-to-r from-[#1455D9] via-[#22C7E8] to-[#F4C430] animate-portal-top-loader shadow-[0_0_14px_rgba(34,199,232,0.9)]" />
+        </div>
+      )}
       {/* Mobile Drawer Overlay */}
       {isDrawerOpen && (
         <div
@@ -1141,6 +1190,11 @@ export function PortalLayout({
                   } catch {}
                 }}
                 onMouseDown={() => {
+                  try {
+                    router.prefetch(item.href)
+                  } catch {}
+                }}
+                onTouchStart={() => {
                   try {
                     router.prefetch(item.href)
                   } catch {}
@@ -1714,7 +1768,10 @@ export function PortalLayout({
       </header>
 
       {/* Main Content Area */}
-      <main className="lg:pl-72 pb-28 lg:pb-8 min-h-[calc(100vh-64px)]">
+      <main className={cn(
+        'lg:pl-72 pb-28 lg:pb-8 min-h-[calc(100vh-64px)] transition-opacity duration-150',
+        isNavigating && 'opacity-80'
+      )}>
         <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-4 sm:py-6">{children}</div>
       </main>
 
@@ -1730,6 +1787,7 @@ export function PortalLayout({
           prefetch={true}
           onMouseEnter={() => { try { router.prefetch(role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard') } catch {} }}
           onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard') } catch {} }}
+          onTouchStart={() => { try { router.prefetch(role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard') } catch {} }}
           onClick={() => handleNavClick(role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard')}
           className={cn(
             'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-bold transition-colors relative',
@@ -1748,6 +1806,7 @@ export function PortalLayout({
           prefetch={true}
           onMouseEnter={() => { try { router.prefetch(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects') } catch {} }}
           onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects') } catch {} }}
+          onTouchStart={() => { try { router.prefetch(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects') } catch {} }}
           onClick={() => handleNavClick(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects')}
           className={cn(
             'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-bold transition-colors relative',
@@ -1773,6 +1832,7 @@ export function PortalLayout({
           prefetch={true}
           onMouseEnter={() => { try { router.prefetch(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects') } catch {} }}
           onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects') } catch {} }}
+          onTouchStart={() => { try { router.prefetch(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects') } catch {} }}
           onClick={() => handleNavClick(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects')}
           className={cn(
             'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-bold transition-colors relative',
@@ -1796,6 +1856,7 @@ export function PortalLayout({
         <Link
           href={notificationsHref}
           prefetch={true}
+          onTouchStart={() => { try { router.prefetch(notificationsHref) } catch {} }}
           onClick={() => handleNavClick(notificationsHref)}
           className={cn(
             'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-bold transition-colors relative',
@@ -1819,6 +1880,7 @@ export function PortalLayout({
           prefetch={true}
           onMouseEnter={() => { try { router.prefetch(profileHref) } catch {} }}
           onMouseDown={() => { try { router.prefetch(profileHref) } catch {} }}
+          onTouchStart={() => { try { router.prefetch(profileHref) } catch {} }}
           onClick={() => handleNavClick(profileHref)}
           className={cn(
             'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-bold transition-colors',

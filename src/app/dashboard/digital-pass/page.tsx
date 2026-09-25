@@ -11,10 +11,14 @@ export default async function DigitalPassPage() {
 
   const userReg = session.registerNumber || (session.email ? session.email.split('@')[0].toUpperCase() : '')
 
-  const student = (await prisma.student.findUnique({ where: { userId: session.userId } }).catch(() => null)) ||
-    (userReg ? await prisma.student.findUnique({ where: { registerNumber: userReg } }).catch(() => null) : null)
-
-  const user = await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)
+  const [student, user] = await Promise.all([
+    (userReg
+      ? prisma.student.findFirst({
+          where: { OR: [{ userId: session.userId }, { registerNumber: userReg }] },
+        }).catch(() => null)
+      : prisma.student.findUnique({ where: { userId: session.userId } }).catch(() => null)),
+    prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null),
+  ])
 
   const studentName = user?.name || session.name || ''
   const registerNumber = student?.registerNumber || userReg || ''

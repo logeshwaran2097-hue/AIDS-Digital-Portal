@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef } from 'react'
+import Image from 'next/image'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import {
@@ -22,9 +23,17 @@ import {
   Loader2,
   AlertCircle,
   FileUp,
+  ShieldCheck,
+  ExternalLink,
+  FileBadge,
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
-import { generateAndDownloadPDF, downloadWithDeptHeader } from '@/lib/pdfGenerator'
+import {
+  generateAndDownloadPDF,
+  downloadWithDeptHeader,
+  generateCoverPageDataUri,
+} from '@/lib/pdfGenerator'
+import { instantDirectDownload } from '@/lib/fastDocumentFetcher'
 
 export interface ResourceRecord {
   id: string
@@ -49,6 +58,7 @@ export function AdminResourcesView({ initialResources }: { initialResources: Res
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [selectedResource, setSelectedResource] = useState<ResourceRecord | null>(null)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+  const [previewMode, setPreviewMode] = useState<'doc' | 'cover'>('doc')
 
   // File Upload State
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -944,58 +954,172 @@ export function AdminResourcesView({ initialResources }: { initialResources: Res
         </div>
       )}
 
-      {/* MODAL: VIEW RESOURCE */}
+      {/* MODAL: OFFICIAL INSTITUTIONAL PREVIEW WITH V.S.B. LETTERHEAD HEADER */}
       {isViewModalOpen && selectedResource && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6">
-            <div className="flex items-start justify-between border-b pb-3">
-              <div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-100 text-[#1455D9]">
-                  Sem {selectedResource.semester || 1} · {selectedResource.resourceType.replace('_', ' ')}
-                </span>
-                <h3 className="text-lg font-black text-[#071A3D] mt-2">{selectedResource.name}</h3>
-              </div>
-              <button
-                onClick={() => setIsViewModalOpen(false)}
-                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6 animate-fade-in">
+          <div className="bg-white rounded-3xl w-full max-w-5xl h-[92vh] flex flex-col shadow-2xl overflow-hidden border border-gray-200">
+            {/* ── Official Institutional Letterhead Header ────────────────────── */}
+            <div className="bg-gradient-to-r from-[#071A3D] via-[#0D2860] to-[#1455D9] text-white p-4 sm:p-5 border-b border-[#F4C430]/30 shadow-lg shrink-0">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white p-1 shadow-md border-2 border-[#F4C430] shrink-0 flex items-center justify-center">
+                    <Image
+                      src="/app-logo.png"
+                      alt="V.S.B. Crest"
+                      width={44}
+                      height={44}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-base sm:text-lg font-black tracking-tight text-white drop-shadow-xs">
+                        V.S.B. ENGINEERING COLLEGE
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-[#F4C430] text-[#071A3D] tracking-wider uppercase shadow-xs">
+                        Autonomous
+                      </span>
+                    </div>
+                    <p className="text-xs font-bold text-cyan-200 tracking-wide uppercase">
+                      Department of Artificial Intelligence &amp; Data Science
+                    </p>
+                    <p className="text-[10px] text-blue-200/80 hidden sm:block">
+                      Approved by AICTE · Affiliated to Anna University, Chennai · NAAC &apos;A&apos; Grade &amp; NBA Accredited
+                    </p>
+                  </div>
+                </div>
 
-            <div className="space-y-3 text-xs">
-              <p className="text-gray-600 leading-relaxed">{selectedResource.description || 'Standard verified textbook.'}</p>
-              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 space-y-2 font-mono">
-                <div className="flex justify-between">
-                  <span className="text-gray-400 font-sans">File Name:</span>
-                  <span className="font-bold text-[#071A3D]">{selectedResource.fileName}</span>
+                {/* Controls: Dual Downloads + External Link + Close */}
+                <div className="flex items-center gap-2 self-end md:self-center flex-wrap">
+                  <button
+                    onClick={() => handleDownloadFile(selectedResource)}
+                    className="px-3.5 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-[#F4C430] to-[#E0B028] hover:from-[#e0b028] hover:to-[#cca022] text-[#071A3D] text-xs font-black flex items-center gap-1.5 shadow-md cursor-pointer transition-all hover:scale-102"
+                    title="Download official PDF with V.S.B. Department Letterhead cover"
+                  >
+                    <ShieldCheck className="w-4 h-4 text-[#071A3D]" />
+                    <span>Download with Official Header</span>
+                  </button>
+
+                  {selectedResource.fileUrl && (
+                    <button
+                      onClick={() => instantDirectDownload(selectedResource.fileUrl, selectedResource.fileName)}
+                      className="px-3 py-1.5 sm:py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 border border-white/20 transition-all cursor-pointer"
+                      title="Download original uploaded file directly"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Direct File</span>
+                    </button>
+                  )}
+
+                  {selectedResource.fileUrl && (
+                    <a
+                      href={selectedResource.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                      title="Open in new window"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
+
+                  <button
+                    onClick={() => setIsViewModalOpen(false)}
+                    className="p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                    title="Close preview"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400 font-sans">Size:</span>
-                  <span className="font-bold text-[#1455D9]">{(selectedResource.fileSize / 1024 / 1024).toFixed(1)} MB</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400 font-sans">Target Semester:</span>
-                  <span className="font-bold text-purple-700">
-                    Semester {selectedResource.semester || 1} (Year {Math.ceil((selectedResource.semester || 1) / 2)})
+              </div>
+
+              {/* Row 2: Document Metadata Ribbon (Subject, Code, Resource Type, Verification & View Mode) */}
+              <div className="mt-3 pt-2.5 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2 flex-wrap min-w-0">
+                  <span className="px-2.5 py-0.5 rounded-lg bg-white/10 text-cyan-200 font-bold border border-white/15 text-[11px] flex items-center gap-1.5 truncate">
+                    <BookOpen className="w-3.5 h-3.5 text-[#F4C430] shrink-0" />
+                    <span className="truncate">{selectedResource.name}</span>
+                  </span>
+                  <span className="px-2 py-0.5 rounded-md bg-blue-500/25 text-blue-200 border border-blue-400/25 text-[10px] font-bold uppercase">
+                    {selectedResource.resourceType.replace(/_/g, ' ')}
+                  </span>
+                  {selectedResource.semester && (
+                    <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-200 border border-amber-400/20 text-[10px] font-semibold">
+                      Sem {selectedResource.semester}
+                    </span>
+                  )}
+                  <span className="hidden lg:flex items-center gap-1 text-[11px] text-emerald-300 font-medium bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    Verified Administrative Repository
                   </span>
                 </div>
+
+                {/* View Mode Switcher */}
+                <div className="flex items-center bg-black/25 p-0.5 rounded-xl border border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewMode('doc')}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                      previewMode === 'doc'
+                        ? 'bg-white text-[#071A3D] shadow-xs'
+                        : 'text-white/70 hover:text-white'
+                    }`}
+                  >
+                    <Eye className="w-3 h-3" />
+                    <span>Document View</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewMode('cover')}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                      previewMode === 'cover'
+                        ? 'bg-[#F4C430] text-[#071A3D] shadow-xs'
+                        : 'text-white/70 hover:text-white'
+                    }`}
+                  >
+                    <FileBadge className="w-3 h-3" />
+                    <span>Cover Letterhead</span>
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t">
-              <button
-                onClick={() => handleDownloadFile(selectedResource)}
-                className="px-4 py-2 rounded-xl bg-[#1455D9] text-white font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer"
-              >
-                <Download className="w-3.5 h-3.5" /> Download Vector PDF
-              </button>
-              <button
-                onClick={() => setIsViewModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-gray-100 text-gray-600 font-bold text-xs hover:bg-gray-200 cursor-pointer"
-              >
-                Close
-              </button>
+            {/* Document Frame / Cover Sheet Frame */}
+            <div className="flex-1 bg-slate-100 p-2 overflow-hidden flex items-center justify-center">
+              {previewMode === 'doc' ? (
+                selectedResource.fileUrl ? (
+                  <iframe
+                    src={selectedResource.fileUrl}
+                    className="w-full h-full rounded-2xl border border-gray-200 bg-white"
+                    title={selectedResource.name}
+                  />
+                ) : (
+                  <div className="text-center p-8">
+                    <p className="text-xs text-gray-500 mb-3">No direct file URL available.</p>
+                    <button
+                      onClick={() => handleDownloadFile(selectedResource)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold text-xs"
+                    >
+                      Generate Official Dossier
+                    </button>
+                  </div>
+                )
+              ) : (
+                /* Cover Page High-Definition Letterhead View */
+                <iframe
+                  src={generateCoverPageDataUri({
+                    fileUrl: selectedResource.fileUrl || '',
+                    fileName: selectedResource.fileName,
+                    title: selectedResource.name,
+                    resourceType: selectedResource.resourceType,
+                    uploadedByName: selectedResource.uploadedByName || 'System Administrator',
+                    semester: selectedResource.semester,
+                    description: selectedResource.description || undefined,
+                  })}
+                  className="w-full h-full rounded-2xl border border-gray-200 bg-white"
+                  title="Official Letterhead Cover"
+                />
+              )}
             </div>
           </div>
         </div>

@@ -1,6 +1,34 @@
 import { jsPDF } from 'jspdf'
 import { VSB_LOGO_BASE64 } from './logoBase64'
 
+export interface PDFTableCell {
+  text: string
+  badge?: boolean
+  badgeType?: 'success' | 'danger' | 'warning' | 'info' | 'neutral' | 'gold'
+  align?: 'left' | 'center' | 'right'
+  bold?: boolean
+}
+
+export interface PDFTableOptions {
+  headers: string[]
+  rows: (string | PDFTableCell)[][]
+  widths?: number[]
+  alignments?: ('left' | 'center' | 'right')[]
+}
+
+export interface PDFStatCard {
+  label: string
+  value: string
+  badgeColor?: 'blue' | 'emerald' | 'gold' | 'cyan' | 'purple' | 'rose'
+}
+
+export interface PDFSection {
+  heading: string
+  body?: string[]
+  table?: PDFTableOptions
+  statsGrid?: PDFStatCard[]
+}
+
 export interface PDFDocOptions {
   title: string
   subtitle?: string
@@ -8,7 +36,7 @@ export interface PDFDocOptions {
   author?: string
   category?: string
   content?: string
-  sections?: { heading: string; body: string[] }[]
+  sections?: PDFSection[]
   fileName?: string
 }
 
@@ -110,6 +138,385 @@ export function drawDigitalPortalDocumentNotice(
   doc.text(`VERIFICATION ID: ${verificationCode}`, col3X, metaTextY, { align: 'right' })
 
   return boxY + boxH
+}
+
+/**
+ * Universal Ultra-Luxury Institutional Table Drawer
+ * Renders executive academic tables with dark navy/gold headers, alternating rows,
+ * repeat-headers on page break, column dividers, and micro status pills.
+ */
+export function drawLuxuryTable(
+  doc: jsPDF,
+  table: PDFTableOptions,
+  startY: number,
+  marginX: number,
+  contentW: number,
+  pageHeight: number
+): number {
+  let currentY = startY
+  const headers = table.headers
+  const numCols = headers.length
+  if (numCols === 0 || table.rows.length === 0) return currentY
+
+  // Normalize column widths to sum up to contentW
+  let widths = table.widths ? [...table.widths] : []
+  const currentSum = widths.reduce((a, b) => a + b, 0)
+  if (widths.length !== numCols || Math.abs(currentSum - contentW) > 2) {
+    if (widths.length === numCols && currentSum > 0) {
+      widths = widths.map(w => (w / currentSum) * contentW)
+    } else {
+      const even = contentW / numCols
+      widths = headers.map(() => even)
+    }
+  }
+
+  const alignments = table.alignments || headers.map(() => 'left' as const)
+
+  const drawHeader = (yPos: number) => {
+    // Header Background: Deep Royal Navy #071A3D
+    doc.setFillColor(7, 26, 61)
+    doc.rect(marginX, yPos, contentW, 7.5, 'F')
+    // Top Royal Cobalt Line
+    doc.setFillColor(20, 85, 217)
+    doc.rect(marginX, yPos, contentW, 0.6, 'F')
+    // Bottom Gold Accent Line
+    doc.setFillColor(231, 185, 62)
+    doc.rect(marginX, yPos + 7.5 - 0.6, contentW, 0.6, 'F')
+
+    let curX = marginX
+    for (let c = 0; c < numCols; c++) {
+      const colW = widths[c]
+      const colAlign = alignments[c] || 'left'
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(6.4)
+      doc.setTextColor(255, 255, 255)
+
+      let textX = curX + 2.5
+      if (colAlign === 'center') textX = curX + colW / 2
+      else if (colAlign === 'right') textX = curX + colW - 2.5
+
+      doc.text(headers[c], textX, yPos + 4.9, { align: colAlign })
+
+      // Subtle column divider line
+      if (c < numCols - 1) {
+        doc.setDrawColor(26, 52, 95)
+        doc.setLineWidth(0.2)
+        doc.line(curX + colW, yPos + 1.2, curX + colW, yPos + 6.3)
+      }
+      curX += colW
+    }
+  }
+
+  // Draw Initial Table Header
+  drawHeader(currentY)
+  currentY += 7.5
+
+  const rowHeight = 7.0
+  for (let r = 0; r < table.rows.length; r++) {
+    // Check page overflow
+    if (currentY + rowHeight > pageHeight - 38) {
+      doc.addPage()
+      // Redraw Outer Luxury Borders
+      doc.setDrawColor(215, 226, 242)
+      doc.setLineWidth(0.4)
+      doc.rect(marginX - 4, marginX - 4, contentW + 8, pageHeight - (marginX - 4) * 2, 'S')
+      doc.setDrawColor(238, 243, 250)
+      doc.setLineWidth(0.2)
+      doc.rect(marginX - 2, marginX - 2, contentW + 4, pageHeight - (marginX - 2) * 2, 'S')
+
+      currentY = 16
+      drawHeader(currentY)
+      currentY += 7.5
+    }
+
+    const row = table.rows[r]
+    const isEven = r % 2 === 0
+
+    // Alternating Row background: Crisp Pure White and Soft Platinum Blue
+    if (isEven) {
+      doc.setFillColor(255, 255, 255)
+    } else {
+      doc.setFillColor(248, 250, 254)
+    }
+    doc.rect(marginX, currentY, contentW, rowHeight, 'F')
+
+    // Subtle horizontal border
+    doc.setDrawColor(228, 235, 245)
+    doc.setLineWidth(0.2)
+    doc.line(marginX, currentY + rowHeight, marginX + contentW, currentY + rowHeight)
+
+    let curX = marginX
+    for (let c = 0; c < numCols; c++) {
+      const colW = widths[c]
+      const colAlign = alignments[c] || 'left'
+      const rawCell = row[c]
+      const cellText = typeof rawCell === 'string' ? rawCell : (rawCell?.text || '')
+      const isBadge = typeof rawCell === 'object' && rawCell?.badge
+      const badgeType = typeof rawCell === 'object' ? rawCell?.badgeType : undefined
+      const isBold = typeof rawCell === 'object' ? rawCell?.bold : (c === 0 || c === 1)
+
+      // Vertical column divider
+      if (c < numCols - 1) {
+        doc.setDrawColor(238, 243, 250)
+        doc.setLineWidth(0.15)
+        doc.line(curX + colW, currentY, curX + colW, currentY + rowHeight)
+      }
+
+      // Check if cell is a status or grade badge
+      const textUpper = cellText.toUpperCase().trim()
+      const isStatusBadge =
+        isBadge ||
+        badgeType !== undefined ||
+        ['ACTIVE', 'PASS', 'DISTINCTION', 'INACTIVE', 'WITHHELD', 'FAIL', 'AWAITING', 'PENDING', 'S', 'A+', 'A', 'B+', 'B', 'C', 'U'].includes(textUpper)
+
+      if (isStatusBadge && cellText.length > 0 && cellText !== '—') {
+        const isSuccess =
+          badgeType === 'success' ||
+          ['ACTIVE', 'PASS', 'DISTINCTION', 'FIRST CLASS WITH DISTINCTION', 'FIRST CLASS', 'S', 'A+', 'A'].includes(textUpper)
+        const isDanger =
+          badgeType === 'danger' ||
+          ['INACTIVE', 'WITHHELD', 'FAIL', 'U', 'DISCONTINUED', 'ABSENT'].includes(textUpper)
+        const isWarning =
+          badgeType === 'warning' ||
+          ['AWAITING', 'PENDING', 'WARNING', 'CONDONATION', 'B+', 'B'].includes(textUpper)
+        const isGold = badgeType === 'gold'
+
+        const pillH = 4.8
+        const pillY = currentY + (rowHeight - pillH) / 2
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(5.6)
+        const textW = doc.getTextWidth(cellText)
+        const pillW = Math.max(14, Math.min(colW - 3, textW + 6))
+        const pillX = curX + (colW - pillW) / 2
+
+        if (isSuccess) {
+          doc.setFillColor(236, 253, 245) // emerald-50
+          doc.setDrawColor(167, 243, 208)
+          doc.setTextColor(4, 120, 87)
+        } else if (isDanger) {
+          doc.setFillColor(254, 242, 242) // red-50
+          doc.setDrawColor(254, 202, 202)
+          doc.setTextColor(185, 28, 28)
+        } else if (isWarning) {
+          doc.setFillColor(255, 251, 235) // amber-50
+          doc.setDrawColor(253, 230, 138)
+          doc.setTextColor(180, 83, 9)
+        } else if (isGold) {
+          doc.setFillColor(254, 252, 232)
+          doc.setDrawColor(245, 208, 77)
+          doc.setTextColor(133, 77, 14)
+        } else {
+          doc.setFillColor(239, 246, 255)
+          doc.setDrawColor(191, 219, 254)
+          doc.setTextColor(29, 78, 216)
+        }
+
+        doc.setLineWidth(0.25)
+        doc.roundedRect(pillX, pillY, pillW, pillH, 1.3, 1.3, 'FD')
+        doc.text(cellText, pillX + pillW / 2, pillY + 3.4, { align: 'center' })
+      } else {
+        doc.setFont('helvetica', isBold ? 'bold' : 'normal')
+        doc.setFontSize(6.4)
+        if (c === 0) {
+          doc.setTextColor(100, 116, 139)
+        } else if (c === 1) {
+          doc.setTextColor(20, 85, 217) // Royal Cobalt for Code / RegNo
+        } else {
+          doc.setTextColor(15, 23, 42) // Deep navy
+        }
+
+        // Clip text with ellipsis if too wide
+        let printable = cellText
+        while (doc.getTextWidth(printable) > colW - 4.5 && printable.length > 3) {
+          printable = printable.slice(0, -3) + '..'
+        }
+
+        let textX = curX + 2.5
+        if (colAlign === 'center') textX = curX + colW / 2
+        else if (colAlign === 'right') textX = curX + colW - 2.5
+
+        doc.text(printable, textX, currentY + 4.6, { align: colAlign })
+      }
+
+      curX += colW
+    }
+
+    currentY += rowHeight
+  }
+
+  // Bottom table finish line
+  doc.setDrawColor(20, 85, 217)
+  doc.setLineWidth(0.4)
+  doc.line(marginX, currentY, marginX + contentW, currentY)
+
+  return currentY + 4.5
+}
+
+/**
+ * Universal Executive KPI Stat Grid Drawer
+ * Renders key summary metrics as sleek cards with accent colors
+ */
+export function drawExecutiveKPIGrid(
+  doc: jsPDF,
+  items: { label: string; value: string; badgeColor?: string }[],
+  startY: number,
+  marginX: number,
+  contentW: number
+): number {
+  const cardCount = items.length
+  if (cardCount === 0) return startY
+
+  const cols = cardCount <= 3 ? cardCount : cardCount <= 6 ? Math.ceil(cardCount / 2) : 4
+  const gap = 2.5
+  const cardW = (contentW - (cols - 1) * gap) / cols
+  const cardH = 12.5
+
+  const accents: Record<string, { bg: number[]; bar: number[]; text: number[] }> = {
+    blue: { bg: [248, 250, 254], bar: [20, 85, 217], text: [20, 85, 217] },
+    emerald: { bg: [236, 253, 245], bar: [16, 185, 129], text: [4, 120, 87] },
+    gold: { bg: [254, 252, 232], bar: [234, 179, 8], text: [161, 98, 7] },
+    cyan: { bg: [240, 249, 255], bar: [2, 132, 199], text: [3, 105, 161] },
+    purple: { bg: [250, 245, 255], bar: [168, 85, 247], text: [126, 34, 206] },
+    rose: { bg: [255, 241, 242], bar: [244, 63, 94], text: [190, 18, 60] },
+  }
+
+  const defaultKeys = ['blue', 'emerald', 'cyan', 'gold', 'purple', 'rose']
+
+  for (let i = 0; i < cardCount; i++) {
+    const colIdx = i % cols
+    const rowIdx = Math.floor(i / cols)
+    const cardX = marginX + colIdx * (cardW + gap)
+    const cardY = startY + rowIdx * (cardH + gap)
+    const colorKey = items[i].badgeColor || defaultKeys[i % defaultKeys.length]
+    const style = accents[colorKey] || accents.blue
+
+    // Card Container
+    doc.setFillColor(style.bg[0], style.bg[1], style.bg[2])
+    doc.roundedRect(cardX, cardY, cardW, cardH, 1.5, 1.5, 'F')
+    doc.setDrawColor(220, 230, 244)
+    doc.setLineWidth(0.2)
+    doc.roundedRect(cardX, cardY, cardW, cardH, 1.5, 1.5, 'S')
+
+    // Left Accent Strip
+    doc.setFillColor(style.bar[0], style.bar[1], style.bar[2])
+    doc.roundedRect(cardX, cardY, 2.2, cardH, 0.8, 0.8, 'F')
+
+    // Label
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(5.0)
+    doc.setTextColor(100, 116, 139)
+    const rawLabel = items[i].label.toUpperCase()
+    const truncatedLabel = doc.splitTextToSize(rawLabel, cardW - 6)[0]
+    doc.text(truncatedLabel, cardX + 4.5, cardY + 4.2)
+
+    // Value
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(9.5)
+    doc.setTextColor(style.text[0], style.text[1], style.text[2])
+    doc.text(items[i].value, cardX + 4.5, cardY + 10.2)
+  }
+
+  const numRows = Math.ceil(cardCount / cols)
+  return startY + numRows * (cardH + gap) + 2.5
+}
+
+/**
+ * Automatically parses student roster strings into a structured luxury table
+ */
+export function parseStudentRosterLines(lines: string[]): PDFTableOptions | null {
+  if (!lines || lines.length === 0) return null
+  const parsedRows: string[][] = []
+
+  for (let idx = 0; idx < lines.length; idx++) {
+    const raw = lines[idx].replace(/^[•\-\*]\s*/, '').trim()
+    // Pattern: 1. [922525243065] Jagan M — Year 2, Sem 3, Sec B · Contact: 7010711868 · Status: ACTIVE
+    const match = raw.match(/^\s*(\d+)?[\.\)]?\s*\[([^\]]+)\]\s*([^—\-]+)\s*[—\-]\s*(?:Year\s*(\d+),?\s*Sem\s*(\d+),?\s*Sec\s*([A-Za-z0-9]+)|([^·]+))\s*[·•-]?\s*(?:Contact:\s*([^·]+))?\s*[·•-]?\s*(?:Status:\s*(.+))?$/i)
+    if (match) {
+      const sNo = match[1] || String(idx + 1)
+      const regNo = match[2].trim()
+      const name = match[3].trim()
+      const cohort = match[4] && match[5]
+        ? `Yr ${match[4]} · S${match[5]} · ${match[6] || 'A'}`
+        : (match[7] || 'AI & DS').trim()
+      const contact = (match[8] || 'N/A').trim()
+      const status = (match[9] || 'ACTIVE').trim().toUpperCase()
+
+      parsedRows.push([sNo, regNo, name, cohort, contact, status])
+    } else {
+      // Loose regex fallback
+      const loose = raw.match(/^\s*(\d+)?[\.\)]?\s*\[([^\]]+)\]\s*([^—\|]+?)(?:—|\||-)(.+)$/)
+      if (loose) {
+        parsedRows.push([
+          loose[1] || String(idx + 1),
+          loose[2].trim(),
+          loose[3].trim(),
+          'AI & DS',
+          loose[4].trim(),
+          'ACTIVE'
+        ])
+      } else {
+        return null
+      }
+    }
+  }
+
+  if (parsedRows.length === 0) return null
+
+  return {
+    headers: ['#', 'REGISTER NO', 'STUDENT NAME', 'COHORT / CLASS', 'CONTACT DETAILS', 'STATUS'],
+    rows: parsedRows,
+    widths: [8, 28, 48, 32, 44, 26],
+    alignments: ['center', 'left', 'left', 'center', 'left', 'center']
+  }
+}
+
+/**
+ * Automatically parses marksheet / course grade strings into a structured luxury table
+ */
+export function parseMarksheetLines(lines: string[]): PDFTableOptions | null {
+  if (!lines || lines.length === 0) return null
+  const parsedRows: string[][] = []
+
+  for (let idx = 0; idx < lines.length; idx++) {
+    const raw = lines[idx].replace(/^[•\-\*]\s*/, '').trim()
+    if (!raw.includes('|') || !raw.includes('Credits:')) return null
+
+    // e.g.: 1. [CS3301] Data Structures | Credits: 3 | Grade: A+ | Grade Point: 9 | Score: 27.0
+    const match = raw.match(/^\s*(\d+)?[\.\)]?\s*\[([^\]]+)\]\s*([^\|]+)\|\s*Credits:\s*([0-9\.]+)\s*\|\s*Grade:\s*([^\|]+)\|\s*Grade Point:\s*([^\|]+)\|\s*Score:\s*(.+)$/i)
+    if (match) {
+      parsedRows.push([
+        match[1] || String(idx + 1),
+        match[2].trim(),
+        match[3].trim(),
+        match[4].trim(),
+        match[5].trim(),
+        match[6].trim(),
+        match[7].trim()
+      ])
+    } else {
+      const parts = raw.split('|').map(p => p.trim())
+      if (parts.length >= 4) {
+        parsedRows.push([
+          String(idx + 1),
+          parts[0].replace(/^\d+[\.\)]?\s*\[?/, '').replace(/\]?.*$/, ''),
+          parts[0].replace(/^.*\]\s*/, ''),
+          parts[1].replace(/Credits:\s*/i, ''),
+          parts[2].replace(/Grade:\s*/i, ''),
+          parts[3].replace(/Grade Point:\s*/i, ''),
+          parts[4] ? parts[4].replace(/Score:\s*/i, '') : '—'
+        ])
+      }
+    }
+  }
+
+  if (parsedRows.length === 0) return null
+
+  return {
+    headers: ['S.NO', 'COURSE CODE', 'COURSE TITLE', 'CREDITS', 'GRADE', 'GRADE PT', 'CREDIT-POINTS (Ci×Gi)'],
+    rows: parsedRows,
+    widths: [10, 26, 64, 18, 18, 18, 32],
+    alignments: ['center', 'center', 'left', 'center', 'center', 'center', 'right']
+  }
 }
 
 export function generateAndDownloadPDF(options: PDFDocOptions) {
@@ -273,19 +680,22 @@ export function generateAndDownloadPDF(options: PDFDocOptions) {
 
   currentY += metaBoxH + 6
 
-  // 5. Structured Sections Rendered as Executive Tables with Status Badges
+  // 5. Structured Sections Rendered as Luxury Tables & Executive Dashboards
   if (options.sections && options.sections.length > 0) {
     for (const sec of options.sections) {
       if (currentY > pageHeight - 55) {
         doc.addPage()
         // Re-draw border on page 2+
-        doc.setDrawColor(200, 215, 235)
-        doc.setLineWidth(0.5)
-        doc.rect(marginX - 3, marginX - 3, contentW + 6, pageHeight - (marginX - 3) * 2, 'S')
+        doc.setDrawColor(215, 226, 242)
+        doc.setLineWidth(0.4)
+        doc.rect(marginX - 4, marginX - 4, contentW + 8, pageHeight - (marginX - 4) * 2, 'S')
+        doc.setDrawColor(238, 243, 250)
+        doc.setLineWidth(0.2)
+        doc.rect(marginX - 2, marginX - 2, contentW + 4, pageHeight - (marginX - 2) * 2, 'S')
         currentY = 16
       }
 
-      // Section Header Ribbon
+      // Section Header Ribbon with Royal Navy & Sapphire Accents
       doc.setFillColor(242, 246, 254)
       doc.roundedRect(marginX, currentY, contentW, 7, 1.5, 1.5, 'F')
       doc.setFillColor(21, 87, 192)
@@ -306,147 +716,214 @@ export function generateAndDownloadPDF(options: PDFDocOptions) {
 
       currentY += 9.5
 
-      // Parse Lines into Key-Value Table
-      const tableX = marginX
-      const tableW = contentW
-      const col1W = 75
+      // CASE 1: Explicit Table provided in section
+      if (sec.table && sec.table.headers && sec.table.rows) {
+        currentY = drawLuxuryTable(doc, sec.table, currentY, marginX, contentW, pageHeight)
+        currentY += 2
+        continue
+      }
 
-      for (let rIdx = 0; rIdx < sec.body.length; rIdx++) {
-        if (currentY > pageHeight - 45) {
-          doc.addPage()
-          doc.setDrawColor(200, 215, 235)
-          doc.setLineWidth(0.5)
-          doc.rect(marginX - 3, marginX - 3, contentW + 6, pageHeight - (marginX - 3) * 2, 'S')
-          currentY = 16
+      // CASE 2: Explicit KPI Stat Grid provided
+      if (sec.statsGrid && sec.statsGrid.length > 0) {
+        currentY = drawExecutiveKPIGrid(doc, sec.statsGrid, currentY, marginX, contentW)
+        currentY += 2
+        continue
+      }
+
+      // CASE 3: Text body lines with intelligent luxury conversion
+      if (sec.body && sec.body.length > 0) {
+        // A: Check if body is a student roster list
+        const rosterTable = parseStudentRosterLines(sec.body)
+        if (rosterTable) {
+          currentY = drawLuxuryTable(doc, rosterTable, currentY, marginX, contentW, pageHeight)
+          currentY += 2
+          continue
         }
 
-        const rawLine = sec.body[rIdx]
-        const cleanLine = rawLine.replace(/^[•\-\*]\s*/, '').trim()
-        const colonIdx = cleanLine.indexOf(':')
+        // B: Check if body is a marksheet grade list
+        const marksheetTable = parseMarksheetLines(sec.body)
+        if (marksheetTable) {
+          currentY = drawLuxuryTable(doc, marksheetTable, currentY, marginX, contentW, pageHeight)
+          currentY += 2
+          continue
+        }
 
-        if (colonIdx > 0 && colonIdx < 55) {
-          const label = cleanLine.slice(0, colonIdx).trim()
-          const val = cleanLine.slice(colonIdx + 1).trim()
+        // C: Check if body is a concise overview or metrics list
+        const headingUpper = sec.heading.toUpperCase()
+        const isOverviewHeading =
+          headingUpper.includes('OVERVIEW') ||
+          headingUpper.includes('METRICS') ||
+          headingUpper.includes('STATISTICS') ||
+          headingUpper.includes('COUNTS') ||
+          headingUpper.includes('SUMMARY')
 
-          doc.setFont('helvetica', 'bold')
-          doc.setFontSize(7.2)
-          const splitLabel = doc.splitTextToSize(label, col1W - 12)
-          const rowHeight = Math.max(8.2, splitLabel.length * 4.2 + 2.5)
+        const allHaveColon = sec.body.every(line => line.includes(':'))
+        const allShortValues = sec.body.every(line => {
+          const colon = line.indexOf(':')
+          return colon > 0 && (line.length - colon) <= 35
+        })
 
-          // Alternating Table Row
-          doc.setFillColor(rIdx % 2 === 0 ? 255 : 248, rIdx % 2 === 0 ? 255 : 250, rIdx % 2 === 0 ? 255 : 253)
-          doc.rect(tableX, currentY, tableW, rowHeight, 'F')
-          doc.setDrawColor(225, 233, 245)
-          doc.setLineWidth(0.2)
-          doc.rect(tableX, currentY, tableW, rowHeight, 'S')
-
-          // Column 1 Divider
-          doc.line(tableX + col1W, currentY, tableX + col1W, currentY + rowHeight)
-
-          // Key Label with bullet dot
-          doc.setFillColor(21, 87, 192)
-          doc.circle(tableX + 4.5, currentY + (rowHeight / 2), 0.75, 'F')
-
-          doc.setFont('helvetica', 'bold')
-          doc.setFontSize(7.2)
-          doc.setTextColor(30, 41, 59)
-          const labelStartY = splitLabel.length > 1 ? currentY + 4.2 : currentY + (rowHeight / 2) + 1.2
-          doc.text(splitLabel, tableX + 7.5, labelStartY)
-
-          // Value Pill / Highlight Text
-          const valLower = val.toLowerCase()
-          const isEligible =
-            valLower.includes('eligible') ||
-            valLower.includes('verified') ||
-            valLower.includes('safe') ||
-            valLower.includes('compliant') ||
-            valLower.includes('100%')
-          const isShortage =
-            valLower.includes('shortage') ||
-            valLower.includes('critical') ||
-            (valLower.includes('absent') && !valLower.startsWith('0') && !valLower.includes('zero'))
-          const isWarning =
-            valLower.includes('warning') ||
-            valLower.includes('remedial') ||
-            valLower.includes('condonation')
-
-          const isFullBanner = val.length > 35
-
-          if (isFullBanner) {
-            // Full-width status banner with rounded corners
-            const bannerW = tableW - col1W - 6
-            const bannerX = tableX + col1W + 3
-            const bannerH = 5.6
-            const bannerY = currentY + (rowHeight - bannerH) / 2
-
-            if (isEligible) {
-              doc.setFillColor(236, 253, 245) // Emerald-50
-              doc.setDrawColor(167, 243, 208)
-              doc.setTextColor(5, 122, 85)
-            } else if (isShortage) {
-              doc.setFillColor(254, 242, 242) // Rose-50
-              doc.setDrawColor(254, 202, 202)
-              doc.setTextColor(185, 28, 28)
-            } else {
-              doc.setFillColor(240, 246, 255) // Blue-50
-              doc.setDrawColor(219, 234, 254)
-              doc.setTextColor(29, 78, 216)
+        if (isOverviewHeading && allHaveColon && allShortValues && sec.body.length >= 2 && sec.body.length <= 8) {
+          const kpiItems = sec.body.map(line => {
+            const clean = line.replace(/^[•\-\*]\s*/, '').trim()
+            const parts = clean.split(':')
+            return {
+              label: parts[0].trim(),
+              value: parts.slice(1).join(':').trim(),
             }
-            doc.setLineWidth(0.3)
-            doc.roundedRect(bannerX, bannerY, bannerW, bannerH, 1.8, 1.8, 'FD')
+          })
+          currentY = drawExecutiveKPIGrid(doc, kpiItems, currentY, marginX, contentW)
+          currentY += 2
+          continue
+        }
 
-            doc.setFont('helvetica', 'bold')
-            doc.setFontSize(6.8)
-            doc.text(val, bannerX + 4, bannerY + 3.9)
-          } else {
-            // Compact, proportional rounded pill (sized to content)
-            doc.setFont('helvetica', 'bold')
-            doc.setFontSize(7.4)
-            const textW = doc.getTextWidth(val)
-            const pillW = Math.min(tableW - col1W - 8, Math.max(26, textW + 9))
-            const pillX = tableX + col1W + 4
-            const pillH = 5.4
-            const pillY = currentY + (rowHeight - pillH) / 2
+        // D: Fallback structured key-value & description card rendering
+        const tableX = marginX
+        const tableW = contentW
+        const col1W = 75
 
-            if (isEligible) {
-              doc.setFillColor(236, 253, 245)
-              doc.setDrawColor(167, 243, 208)
-              doc.setTextColor(5, 122, 85)
-            } else if (isShortage) {
-              doc.setFillColor(254, 242, 242)
-              doc.setDrawColor(254, 202, 202)
-              doc.setTextColor(185, 28, 28)
-            } else if (isWarning) {
-              doc.setFillColor(254, 243, 199)
-              doc.setDrawColor(253, 230, 138)
-              doc.setTextColor(180, 83, 9)
-            } else {
-              // Clean Cobalt Blue neutral badge
-              doc.setFillColor(240, 246, 255)
-              doc.setDrawColor(219, 234, 254)
-              doc.setTextColor(21, 87, 192)
-            }
-
-            doc.setLineWidth(0.3)
-            doc.roundedRect(pillX, pillY, pillW, pillH, 1.8, 1.8, 'FD')
-            doc.text(val, pillX + pillW / 2, pillY + 3.8, { align: 'center' })
+        for (let rIdx = 0; rIdx < sec.body.length; rIdx++) {
+          if (currentY > pageHeight - 45) {
+            doc.addPage()
+            doc.setDrawColor(215, 226, 242)
+            doc.setLineWidth(0.4)
+            doc.rect(marginX - 4, marginX - 4, contentW + 8, pageHeight - (marginX - 4) * 2, 'S')
+            doc.setDrawColor(238, 243, 250)
+            doc.setLineWidth(0.2)
+            doc.rect(marginX - 2, marginX - 2, contentW + 4, pageHeight - (marginX - 2) * 2, 'S')
+            currentY = 16
           }
 
-          currentY += rowHeight
-        } else {
-          // Regular Line Card
-          doc.setFillColor(rIdx % 2 === 0 ? 255 : 249, rIdx % 2 === 0 ? 255 : 251, rIdx % 2 === 0 ? 255 : 254)
-          doc.rect(tableX, currentY, tableW, 7.5, 'F')
-          doc.setDrawColor(225, 233, 245)
-          doc.setLineWidth(0.2)
-          doc.rect(tableX, currentY, tableW, 7.5, 'S')
+          const rawLine = sec.body[rIdx]
+          const cleanLine = rawLine.replace(/^[•\-\*]\s*/, '').trim()
+          const colonIdx = cleanLine.indexOf(':')
 
-          doc.setFont('helvetica', 'normal')
-          doc.setFontSize(7.5)
-          doc.setTextColor(30, 40, 55)
-          const splitText = doc.splitTextToSize(cleanLine, tableW - 10)
-          doc.text(splitText, tableX + 5, currentY + 5)
-          currentY += 7.5
+          if (colonIdx > 0 && colonIdx < 55) {
+            const label = cleanLine.slice(0, colonIdx).trim()
+            const val = cleanLine.slice(colonIdx + 1).trim()
+
+            doc.setFont('helvetica', 'bold')
+            doc.setFontSize(7.2)
+            const splitLabel = doc.splitTextToSize(label, col1W - 12)
+            const rowHeight = Math.max(8.2, splitLabel.length * 4.2 + 2.5)
+
+            // Alternating Table Row
+            doc.setFillColor(rIdx % 2 === 0 ? 255 : 248, rIdx % 2 === 0 ? 255 : 250, rIdx % 2 === 0 ? 255 : 253)
+            doc.rect(tableX, currentY, tableW, rowHeight, 'F')
+            doc.setDrawColor(225, 233, 245)
+            doc.setLineWidth(0.2)
+            doc.rect(tableX, currentY, tableW, rowHeight, 'S')
+
+            // Column 1 Divider
+            doc.line(tableX + col1W, currentY, tableX + col1W, currentY + rowHeight)
+
+            // Key Label with bullet dot
+            doc.setFillColor(21, 87, 192)
+            doc.circle(tableX + 4.5, currentY + (rowHeight / 2), 0.75, 'F')
+
+            doc.setFont('helvetica', 'bold')
+            doc.setFontSize(7.2)
+            doc.setTextColor(30, 41, 59)
+            const labelStartY = splitLabel.length > 1 ? currentY + 4.2 : currentY + (rowHeight / 2) + 1.2
+            doc.text(splitLabel, tableX + 7.5, labelStartY)
+
+            // Value Pill / Highlight Text
+            const valLower = val.toLowerCase()
+            const isEligible =
+              valLower.includes('eligible') ||
+              valLower.includes('verified') ||
+              valLower.includes('safe') ||
+              valLower.includes('compliant') ||
+              valLower.includes('pass') ||
+              valLower.includes('distinction') ||
+              valLower.includes('100%')
+            const isShortage =
+              valLower.includes('shortage') ||
+              valLower.includes('critical') ||
+              valLower.includes('fail') ||
+              valLower.includes('withheld') ||
+              (valLower.includes('absent') && !valLower.startsWith('0') && !valLower.includes('zero'))
+            const isWarning =
+              valLower.includes('warning') ||
+              valLower.includes('remedial') ||
+              valLower.includes('condonation') ||
+              valLower.includes('awaiting')
+
+            const isFullBanner = val.length > 35
+
+            if (isFullBanner) {
+              const bannerW = tableW - col1W - 6
+              const bannerX = tableX + col1W + 3
+              const bannerH = 5.6
+              const bannerY = currentY + (rowHeight - bannerH) / 2
+
+              if (isEligible) {
+                doc.setFillColor(236, 253, 245)
+                doc.setDrawColor(167, 243, 208)
+                doc.setTextColor(5, 122, 85)
+              } else if (isShortage) {
+                doc.setFillColor(254, 242, 242)
+                doc.setDrawColor(254, 202, 202)
+                doc.setTextColor(185, 28, 28)
+              } else {
+                doc.setFillColor(240, 246, 255)
+                doc.setDrawColor(219, 234, 254)
+                doc.setTextColor(29, 78, 216)
+              }
+              doc.setLineWidth(0.3)
+              doc.roundedRect(bannerX, bannerY, bannerW, bannerH, 1.8, 1.8, 'FD')
+
+              doc.setFont('helvetica', 'bold')
+              doc.setFontSize(6.8)
+              doc.text(val, bannerX + 4, bannerY + 3.9)
+            } else {
+              doc.setFont('helvetica', 'bold')
+              doc.setFontSize(7.4)
+              const textW = doc.getTextWidth(val)
+              const pillW = Math.min(tableW - col1W - 8, Math.max(26, textW + 9))
+              const pillX = tableX + col1W + 4
+              const pillH = 5.4
+              const pillY = currentY + (rowHeight - pillH) / 2
+
+              if (isEligible) {
+                doc.setFillColor(236, 253, 245)
+                doc.setDrawColor(167, 243, 208)
+                doc.setTextColor(5, 122, 85)
+              } else if (isShortage) {
+                doc.setFillColor(254, 242, 242)
+                doc.setDrawColor(254, 202, 202)
+                doc.setTextColor(185, 28, 28)
+              } else if (isWarning) {
+                doc.setFillColor(254, 243, 199)
+                doc.setDrawColor(253, 230, 138)
+                doc.setTextColor(180, 83, 9)
+              } else {
+                doc.setFillColor(240, 246, 255)
+                doc.setDrawColor(219, 234, 254)
+                doc.setTextColor(21, 87, 192)
+              }
+
+              doc.setLineWidth(0.3)
+              doc.roundedRect(pillX, pillY, pillW, pillH, 1.8, 1.8, 'FD')
+              doc.text(val, pillX + pillW / 2, pillY + 3.8, { align: 'center' })
+            }
+
+            currentY += rowHeight
+          } else {
+            // Regular Line Card
+            doc.setFillColor(rIdx % 2 === 0 ? 255 : 249, rIdx % 2 === 0 ? 255 : 251, rIdx % 2 === 0 ? 255 : 254)
+            doc.rect(tableX, currentY, tableW, 7.5, 'F')
+            doc.setDrawColor(225, 233, 245)
+            doc.setLineWidth(0.2)
+            doc.rect(tableX, currentY, tableW, 7.5, 'S')
+
+            doc.setFont('helvetica', 'normal')
+            doc.setFontSize(7.5)
+            doc.setTextColor(30, 40, 55)
+            const splitText = doc.splitTextToSize(cleanLine, tableW - 10)
+            doc.text(splitText, tableX + 5, currentY + 5)
+            currentY += 7.5
+          }
         }
       }
 
@@ -2500,110 +2977,142 @@ export interface DeptHeaderDownloadOptions {
   uploadedByName?: string
   semester?: number | null
   description?: string
+  subjectCode?: string
+  subjectName?: string
+  academicYear?: string | null
+}
+
+/**
+ * buildDeptHeaderCoverDoc
+ * Creates a branded official V.S.B. Department Letterhead cover page jsPDF document.
+ */
+export function buildDeptHeaderCoverDoc(options: DeptHeaderDownloadOptions): jsPDF {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const pageHeight = doc.internal.pageSize.getHeight()
+  const marginX = 12
+  const contentW = pageWidth - marginX * 2
+
+  // Frame
+  doc.setDrawColor(215, 226, 242); doc.setLineWidth(0.4)
+  doc.rect(marginX - 4, marginX - 4, contentW + 8, pageHeight - (marginX - 4) * 2, 'S')
+  doc.setDrawColor(238, 243, 250); doc.setLineWidth(0.2)
+  doc.rect(marginX - 2, marginX - 2, contentW + 4, pageHeight - (marginX - 2) * 2, 'S')
+
+  // Header tint
+  doc.setFillColor(250, 252, 255)
+  doc.rect(marginX - 2, marginX - 2, contentW + 4, 38, 'F')
+
+  // Logo
+  const logoX = marginX + 2; const logoY = marginX + 3; const logoSize = 24
+  doc.setFillColor(255, 255, 255)
+  doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 1, 'F')
+  doc.setDrawColor(231, 185, 62); doc.setLineWidth(0.6)
+  doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 1, 'S')
+  try { doc.addImage(VSB_LOGO_BASE64, 'PNG', logoX + 2, logoY + 2, logoSize - 4, logoSize - 4) } catch {}
+
+  // College name & dept
+  const hCX = marginX + logoSize + (contentW - logoSize) / 2
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(14.5); doc.setTextColor(7, 26, 61)
+  doc.text('V.S.B. ENGINEERING COLLEGE', hCX, marginX + 6.5, { align: 'center' })
+  doc.setFillColor(231, 185, 62)
+  doc.roundedRect(hCX - 22, marginX + 8.5, 44, 4, 1, 1, 'F')
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(6.8); doc.setTextColor(7, 26, 61)
+  doc.text('AN AUTONOMOUS INSTITUTION', hCX, marginX + 11.3, { align: 'center' })
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(21, 87, 192)
+  doc.text('DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE', hCX, marginX + 17.5, { align: 'center' })
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(75, 85, 105)
+  doc.text('Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai · Karur - 639 111, Tamil Nadu', hCX, marginX + 22.5, { align: 'center' })
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(6.8); doc.setTextColor(100, 115, 135)
+  doc.text('Accredited by NAAC with "A" Grade  ·  NBA Accredited Programs  ·  ISO 9001:2015 Certified', hCX, marginX + 27, { align: 'center' })
+
+  // Separator beam
+  const beamY = marginX + 34
+  doc.setFillColor(21, 87, 192); doc.rect(marginX, beamY, contentW, 1.4, 'F')
+  doc.setFillColor(231, 185, 62); doc.rect(marginX, beamY + 1.4, contentW, 0.7, 'F')
+  doc.setFillColor(231, 185, 62); doc.circle(marginX + contentW / 2, beamY + 1, 1.8, 'F')
+  doc.setFillColor(7, 26, 61); doc.circle(marginX + contentW / 2, beamY + 1, 0.9, 'F')
+
+  // Subject Pill / Banner
+  let curY = beamY + 14
+  if (options.subjectCode || options.subjectName) {
+    const fullSubj = `${options.subjectCode ? `[${options.subjectCode}] ` : ''}${options.subjectName || ''}`.trim()
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(20, 85, 217)
+    doc.text(fullSubj, pageWidth / 2, curY, { align: 'center' })
+    curY += 8
+  }
+
+  // Document Title
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(7, 26, 61)
+  const splitTitle = doc.splitTextToSize(options.title || 'Official Academic Study Resource', contentW - 10)
+  doc.text(splitTitle, pageWidth / 2, curY, { align: 'center' })
+  curY += (splitTitle.length * 6) + 4
+  
+  if (options.resourceType) {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(21, 87, 192)
+    doc.text(options.resourceType.replace(/_/g, ' ').toUpperCase(), pageWidth / 2, curY, { align: 'center' })
+    curY += 6
+  }
+
+  const metaParts: string[] = []
+  if (options.semester) metaParts.push(`Semester ${options.semester}`)
+  if (options.academicYear) metaParts.push(`Academic Year: ${options.academicYear}`)
+  metaParts.push('Regulation: R-2021 Autonomous')
+  
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(100, 115, 135)
+  doc.text(metaParts.join('  ·  '), pageWidth / 2, curY, { align: 'center' })
+  curY += 6
+
+  if (options.uploadedByName) {
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(71, 85, 105)
+    doc.text(`Authorized by: ${options.uploadedByName}`, pageWidth / 2, curY, { align: 'center' })
+    curY += 7
+  }
+
+  if (options.description) {
+    doc.setFont('helvetica', 'italic'); doc.setFontSize(8.5); doc.setTextColor(80, 95, 115)
+    const splitDesc = doc.splitTextToSize(options.description, contentW - 20)
+    doc.text(splitDesc, pageWidth / 2, curY, { align: 'center' })
+  }
+
+  drawDigitalPortalDocumentNotice(doc, {
+    y: pageHeight - 35,
+    contentW,
+    marginX,
+    recordType: options.resourceType || 'ACADEMIC STUDY RECORD',
+    verificationCode: 'VSB-DIGITAL-PORTAL-E-RECORD',
+    repositoryName: 'Centralized Autonomous Digital Library',
+    issuingAuthority: 'Department of Artificial Intelligence & Data Science',
+    boxHeight: 24,
+    isCompact: false,
+  })
+
+  // Footer on cover
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(5.6); doc.setTextColor(140, 155, 175)
+  doc.text('DIGITAL PORTAL DOCUMENT · V.S.B. ENGINEERING COLLEGE (AUTONOMOUS) · AI & DS PORTAL', pageWidth / 2, pageHeight - 5.5, { align: 'center' })
+
+  return doc
+}
+
+/**
+ * Generates data URI for the official department header cover page
+ */
+export function generateCoverPageDataUri(options: DeptHeaderDownloadOptions): string {
+  const doc = buildDeptHeaderCoverDoc(options)
+  return doc.output('datauristring')
 }
 
 export async function downloadWithDeptHeader(options: DeptHeaderDownloadOptions): Promise<void> {
-  const { fileUrl, fileName, resourceType } = options
-
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-
-  const renderHeader = () => {
-    const pageWidth = doc.internal.pageSize.getWidth()
-    const pageHeight = doc.internal.pageSize.getHeight()
-    const marginX = 12
-    const contentW = pageWidth - marginX * 2
-
-    // Frame
-    doc.setDrawColor(215, 226, 242); doc.setLineWidth(0.4)
-    doc.rect(marginX - 4, marginX - 4, contentW + 8, pageHeight - (marginX - 4) * 2, 'S')
-    doc.setDrawColor(238, 243, 250); doc.setLineWidth(0.2)
-    doc.rect(marginX - 2, marginX - 2, contentW + 4, pageHeight - (marginX - 2) * 2, 'S')
-
-    // Header tint
-    doc.setFillColor(250, 252, 255)
-    doc.rect(marginX - 2, marginX - 2, contentW + 4, 38, 'F')
-
-    // Logo
-    const logoX = marginX + 2; const logoY = marginX + 3; const logoSize = 24
-    doc.setFillColor(255, 255, 255)
-    doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 1, 'F')
-    doc.setDrawColor(231, 185, 62); doc.setLineWidth(0.6)
-    doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 1, 'S')
-    try { doc.addImage(VSB_LOGO_BASE64, 'PNG', logoX + 2, logoY + 2, logoSize - 4, logoSize - 4) } catch {}
-
-    // College name & dept
-    const hCX = marginX + logoSize + (contentW - logoSize) / 2
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(14.5); doc.setTextColor(7, 26, 61)
-    doc.text('V.S.B. ENGINEERING COLLEGE', hCX, marginX + 6.5, { align: 'center' })
-    doc.setFillColor(231, 185, 62)
-    doc.roundedRect(hCX - 22, marginX + 8.5, 44, 4, 1, 1, 'F')
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(6.8); doc.setTextColor(7, 26, 61)
-    doc.text('AN AUTONOMOUS INSTITUTION', hCX, marginX + 11.3, { align: 'center' })
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(21, 87, 192)
-    doc.text('DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE', hCX, marginX + 17.5, { align: 'center' })
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(75, 85, 105)
-    doc.text('Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai · Karur - 639 111, Tamil Nadu', hCX, marginX + 22.5, { align: 'center' })
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(6.8); doc.setTextColor(100, 115, 135)
-    doc.text('Accredited by NAAC with "A" Grade  ·  NBA Accredited Programs  ·  ISO 9001:2015 Certified', hCX, marginX + 27, { align: 'center' })
-
-    // Separator beam
-    const beamY = marginX + 34
-    doc.setFillColor(21, 87, 192); doc.rect(marginX, beamY, contentW, 1.4, 'F')
-    doc.setFillColor(231, 185, 62); doc.rect(marginX, beamY + 1.4, contentW, 0.7, 'F')
-    doc.setFillColor(231, 185, 62); doc.circle(marginX + contentW / 2, beamY + 1, 1.8, 'F')
-    doc.setFillColor(7, 26, 61); doc.circle(marginX + contentW / 2, beamY + 1, 0.9, 'F')
-
-    // Document Title
-    const currentY = beamY + 15
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(7, 26, 61)
-    doc.text(options.title || 'Official Academic Resource', pageWidth / 2, currentY, { align: 'center' })
-    
-    if (options.resourceType) {
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(21, 87, 192)
-      doc.text(options.resourceType.replace(/_/g, ' ').toUpperCase(), pageWidth / 2, currentY + 7, { align: 'center' })
-    }
-
-    if (options.semester) {
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(100, 115, 135)
-      doc.text(`Semester ${options.semester}`, pageWidth / 2, currentY + 13, { align: 'center' })
-    }
-
-    if (options.uploadedByName) {
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(100, 115, 135)
-      doc.text(`Uploaded by: ${options.uploadedByName}`, pageWidth / 2, currentY + 19, { align: 'center' })
-    }
-
-    if (options.description) {
-      doc.setFont('helvetica', 'italic'); doc.setFontSize(9); doc.setTextColor(75, 85, 105)
-      const splitDesc = doc.splitTextToSize(options.description, contentW - 20)
-      doc.text(splitDesc, pageWidth / 2, currentY + 29, { align: 'center' })
-    }
-
-    drawDigitalPortalDocumentNotice(doc, {
-      y: pageHeight - 35,
-      contentW,
-      marginX,
-      recordType: options.resourceType || 'ACADEMIC RECORD',
-      verificationCode: 'VSB-DIGITAL-PORTAL-E-RECORD',
-      repositoryName: 'Centralized Autonomous ERP Ledger',
-      issuingAuthority: 'Office of HOD (AI & DS)',
-      boxHeight: 24,
-      isCompact: false,
-    })
-
-    // Footer on cover
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(5.6); doc.setTextColor(140, 155, 175)
-    doc.text('DIGITAL PORTAL DOCUMENT · V.S.B. ENGINEERING COLLEGE (AUTONOMOUS) · AI & DS PORTAL', pageWidth / 2, pageHeight - 5.5, { align: 'center' })
-  }
+  const { fileUrl, fileName } = options
 
   try {
     const resp = await fetch(fileUrl)
     if (resp.ok) {
       const originalPdfBytes = await resp.arrayBuffer()
       
-      // If file is larger than 5MB, skip merging to prevent browser freeze and out-of-memory errors
-      if (originalPdfBytes.byteLength > 5 * 1024 * 1024) {
-        console.warn('File exceeds 5MB, skipping cover page merging to prevent UI freeze.')
+      // If file is larger than 40MB, fallback to direct download to prevent browser OOM
+      if (originalPdfBytes.byteLength > 40 * 1024 * 1024) {
+        console.warn('File exceeds 40MB, downloading original file directly.')
         const blob = new Blob([originalPdfBytes], { type: 'application/pdf' })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
@@ -2617,7 +3126,7 @@ export async function downloadWithDeptHeader(options: DeptHeaderDownloadOptions)
       }
       
       // Render Cover Page
-      renderHeader()
+      const doc = buildDeptHeaderCoverDoc(options)
       const coverPdfBytes = doc.output('arraybuffer')
 
       // Dynamically import pdf-lib to avoid SSR issues

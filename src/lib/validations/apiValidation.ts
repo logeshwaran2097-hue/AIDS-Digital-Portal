@@ -458,6 +458,7 @@ export const odProofActionSchema = z
       'EDIT_OD',
       'DELETE_OD',
       'DELETE_EVENT',
+      'DELETE_ALL_OD',
       'UPLOAD_GEOTAG',
       'UPLOAD_CERTIFICATE',
       'ADVISOR_VERIFY',

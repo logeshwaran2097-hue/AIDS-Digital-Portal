@@ -199,6 +199,22 @@ html.app-is-installed .pwa-hide-when-installed,
   }
 }
 
+@keyframes portalTopLoader {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-portal-top-loader {
+  animation: portalTopLoader 0.9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
 @keyframes textShimmerWave {
   0% {
     background-position: -200% 0;

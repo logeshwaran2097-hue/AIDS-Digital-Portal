@@ -299,7 +299,9 @@ export default function GPACalculatorMarksheetView({
       ? 'FIRST CLASS WITH DISTINCTION'
       : calculatedSemesterGPA >= 6.5
       ? 'FIRST CLASS'
-      : 'SECOND CLASS'
+      : calculatedSemesterGPA >= 5.0
+      ? 'SECOND CLASS'
+      : 'RE-APPEAR REQUIRED'
 
     generateAndDownloadPDF({
       title: 'DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE',
@@ -309,7 +311,7 @@ export default function GPACalculatorMarksheetView({
       category: 'Autonomous Semester Grade Sheet',
       sections: [
         {
-          heading: 'STUDENT ACADEMIC CREDENTIALS',
+          heading: '1. STUDENT ACADEMIC CREDENTIALS',
           body: [
             `Student Name: ${studentName || 'Student'}`,
             `Register Number: ${registerNumber || '922522AD001'}`,
@@ -320,11 +322,42 @@ export default function GPACalculatorMarksheetView({
           ],
         },
         {
-          heading: `SEMESTER ${selectedSemester} COURSE-WISE GRADE POINT PERFORMANCE`,
+          heading: `2. SEMESTER ${selectedSemester} COURSE-WISE GRADE POINT PERFORMANCE`,
+          table: {
+            headers: ['S.NO', 'COURSE CODE', 'COURSE TITLE', 'TYPE', 'CREDITS (Ci)', 'GRADE', 'GRADE PT (Gi)', 'CREDIT-POINTS (Ci×Gi)'],
+            rows: subjects.map((s, idx) => {
+              const pt = s.grade && currentGradePoints[s.grade] !== undefined ? currentGradePoints[s.grade] : 0
+              const ciGi = pt * s.credits
+              const isTop = pt >= 9
+              const isPassing = pt >= 6
+              return [
+                String(idx + 1),
+                s.code,
+                s.name,
+                s.courseType || 'Theory',
+                String(s.credits),
+                {
+                  text: s.grade || 'Awaiting',
+                  badge: true,
+                  badgeType: !s.grade ? 'warning' : isTop ? 'gold' : isPassing ? 'success' : 'danger'
+                },
+                s.grade ? String(pt) : '—',
+                s.grade ? ciGi.toFixed(1) : '—'
+              ]
+            }),
+            widths: [10, 24, 60, 24, 18, 16, 16, 18],
+            alignments: ['center', 'center', 'left', 'center', 'center', 'center', 'center', 'right']
+          },
           body: rows,
         },
         {
-          heading: 'SEMESTER CUMULATIVE SUMMARY & RESULT CLASSIFICATION',
+          heading: '3. SEMESTER CUMULATIVE SUMMARY & RESULT CLASSIFICATION',
+          statsGrid: [
+            { label: 'Registered Credits', value: `${currentSemesterCredits} Credits`, badgeColor: 'blue' },
+            { label: 'Earned Credit-Points', value: `${totalWeightedPoints} Pts`, badgeColor: 'gold' },
+            { label: 'Semester SGPA', value: `${hasAnyGrade ? calculatedSemesterGPA.toFixed(2) : 'Awaiting'} / 10.0`, badgeColor: 'emerald' },
+            { label: 'Result Standing', value: `${hasAnyGrade ? honors : 'Awaiting Evaluation'}`, badgeColor: 'purple' },
+          ],
           body: [
             `Total Registered Credits (∑Ci): ${currentSemesterCredits} Credits`,
             `Total Earned Credit-Points (∑Ci × Gi): ${totalWeightedPoints} Points`,
@@ -845,27 +878,64 @@ export default function GPACalculatorMarksheetView({
                   </div>
                 </div>
 
-                <div className="overflow-x-auto">
+                {/* Luxury Curriculum Progress Strip */}
+                <div className="rounded-2xl p-4 bg-gradient-to-r from-[#071A3D] via-[#0E2C66] to-[#1455D9] text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg border border-blue-400/20">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-[#F4C430] font-black text-sm shadow-inner shrink-0">
+                      S{selectedSemester}
+                    </div>
+                    <div>
+                      <div className="text-xs font-black tracking-wider uppercase flex items-center gap-2">
+                        <span>Semester {selectedSemester} Course Curriculum</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-400/20 text-cyan-200 border border-cyan-400/30">
+                          {gradingSystem === 'absolute_ii_year' ? 'Absolute Scale' : 'Relative Scale'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-cyan-100/80 mt-0.5">
+                        {gradedCoursesCount} of {totalCoursesCount} Courses Graded · {gradedSemesterCredits} of {currentSemesterCredits} Total Credits Evaluated
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Dynamic Progress Meter */}
+                  <div className="w-full sm:w-56 space-y-1.5 shrink-0">
+                    <div className="flex justify-between text-[11px] font-bold text-cyan-200">
+                      <span>Evaluation Status</span>
+                      <span className="font-mono text-[#F4C430]">
+                        {currentSemesterCredits > 0 ? Math.round((gradedSemesterCredits / currentSemesterCredits) * 100) : 0}% Complete
+                      </span>
+                    </div>
+                    <div className="h-2.5 w-full bg-white/15 rounded-full overflow-hidden p-0.5 border border-white/10">
+                      <div
+                        className="h-full bg-gradient-to-r from-amber-400 via-emerald-400 to-cyan-300 rounded-full transition-all duration-700 shadow-sm"
+                        style={{ width: `${currentSemesterCredits > 0 ? Math.min(100, (gradedSemesterCredits / currentSemesterCredits) * 100) : 0}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Luxury Table Container */}
+                <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-slate-200 text-slate-500 font-bold bg-slate-50">
-                        <th className="py-3 px-4">Course</th>
-                        <th className="py-3 px-4 text-center w-28">Credits (C<sub>i</sub>)</th>
-                        <th className="py-3 px-4 text-center w-36">Grade Point (G<sub>i</sub>)</th>
-                        <th className="py-3 px-4 text-center w-28 font-mono">C<sub>i</sub> &times; G<sub>i</sub></th>
-                        <th className="py-3 px-3 text-center w-12">Action</th>
+                      <tr className="bg-gradient-to-r from-[#071A3D] via-[#0E2C66] to-[#1455D9] text-white font-black text-[11px] tracking-wider uppercase border-b-2 border-[#F4C430]">
+                        <th className="py-3.5 px-4">Course Catalog Details</th>
+                        <th className="py-3.5 px-3 text-center w-28">Credits (C<sub>i</sub>)</th>
+                        <th className="py-3.5 px-4 text-center w-48">Assigned Grade (G<sub>i</sub>)</th>
+                        <th className="py-3.5 px-4 text-center w-36 font-mono">Weighted (C<sub>i</sub> &times; G<sub>i</sub>)</th>
+                        <th className="py-3.5 px-3 text-center w-12">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {subjects.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className="py-12 text-center text-slate-400">
-                            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-3">
-                              <BookOpen className="w-6 h-6" />
+                          <td colSpan={5} className="py-12 text-center text-slate-400 bg-slate-50/50">
+                            <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center mx-auto mb-3 shadow-xs">
+                              <BookOpen className="w-7 h-7" />
                             </div>
-                            <p className="font-bold text-slate-700 text-sm">No courses added by Administrator for Semester {selectedSemester} yet</p>
+                            <p className="font-bold text-slate-800 text-sm">No courses added by Administrator for Semester {selectedSemester} yet</p>
                             <p className="text-xs text-slate-400 max-w-md mx-auto mt-1 mb-4 leading-relaxed">
-                              When the department administrator publishes subjects in <strong>Academics &amp; Courses</strong>, they will display here automatically. You can also add custom courses below.
+                              When the department administrator publishes subjects in <strong>Academics &amp; Courses</strong>, they will display here automatically with real curriculum credits. You can also add custom courses below.
                             </p>
                             <button
                               type="button"
@@ -877,72 +947,110 @@ export default function GPACalculatorMarksheetView({
                           </td>
                         </tr>
                       ) : (
-                        subjects.map((subj) => {
+                        subjects.map((subj, idx) => {
                           const hasGrade = Boolean(subj.grade && currentGradePoints[subj.grade] !== undefined)
                           const pt = hasGrade ? currentGradePoints[subj.grade] : null
                           const ciGi = hasGrade && pt !== null ? (pt * subj.credits) : null
                           const isCustom = subj.id.startsWith('custom-')
+                          const isTop = pt !== null && pt >= 9
+                          const isPassing = pt !== null && pt >= 6
+
                           return (
-                            <tr key={subj.id} className="hover:bg-slate-50/70 transition-colors">
-                              <td className="py-3 px-4">
+                            <tr key={subj.id} className="hover:bg-blue-50/40 transition-colors group">
+                              <td className="py-3.5 px-4">
                                 {isCustom ? (
-                                  <div className="space-y-1">
+                                  <div className="space-y-1.5">
                                     <input
                                       type="text"
                                       value={subj.name}
                                       onChange={(e) => handleUpdateSubject(subj.id, 'name', e.target.value)}
                                       placeholder="Course Name"
-                                      className="w-full p-1.5 rounded-lg border border-slate-200 font-bold text-slate-800 text-xs focus:bg-white"
+                                      className="w-full p-2 rounded-lg border border-slate-200 font-bold text-slate-800 text-xs focus:bg-white focus:border-blue-400 transition-all shadow-2xs"
                                     />
-                                    <input
-                                      type="text"
-                                      value={subj.code}
-                                      onChange={(e) => handleUpdateSubject(subj.id, 'code', e.target.value.toUpperCase())}
-                                      placeholder="Code e.g. CS3401"
-                                      className="w-32 p-1 rounded-md border border-slate-200 font-mono text-[10px] text-[#1455D9]"
-                                    />
+                                    <div className="flex items-center gap-2">
+                                      <input
+                                        type="text"
+                                        value={subj.code}
+                                        onChange={(e) => handleUpdateSubject(subj.id, 'code', e.target.value.toUpperCase())}
+                                        placeholder="Code e.g. CS3401"
+                                        className="w-32 p-1.5 rounded-md border border-slate-200 font-mono text-[10px] text-[#1455D9] font-bold"
+                                      />
+                                      <span className="text-[10px] text-slate-400 font-medium">Custom Course Entry</span>
+                                    </div>
                                   </div>
                                 ) : (
-                                  <>
-                                    <span className="font-bold text-slate-800 block">{subj.name}</span>
-                                    <span className="text-slate-400 font-mono text-[10px]">{subj.code} · {subj.courseType}</span>
-                                  </>
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-mono text-[10px] font-black px-2 py-0.5 rounded-md bg-blue-50 text-[#1455D9] border border-blue-200">
+                                        {subj.code}
+                                      </span>
+                                      <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full border ${
+                                        subj.courseType === 'Laboratory'
+                                          ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                          : subj.courseType === 'Theory cum Laboratory'
+                                          ? 'bg-teal-50 text-teal-700 border-teal-200'
+                                          : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                      }`}>
+                                        {subj.courseType || 'Theory'}
+                                      </span>
+                                    </div>
+                                    <span className="font-bold text-slate-900 block text-xs tracking-tight">
+                                      {subj.name}
+                                    </span>
+                                  </div>
                                 )}
                               </td>
-                              <td className="py-3 px-4 text-center">
-                                <input
-                                  type="number"
-                                  step="0.5"
-                                  min="0.5"
-                                  max="20"
-                                  value={subj.credits}
-                                  onChange={(e) => handleUpdateSubject(subj.id, 'credits', parseFloat(e.target.value) || 0)}
-                                  className="w-16 p-1.5 rounded-lg border border-slate-200 text-center font-bold text-slate-800 bg-slate-50"
-                                />
+                              <td className="py-3.5 px-3 text-center">
+                                <div className="inline-flex items-center justify-center p-1 rounded-xl bg-slate-50 border border-slate-200">
+                                  <input
+                                    type="number"
+                                    step="0.5"
+                                    min="0.5"
+                                    max="20"
+                                    value={subj.credits}
+                                    onChange={(e) => handleUpdateSubject(subj.id, 'credits', parseFloat(e.target.value) || 0)}
+                                    className="w-14 text-center font-black text-slate-800 bg-transparent text-xs outline-none"
+                                  />
+                                </div>
                               </td>
-                              <td className="py-3 px-4 text-center">
-                                <select
-                                  value={subj.grade}
-                                  onChange={(e) => handleUpdateSubject(subj.id, 'grade', e.target.value)}
-                                  className={`w-full p-1.5 rounded-lg border font-bold text-xs bg-white transition-colors ${
-                                    subj.grade ? 'border-blue-300 text-blue-700 bg-blue-50/30' : 'border-slate-200 text-slate-400'
-                                  }`}
-                                >
-                                  <option value="">— Select Grade —</option>
-                                  {gradeOptions.map((opt) => (
-                                    <option key={opt.grade} value={opt.grade} className="text-slate-800 font-medium">
-                                      {opt.label}
-                                    </option>
-                                  ))}
-                                </select>
+                              <td className="py-3.5 px-4 text-center">
+                                <div className="relative">
+                                  <select
+                                    value={subj.grade}
+                                    onChange={(e) => handleUpdateSubject(subj.id, 'grade', e.target.value)}
+                                    className={`w-full p-2 rounded-xl border font-bold text-xs transition-all cursor-pointer shadow-2xs ${
+                                      subj.grade
+                                        ? isTop
+                                          ? 'border-emerald-300 text-emerald-800 bg-emerald-50/60 ring-1 ring-emerald-300'
+                                          : isPassing
+                                          ? 'border-blue-300 text-blue-800 bg-blue-50/60 ring-1 ring-blue-300'
+                                          : 'border-red-300 text-red-800 bg-red-50/60 ring-1 ring-red-300'
+                                        : 'border-slate-200 text-slate-400 bg-white hover:border-slate-300'
+                                    }`}
+                                  >
+                                    <option value="">— Select Grade —</option>
+                                    {gradeOptions.map((opt) => (
+                                      <option key={opt.grade} value={opt.grade} className="text-slate-800 font-medium">
+                                        {opt.label}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
                               </td>
-                              <td className="py-3 px-4 text-center font-mono font-bold text-slate-800 text-sm">
-                                {ciGi !== null ? ciGi : <span className="text-slate-300 font-normal">—</span>}
+                              <td className="py-3.5 px-4 text-center">
+                                {hasGrade && ciGi !== null ? (
+                                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 text-blue-900 font-mono font-black text-xs shadow-xs">
+                                    <Sparkles className="w-3 h-3 text-amber-500 shrink-0" />
+                                    <span>{ciGi.toFixed(1)} Pts</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-slate-300 font-mono text-xs">—</span>
+                                )}
                               </td>
-                              <td className="py-3 px-3 text-center">
+                              <td className="py-3.5 px-3 text-center">
                                 <button
                                   onClick={() => handleRemoveSubject(subj.id)}
-                                  className="p-1 rounded-lg text-slate-300 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                                  className="p-1.5 rounded-lg text-slate-300 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                                   title="Remove Course"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -953,18 +1061,31 @@ export default function GPACalculatorMarksheetView({
                         })
                       )}
 
-                      {/* Total Row */}
+                      {/* Luxury Total Summary Row */}
                       {subjects.length > 0 && (
-                        <tr className="bg-slate-100/80 font-bold text-slate-900 border-t-2 border-slate-300">
-                          <td className="py-3 px-4 font-black uppercase text-xs">Total</td>
-                          <td className="py-3 px-4 text-center font-black text-sm font-mono text-blue-700">
-                            {currentSemesterCredits}
+                        <tr className="bg-gradient-to-r from-slate-100 via-blue-50/50 to-slate-100 font-black text-slate-900 border-t-2 border-slate-300">
+                          <td className="py-3.5 px-4 font-black uppercase text-xs tracking-wider flex items-center gap-2">
+                            <Award className="w-4 h-4 text-blue-700" />
+                            <span>Semester Workload Total</span>
                           </td>
-                          <td className="py-3 px-4 text-center text-slate-400 text-[11px]">—</td>
-                          <td className="py-3 px-4 text-center font-black text-sm font-mono text-blue-700">
-                            {hasAnyGrade ? totalWeightedPoints : '—'}
+                          <td className="py-3.5 px-3 text-center">
+                            <span className="inline-block px-2.5 py-1 rounded-lg bg-blue-100/80 text-blue-800 font-black font-mono text-xs border border-blue-200">
+                              {currentSemesterCredits} Credits
+                            </span>
                           </td>
-                          <td className="py-3 px-3"></td>
+                          <td className="py-3.5 px-4 text-center text-slate-400 text-[11px] font-medium font-sans">
+                            {gradedCoursesCount} / {totalCoursesCount} Evaluated
+                          </td>
+                          <td className="py-3.5 px-4 text-center">
+                            {hasAnyGrade ? (
+                              <span className="inline-block px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-black font-mono text-xs shadow-sm">
+                                {totalWeightedPoints} Points
+                              </span>
+                            ) : (
+                              <span className="text-slate-300 font-mono">—</span>
+                            )}
+                          </td>
+                          <td className="py-3.5 px-3"></td>
                         </tr>
                       )}
                     </tbody>
@@ -973,28 +1094,28 @@ export default function GPACalculatorMarksheetView({
 
                 {/* Step-by-Step Fraction Display */}
                 {hasAnyGrade ? (
-                  <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200 flex flex-col sm:flex-row items-center justify-between gap-4 font-serif">
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50/80 via-white to-blue-50/80 border border-blue-200 flex flex-col sm:flex-row items-center justify-between gap-4 font-serif shadow-xs">
                     <div className="flex items-center gap-3">
                       <span className="font-bold text-slate-800 text-sm">Calculation:</span>
                       <span className="font-bold text-base text-slate-900">SGPA =</span>
                       <div className="inline-flex flex-col items-center text-sm font-bold">
-                        <span className="border-b-2 border-slate-800 px-3 pb-0.5 text-blue-800">{totalWeightedPoints}</span>
-                        <span className="pt-0.5 text-slate-800">{gradedSemesterCredits}</span>
+                        <span className="border-b-2 border-slate-800 px-3 pb-0.5 text-blue-800 font-mono">{totalWeightedPoints}</span>
+                        <span className="pt-0.5 text-slate-800 font-mono">{gradedSemesterCredits}</span>
                       </div>
                       <span className="font-bold text-base text-slate-900">=</span>
-                      <span className="text-xl font-black text-blue-800">{calculatedSemesterGPA.toFixed(2)}</span>
+                      <span className="text-2xl font-black text-blue-800 font-mono">{calculatedSemesterGPA.toFixed(2)}</span>
                     </div>
 
-                    <div className="font-sans">
+                    <div className="font-sans text-right">
                       <span className="text-xs text-slate-500 font-bold block">
-                        {gradedCoursesCount === totalCoursesCount ? 'Final Semester Result:' : `Interim Result (${gradedCoursesCount}/${totalCoursesCount} Graded):`}
+                        {gradedCoursesCount === totalCoursesCount ? 'Final Semester Score:' : `Interim Score (${gradedCoursesCount}/${totalCoursesCount} Graded):`}
                       </span>
-                      <strong className="text-base font-black text-blue-900">SGPA = {calculatedSemesterGPA.toFixed(2)}</strong>
+                      <strong className="text-base font-black text-blue-900 font-mono">SGPA = {calculatedSemesterGPA.toFixed(2)} / 10.00</strong>
                     </div>
                   </div>
                 ) : (
                   <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-center text-xs text-slate-500 font-medium">
-                    Select your course grade in the table above to compute your real SGPA.
+                    Select your course grades in the curriculum table above to compute your real SGPA score.
                   </div>
                 )}
 
@@ -1041,39 +1162,88 @@ export default function GPACalculatorMarksheetView({
               </div>
             </div>
 
-            {/* Right Summary Card */}
+            {/* Right Summary Card (Ultra-Luxury Prestige Dossier) */}
             <div className="lg:col-span-4 space-y-6">
-              <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-6 text-white shadow-xl space-y-4">
-                <span className="text-[10px] uppercase font-bold tracking-widest text-cyan-200 block">
-                  SEMESTER SGPA
-                </span>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-5xl font-black">{hasAnyGrade ? calculatedSemesterGPA.toFixed(2) : '—'}</span>
-                  <span className="text-lg font-bold text-cyan-200">/ 10.0</span>
+              <div className="bg-gradient-to-br from-[#071A3D] via-[#0E2C66] to-[#1455D9] rounded-3xl p-6 text-white shadow-2xl space-y-5 border-2 border-[#F4C430]/40 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-amber-400/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none" />
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-black tracking-widest text-[#F4C430] flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[#F4C430]" />
+                    <span>SEMESTER SGPA AUDIT</span>
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-cyan-200 border border-white/20">
+                    Sem {selectedSemester}
+                  </span>
                 </div>
 
-                <div className="space-y-2 pt-3 border-t border-white/20 text-xs text-cyan-100">
-                  <div className="flex justify-between">
-                    <span>Total Registered Credits (&sum;C<sub>i</sub>):</span>
-                    <strong className="text-white font-mono">{currentSemesterCredits} Credits</strong>
+                <div className="flex items-baseline justify-between pt-1">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-5xl font-black font-mono tracking-tight text-white drop-shadow-sm">
+                      {hasAnyGrade ? calculatedSemesterGPA.toFixed(2) : '—'}
+                    </span>
+                    <span className="text-lg font-bold text-cyan-200">/ 10.0</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Total Credit-Points (&sum;C<sub>i</sub>G<sub>i</sub>):</span>
-                    <strong className="text-white font-mono">{hasAnyGrade ? `${totalWeightedPoints} Points` : '—'}</strong>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Academic Honors:</span>
-                    <strong className="text-white font-bold">
+
+                  {hasAnyGrade && (
+                    <div className="text-right">
+                      <span className="text-[10px] text-cyan-200 block uppercase font-bold">Equivalent</span>
+                      <span className="text-lg font-black font-mono text-[#F4C430]">
+                        {((calculatedSemesterGPA - 0.5) * 10).toFixed(1)}%
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Academic Standing Laurel Ribbon */}
+                <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-xs space-y-1">
+                  <span className="text-[10px] text-cyan-200 font-bold uppercase block tracking-wider">
+                    Official Classification:
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Award className="w-4 h-4 text-[#F4C430] shrink-0" />
+                    <strong className="text-white font-black text-xs tracking-tight">
                       {!hasAnyGrade
                         ? 'Awaiting Grade Input'
                         : calculatedSemesterGPA >= 8.5
-                        ? 'First Class with Distinction'
+                        ? 'FIRST CLASS WITH DISTINCTION'
                         : calculatedSemesterGPA >= 6.5
-                        ? 'First Class'
-                        : 'Second Class'}
+                        ? 'FIRST CLASS'
+                        : calculatedSemesterGPA >= 5.0
+                        ? 'SECOND CLASS'
+                        : 'RE-APPEAR REQUIRED'}
                     </strong>
                   </div>
                 </div>
+
+                {/* Executive Metric Matrix */}
+                <div className="space-y-2 pt-2 border-t border-white/15 text-xs text-cyan-100">
+                  <div className="flex justify-between items-center py-1 border-b border-white/10">
+                    <span>Registered Credits (&sum;C<sub>i</sub>):</span>
+                    <strong className="text-white font-mono font-bold text-sm">{currentSemesterCredits} Credits</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-white/10">
+                    <span>Credit-Points (&sum;C<sub>i</sub>G<sub>i</sub>):</span>
+                    <strong className="text-[#F4C430] font-mono font-bold text-sm">
+                      {hasAnyGrade ? `${totalWeightedPoints} Points` : '—'}
+                    </strong>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span>Grading Standard:</span>
+                    <strong className="text-white font-semibold">
+                      {gradingSystem === 'absolute_ii_year' ? 'Absolute (II Year)' : 'Relative (III/IV Year)'}
+                    </strong>
+                  </div>
+                </div>
+
+                {/* Action button inside card */}
+                <button
+                  onClick={handleDownloadSemesterMarksheetPDF}
+                  className="w-full py-2.5 rounded-xl bg-[#F4C430] hover:bg-[#e0b028] text-[#071A3D] font-extrabold text-xs transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Download Verified Marksheet PDF</span>
+                </button>
               </div>
 
               {/* Grading Reference */}
@@ -1182,15 +1352,15 @@ export default function GPACalculatorMarksheetView({
                   </span>
                 </div>
 
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-slate-200 text-slate-500 font-bold bg-slate-50">
-                        <th className="py-3 px-4">Semester</th>
-                        <th className="py-3 px-4 text-center w-32">Credits (Admin Courses)</th>
-                        <th className="py-3 px-4 text-center w-32">SGPA</th>
-                        <th className="py-3 px-4 text-center w-36 font-mono">Credits &times; SGPA</th>
-                        <th className="py-3 px-3 text-center w-24">Status</th>
+                      <tr className="bg-gradient-to-r from-[#071A3D] via-[#064E3B] to-[#047857] text-white font-black text-[11px] tracking-wider uppercase border-b-2 border-emerald-400">
+                        <th className="py-3.5 px-4">Academic Semester</th>
+                        <th className="py-3.5 px-3 text-center w-32">Credits (∑C<sub>s</sub>)</th>
+                        <th className="py-3.5 px-3 text-center w-32">Semester GPA (SGPA)</th>
+                        <th className="py-3.5 px-4 text-center w-36 font-mono">Weighted (C<sub>s</sub> &times; SGPA)</th>
+                        <th className="py-3.5 px-3 text-center w-28">Evaluation Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -1203,29 +1373,40 @@ export default function GPACalculatorMarksheetView({
                         const creditsTimesSGPA = isEntered ? parseFloat((data.credits * data.gpa).toFixed(2)) : 0
 
                         return (
-                          <tr key={sem} className={isEntered ? 'hover:bg-slate-50/70' : 'bg-slate-50/30'}>
-                            <td className="py-3 px-4">
-                              <span className="font-bold text-slate-800 text-sm">Semester {roman}</span>
-                              <span className="text-slate-400 text-[10px] block">
-                                {semSubs.length > 0 ? `${semSubs.length} Admin Courses` : `Sem ${sem}`}
-                              </span>
+                          <tr key={sem} className={isEntered ? 'hover:bg-emerald-50/40 transition-colors' : 'bg-slate-50/40 hover:bg-slate-50 transition-colors'}>
+                            <td className="py-3.5 px-4">
+                              <div className="flex items-center gap-2.5">
+                                <span className="font-mono text-xs font-black px-2 py-0.5 rounded-md bg-[#071A3D] text-[#F4C430] border border-blue-900 shadow-2xs">
+                                  SEM {roman}
+                                </span>
+                                <div>
+                                  <span className="font-bold text-slate-900 block text-xs">
+                                    Semester {sem} (Year {Math.ceil(sem / 2)})
+                                  </span>
+                                  <span className="text-slate-400 text-[10px]">
+                                    {semSubs.length > 0 ? `${semSubs.length} Curricular Courses` : 'Autonomous Course Ledger'}
+                                  </span>
+                                </div>
+                              </div>
                             </td>
-                            <td className="py-3 px-4 text-center">
-                              <input
-                                type="number"
-                                step="0.5"
-                                value={data.credits}
-                                onChange={(e) => {
-                                  const val = parseFloat(e.target.value) || 0
-                                  setSemesterGPAs(prev => ({
-                                    ...prev,
-                                    [sem]: { ...prev[sem], credits: val }
-                                  }))
-                                }}
-                                className="w-16 p-1.5 rounded-lg border border-slate-200 text-center font-bold text-slate-800 bg-slate-50"
-                              />
+                            <td className="py-3.5 px-3 text-center">
+                              <div className="inline-flex items-center justify-center p-1 rounded-xl bg-slate-50 border border-slate-200">
+                                <input
+                                  type="number"
+                                  step="0.5"
+                                  value={data.credits}
+                                  onChange={(e) => {
+                                    const val = parseFloat(e.target.value) || 0
+                                    setSemesterGPAs(prev => ({
+                                      ...prev,
+                                      [sem]: { ...prev[sem], credits: val }
+                                    }))
+                                  }}
+                                  className="w-14 text-center font-black text-slate-800 bg-transparent text-xs outline-none"
+                                />
+                              </div>
                             </td>
-                            <td className="py-3 px-4 text-center">
+                            <td className="py-3.5 px-3 text-center">
                               <input
                                 type="number"
                                 step="0.01"
@@ -1240,21 +1421,28 @@ export default function GPACalculatorMarksheetView({
                                     [sem]: { ...prev[sem], gpa: val }
                                   }))
                                 }}
-                                className={`w-20 p-1.5 text-center font-black rounded-lg text-sm border ${
-                                  isEntered ? 'border-emerald-300 bg-emerald-50/30 text-emerald-800' : 'border-slate-200 text-slate-600'
+                                className={`w-20 p-2 text-center font-mono font-black rounded-xl text-xs border transition-all shadow-2xs ${
+                                  isEntered ? 'border-emerald-300 bg-emerald-50/70 text-emerald-800 ring-1 ring-emerald-300' : 'border-slate-200 text-slate-600 bg-white hover:border-slate-300'
                                 }`}
                               />
                             </td>
-                            <td className="py-3 px-4 text-center font-mono font-bold text-slate-800 text-sm">
-                              {isEntered ? creditsTimesSGPA.toFixed(2) : '—'}
-                            </td>
-                            <td className="py-3 px-3 text-center">
+                            <td className="py-3.5 px-4 text-center">
                               {isEntered ? (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                                  Done
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 font-mono font-black text-xs border border-emerald-200 shadow-xs">
+                                  {creditsTimesSGPA.toFixed(2)} Pts
                                 </span>
                               ) : (
-                                <span className="text-[10px] font-medium text-slate-400">
+                                <span className="text-slate-300 font-mono text-xs">—</span>
+                              )}
+                            </td>
+                            <td className="py-3.5 px-3 text-center">
+                              {isEntered ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                  Recorded
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-medium text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">
                                   Pending
                                 </span>
                               )}
@@ -1264,16 +1452,23 @@ export default function GPACalculatorMarksheetView({
                       })}
 
                       {/* Total Row */}
-                      <tr className="bg-emerald-50/70 font-bold text-slate-900 border-t-2 border-emerald-300">
-                        <td className="py-3 px-4 font-black uppercase text-xs">Total</td>
-                        <td className="py-3 px-4 text-center font-black text-sm font-mono text-emerald-800">
-                          {completedCredits}
+                      <tr className="bg-gradient-to-r from-emerald-100/90 via-emerald-50/70 to-emerald-100/90 font-black text-slate-900 border-t-2 border-emerald-400">
+                        <td className="py-3.5 px-4 font-black uppercase text-xs tracking-wider flex items-center gap-2">
+                          <Award className="w-4 h-4 text-emerald-700" />
+                          <span>Cumulative Academic Total</span>
                         </td>
-                        <td className="py-3 px-4 text-center text-slate-400 text-[11px]">—</td>
-                        <td className="py-3 px-4 text-center font-black text-sm font-mono text-emerald-800">
-                          {totalCreditPointsCGPA.toFixed(2)}
+                        <td className="py-3.5 px-3 text-center">
+                          <span className="inline-block px-2.5 py-1 rounded-lg bg-emerald-200/80 text-emerald-900 font-black font-mono text-xs border border-emerald-300">
+                            {completedCredits} Credits
+                          </span>
                         </td>
-                        <td className="py-3 px-3"></td>
+                        <td className="py-3.5 px-3 text-center text-slate-400 text-[11px] font-sans font-medium">—</td>
+                        <td className="py-3.5 px-4 text-center">
+                          <span className="inline-block px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-black font-mono text-xs shadow-sm">
+                            {totalCreditPointsCGPA.toFixed(2)} Points
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-3"></td>
                       </tr>
                     </tbody>
                   </table>
@@ -1958,49 +2153,49 @@ export default function GPACalculatorMarksheetView({
               {marksheets.map((ms) => (
                 <div
                   key={ms.semester}
-                  className="bg-slate-50 rounded-2xl p-5 border border-slate-200 hover:border-purple-300 transition-all space-y-4"
+                  className="bg-gradient-to-br from-white via-slate-50/90 to-purple-50/40 rounded-3xl p-6 border-2 border-purple-200/80 hover:border-purple-400 shadow-md hover:shadow-xl transition-all space-y-4 relative overflow-hidden group"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-sm shrink-0">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#071A3D] to-purple-900 text-[#F4C430] flex items-center justify-center font-black text-sm border border-purple-400/30 shadow-md shrink-0">
                         S{ms.semester}
                       </div>
                       <div>
-                        <h4 className="font-bold text-slate-900 text-sm">
+                        <h4 className="font-black text-slate-900 text-sm tracking-tight">
                           Semester {ms.semester} Official Grade Sheet
                         </h4>
-                        <p className="text-[11px] text-slate-500">{ms.academicYear} • {ms.totalCredits} Credits</p>
+                        <p className="text-[11px] text-slate-500 font-medium">{ms.academicYear} · {ms.totalCredits} Registered Credits</p>
                       </div>
                     </div>
 
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-700 shrink-0">
-                      <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                      VERIFIED
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-[10px] font-black text-emerald-800 shadow-2xs shrink-0">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                      E-VERIFIED
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-100 text-xs">
+                  <div className="grid grid-cols-3 gap-2 bg-white/95 p-3.5 rounded-2xl border border-slate-200/80 text-xs shadow-2xs">
                     <div>
-                      <span className="text-slate-400 block text-[10px] uppercase font-semibold">Semester GPA</span>
-                      <strong className="text-slate-800 text-base font-black">{ms.gpa.toFixed(2)}</strong>
+                      <span className="text-slate-400 block text-[9px] uppercase font-bold tracking-wider">Semester SGPA</span>
+                      <strong className="text-blue-900 text-base font-black font-mono">{ms.gpa.toFixed(2)}</strong>
                     </div>
                     <div>
-                      <span className="text-slate-400 block text-[10px] uppercase font-semibold">Result</span>
-                      <strong className="text-emerald-700 font-bold">{ms.result}</strong>
+                      <span className="text-slate-400 block text-[9px] uppercase font-bold tracking-wider">Standing</span>
+                      <strong className="text-emerald-700 font-bold text-xs">{ms.result}</strong>
                     </div>
                     <div>
-                      <span className="text-slate-400 block text-[10px] uppercase font-semibold">File</span>
-                      <span className="font-mono text-slate-600 truncate max-w-[120px] block">{ms.fileName}</span>
+                      <span className="text-slate-400 block text-[9px] uppercase font-bold tracking-wider">File Ledger</span>
+                      <span className="font-mono text-slate-600 font-medium truncate max-w-[110px] block text-[11px]">{ms.fileName}</span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between pt-1">
                     <span className="text-[11px] text-slate-400 font-mono">
-                      Uploaded on {ms.dateUploaded}
+                      Timestamp: {ms.dateUploaded}
                     </span>
                     <button
                       onClick={() => toast.success(`Viewing ${ms.fileName}...`, { icon: '📄' })}
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-purple-700 hover:text-purple-800 cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-xs font-bold text-purple-700 border border-purple-200 transition-colors cursor-pointer shadow-2xs"
                     >
                       <Download className="w-3.5 h-3.5" />
                       <span>Download PDF</span>

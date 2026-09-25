@@ -340,9 +340,67 @@ export async function POST(request: Request) {
 
       await prisma.oDProof.delete({ where: { id } })
 
+      // Create permanent audit log so odSync will never resurrect it
+      await prisma.auditLog.create({
+        data: {
+          userName: session.name || 'Student / Admin',
+          action: 'od_proof_deleted',
+          module: 'attendance_portal',
+          details: `OD Proof deleted permanently [ID: ${id} | ReqId: ${existing.odRequestId || 'N/A'} | Date: ${existing.eventDate}] for ${existing.studentName} (${existing.registerNumber}). Event: ${existing.eventName}`,
+          status: 'success',
+        },
+      }).catch(() => {})
+
+      invalidateCache('od_proofs')
+      invalidateCache('attendance')
+      invalidateCache('student_data')
+      const regUpper = existing.registerNumber.toUpperCase()
+      invalidateCache(`sync_sanctioned_ods_${regUpper}`)
+      invalidateCache(`student_proofs_${regUpper}_ALL`)
+
       return NextResponse.json({
         success: true,
         message: `OD Event "${existing.eventName}" removed successfully.`,
+      })
+    }
+
+    // 1d. DELETE ALL OD EVENTS FOR STUDENT
+    if (action === 'DELETE_ALL_OD') {
+      const activeRegNo = (session.registerNumber || '').trim().toUpperCase()
+      if (session.role === 'student' && !activeRegNo) {
+        return NextResponse.json({ success: false, message: 'Student register number missing' }, { status: 400 })
+      }
+
+      const whereClause: any = session.role === 'student'
+        ? { registerNumber: activeRegNo }
+        : {}
+
+      const proofsToDelete = await prisma.oDProof.findMany({ where: whereClause })
+      for (const p of proofsToDelete) {
+        await prisma.auditLog.create({
+          data: {
+            userName: session.name || 'Student / Admin',
+            action: 'od_proof_deleted',
+            module: 'attendance_portal',
+            details: `OD Proof deleted permanently [ID: ${p.id} | ReqId: ${p.odRequestId || 'N/A'} | Date: ${p.eventDate}] for ${p.studentName} (${p.registerNumber}). Event: ${p.eventName}`,
+            status: 'success',
+          },
+        }).catch(() => {})
+      }
+
+      await prisma.oDProof.deleteMany({ where: whereClause })
+
+      invalidateCache('od_proofs')
+      invalidateCache('attendance')
+      invalidateCache('student_data')
+      if (activeRegNo) {
+        invalidateCache(`sync_sanctioned_ods_${activeRegNo}`)
+        invalidateCache(`student_proofs_${activeRegNo}_ALL`)
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `Successfully deleted all ${proofsToDelete.length} OD records.`,
       })
     }
 
@@ -789,6 +847,49 @@ export async function DELETE(request: Request) {
 
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
+    const deleteAll = searchParams.get('all') === 'true'
+    const activeRegNo = (session.registerNumber || '').trim().toUpperCase()
+
+    // 1. Bulk Delete All for student
+    if (deleteAll) {
+      if (session.role === 'student' && !activeRegNo) {
+        return NextResponse.json({ success: false, message: 'Student register number missing' }, { status: 400 })
+      }
+
+      const whereClause: any = session.role === 'student'
+        ? { registerNumber: activeRegNo }
+        : {}
+
+      const proofsToDelete = await prisma.oDProof.findMany({ where: whereClause })
+      for (const p of proofsToDelete) {
+        await prisma.auditLog.create({
+          data: {
+            userName: session.name || 'Student / Admin',
+            action: 'od_proof_deleted',
+            module: 'attendance_portal',
+            details: `OD Proof deleted permanently [ID: ${p.id} | ReqId: ${p.odRequestId || 'N/A'} | Date: ${p.eventDate}] for ${p.studentName} (${p.registerNumber}). Event: ${p.eventName}`,
+            status: 'success',
+          },
+        }).catch(() => {})
+      }
+
+      await prisma.oDProof.deleteMany({ where: whereClause })
+
+      invalidateCache('od_proofs')
+      invalidateCache('attendance')
+      invalidateCache('student_data')
+      if (activeRegNo) {
+        invalidateCache(`sync_sanctioned_ods_${activeRegNo}`)
+        invalidateCache(`student_proofs_${activeRegNo}_ALL`)
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `Successfully deleted all ${proofsToDelete.length} OD records.`,
+      })
+    }
+
+    // 2. Single Proof Delete
     if (!id) {
       return NextResponse.json({ success: false, message: 'Proof ID required' }, { status: 400 })
     }
@@ -809,7 +910,7 @@ export async function DELETE(request: Request) {
         userName: session.name || 'Student / Admin',
         action: 'od_proof_deleted',
         module: 'attendance_portal',
-        details: `Deleted OD Proof record ${id} for ${deleted.studentName} (${deleted.registerNumber}). Event: ${deleted.eventName}`,
+        details: `OD Proof deleted permanently [ID: ${id} | ReqId: ${deleted.odRequestId || 'N/A'} | Date: ${deleted.eventDate}] for ${deleted.studentName} (${deleted.registerNumber}). Event: ${deleted.eventName}`,
         status: 'success',
       },
     }).catch(() => {})
@@ -817,6 +918,9 @@ export async function DELETE(request: Request) {
     invalidateCache('od_proofs')
     invalidateCache('attendance')
     invalidateCache('student_data')
+    const regUpper = deleted.registerNumber.toUpperCase()
+    invalidateCache(`sync_sanctioned_ods_${regUpper}`)
+    invalidateCache(`student_proofs_${regUpper}_ALL`)
 
     return NextResponse.json({
       success: true,

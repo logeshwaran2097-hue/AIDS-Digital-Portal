@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect } from 'react'
+import Image from 'next/image'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/portal/states'
@@ -22,9 +23,15 @@ import {
   Eye,
   X,
   CheckCircle2,
+  ShieldCheck,
+  FileBadge,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import {
+  generateAndDownloadPDF,
+  downloadWithDeptHeader,
+  generateCoverPageDataUri,
+} from '@/lib/pdfGenerator'
 import { StudyNavigationHeader } from '@/components/study/StudyNavigationHeader'
 import {
   getFastDocumentUrl,
@@ -61,6 +68,7 @@ export function StudentResourcesView({ resources }: { resources: ResourceItem[] 
   const [selectedType, setSelectedType] = useState('ALL')
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [previewItem, setPreviewItem] = useState<{ item: ResourceItem; url: string } | null>(null)
+  const [previewMode, setPreviewMode] = useState<'doc' | 'cover'>('doc')
 
   // Background prefetch document URLs so downloads are instantaneous
   useEffect(() => {
@@ -97,7 +105,54 @@ export function StudentResourcesView({ resources }: { resources: ResourceItem[] 
     return groups
   }, [filtered])
 
-  // Fast document downloading with instant streaming
+  // Download with official VSB institutional letterhead cover prepended
+  const handleDownloadWithHeader = async (item: ResourceItem) => {
+    setDownloadingId(item.id)
+    toast.loading('Compiling with official V.S.B. letterhead...', { id: 'hdr_dl' })
+    try {
+      let finalFileUrl = item.fileUrl
+      if (!finalFileUrl) {
+        finalFileUrl = (await getFastDocumentUrl(item.id)) || ''
+      }
+
+      if (finalFileUrl && (finalFileUrl.startsWith('/uploads/') || finalFileUrl.startsWith('data:') || finalFileUrl.startsWith('http') || finalFileUrl.startsWith('blob:'))) {
+        await downloadWithDeptHeader({
+          fileUrl: finalFileUrl,
+          fileName: item.fileName,
+          title: item.name,
+          resourceType: item.resourceType,
+          uploadedByName: item.uploadedByName || 'Department Faculty',
+          semester: item.semester,
+          subjectCode: item.subject?.code,
+          subjectName: item.subject?.name,
+          academicYear: item.academicYear,
+          description: item.description || undefined,
+        })
+        toast.success(`Downloaded ${item.fileName} with official header`, { id: 'hdr_dl' })
+        return
+      }
+
+      // Fallback PDF generation
+      generateAndDownloadPDF({
+        title: item.name,
+        subtitle: `V.S.B. Engineering College · Department of AI & DS · ${item.resourceType.replace(/_/g, ' ')}`,
+        subjectCode: item.subject?.code || 'AI&DS',
+        author: item.uploadedByName || 'V.S.B. Department Faculty',
+        category: item.resourceType.replace(/_/g, ' '),
+        content: `OFFICIAL STUDY RESOURCE OVERVIEW & CURRICULAR MAPPING\n\nInstitution: V.S.B. Engineering College (Autonomous)\nDepartment: Artificial Intelligence & Data Science\nCourse: ${item.subject ? `${item.subject.code} - ${item.subject.name}` : item.name}\nRegulation: Autonomous R-2021\nSemester: ${item.semester || 'All Semesters'}\nResource Type: ${item.resourceType.replace(/_/g, ' ')}\nAuthorized Faculty: ${item.uploadedByName || 'Department Faculty'}\n\nABSTRACT & SYLLABUS HIGHLIGHTS:\n${item.description || 'Comprehensive curriculum study material and reference textbook guide.'}\n\nINCLUSIONS:\n• Unitwise analytical derivations and solved university past question reviews\n• Algorithm benchmarks, pseudo-codes, and data science model architectures\n• Autonomous continuous assessment and semester end examination guidelines`,
+        fileName: item.fileName.replace(/\.pdf$/i, ''),
+      })
+      toast.success(`Generated official PDF with header: ${item.fileName}`, { id: 'hdr_dl' })
+    } catch (err) {
+      console.error('Download with header error:', err)
+      toast.error('Failed to attach header, downloading direct file...', { id: 'hdr_dl' })
+      instantDirectDownload(item.fileUrl, item.fileName)
+    } finally {
+      setDownloadingId(null)
+    }
+  }
+
+  // Fast document downloading with instant streaming (Original raw file)
   const handleFastDownload = async (item: ResourceItem) => {
     setDownloadingId(item.id)
     try {
@@ -134,12 +189,12 @@ export function StudentResourcesView({ resources }: { resources: ResourceItem[] 
   // Fast preview modal opener
   const handleQuickPreview = async (item: ResourceItem) => {
     setDownloadingId(item.id)
+    setPreviewMode('doc')
     try {
       let url = item.fileUrl || (await getFastDocumentUrl(item.id))
       if (url) {
         setPreviewItem({ item, url })
       } else {
-        // Generate on-the-fly and preview
         handleFastDownload(item)
       }
     } catch {
@@ -261,19 +316,19 @@ export function StudentResourcesView({ resources }: { resources: ResourceItem[] 
                               onClick={() => handleQuickPreview(item)}
                               disabled={downloadingId === item.id}
                               className="px-2.5 py-1.5 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                              title="Quick in-portal document preview"
+                              title="Preview with official V.S.B. header"
                             >
                               <Eye className="w-3.5 h-3.5 text-[#1455D9]" /> Preview
                             </button>
                             <button
                               type="button"
-                              onClick={() => handleFastDownload(item)}
+                              onClick={() => handleDownloadWithHeader(item)}
                               disabled={downloadingId === item.id}
-                              className="px-3 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
-                              title="Instant stream & fast download"
+                              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#1455D9] to-[#071A3D] hover:from-[#0e44b5] hover:to-[#051430] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                              title="Download with official V.S.B. Department Header"
                             >
-                              <Zap className="w-3.5 h-3.5 text-amber-300" />
-                              <span>{downloadingId === item.id ? 'Fetching...' : 'Download'}</span>
+                              <ShieldCheck className="w-3.5 h-3.5 text-[#F4C430]" />
+                              <span>{downloadingId === item.id ? 'Attaching...' : 'Download'}</span>
                             </button>
                           </div>
                         </div>
@@ -287,50 +342,177 @@ export function StudentResourcesView({ resources }: { resources: ResourceItem[] 
         </div>
       )}
 
-      {/* Fast Document Preview Modal */}
+      {/* Official Institutional Preview Modal with V.S.B. Academic Header */}
       {previewItem && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-fade-in">
-          <div className="bg-white rounded-3xl w-full max-w-4xl h-[85vh] flex flex-col shadow-2xl overflow-hidden border border-gray-200">
-            <div className="p-4 bg-gradient-to-r from-[#071A3D] to-[#1455D9] text-white flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <span className="text-[10px] font-bold text-cyan-300 uppercase tracking-wider block">
-                  Quick Document Preview · Fast Fetch
-                </span>
-                <h3 className="font-black text-sm sm:text-base truncate text-white">{previewItem.item.name}</h3>
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6 animate-fade-in">
+          <div className="bg-white rounded-3xl w-full max-w-5xl h-[92vh] flex flex-col shadow-2xl overflow-hidden border border-gray-200">
+            {/* ── Official Institutional Letterhead Header ────────────────────── */}
+            <div className="bg-gradient-to-r from-[#071A3D] via-[#0D2860] to-[#1455D9] text-white p-4 sm:p-5 border-b border-[#F4C430]/30 shadow-lg shrink-0">
+              {/* Row 1: College Emblem + College Name + Autonomous Badge + Actions */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white p-1 shadow-md border-2 border-[#F4C430] shrink-0 flex items-center justify-center">
+                    <Image
+                      src="/app-logo.png"
+                      alt="V.S.B. Crest"
+                      width={44}
+                      height={44}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-base sm:text-lg font-black tracking-tight text-white drop-shadow-xs">
+                        V.S.B. ENGINEERING COLLEGE
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-[#F4C430] text-[#071A3D] tracking-wider uppercase shadow-xs">
+                        Autonomous
+                      </span>
+                    </div>
+                    <p className="text-xs font-bold text-cyan-200 tracking-wide uppercase">
+                      Department of Artificial Intelligence &amp; Data Science
+                    </p>
+                    <p className="text-[10px] text-blue-200/80 hidden sm:block">
+                      Approved by AICTE · Affiliated to Anna University, Chennai · NAAC &apos;A&apos; Grade &amp; NBA Accredited
+                    </p>
+                  </div>
+                </div>
+
+                {/* Controls: Dual Downloads + External Link + Close */}
+                <div className="flex items-center gap-2 self-end md:self-center flex-wrap">
+                  <button
+                    onClick={() => handleDownloadWithHeader(previewItem.item)}
+                    disabled={downloadingId === previewItem.item.id}
+                    className="px-3.5 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-[#F4C430] to-[#E0B028] hover:from-[#e0b028] hover:to-[#cca022] text-[#071A3D] text-xs font-black flex items-center gap-1.5 shadow-md cursor-pointer transition-all hover:scale-102"
+                    title="Download official PDF with V.S.B. Department Letterhead cover"
+                  >
+                    <ShieldCheck className="w-4 h-4 text-[#071A3D]" />
+                    <span>{downloadingId === previewItem.item.id ? 'Attaching...' : 'Official PDF (With Header)'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleFastDownload(previewItem.item)}
+                    disabled={downloadingId === previewItem.item.id}
+                    className="px-3 py-1.5 sm:py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 border border-white/20 transition-all cursor-pointer"
+                    title="Download original uploaded file directly"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Direct File</span>
+                  </button>
+
+                  <a
+                    href={previewItem.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                    title="Open in new window"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+
+                  <button
+                    onClick={() => setPreviewItem(null)}
+                    className="p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                    title="Close preview"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleFastDownload(previewItem.item)}
-                  className="px-3 py-1.5 rounded-xl bg-[#F4C430] hover:bg-[#e0b028] text-[#071A3D] text-xs font-extrabold flex items-center gap-1.5 shadow-sm cursor-pointer"
-                >
-                  <Download className="w-3.5 h-3.5" /> Download
-                </button>
-                <button
-                  onClick={() => setPreviewItem(null)}
-                  className="p-1.5 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+
+              {/* Row 2: Document Metadata Ribbon (Subject, Code, Resource Type, Verification & View Mode) */}
+              <div className="mt-3 pt-2.5 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2 flex-wrap min-w-0">
+                  <span className="px-2.5 py-0.5 rounded-lg bg-white/10 text-cyan-200 font-bold border border-white/15 text-[11px] flex items-center gap-1.5 truncate max-w-[260px] sm:max-w-none">
+                    <BookOpen className="w-3.5 h-3.5 text-[#F4C430] shrink-0" />
+                    <span className="truncate">
+                      {previewItem.item.subject ? `${previewItem.item.subject.code} · ${previewItem.item.subject.name}` : previewItem.item.name}
+                    </span>
+                  </span>
+                  <span className="px-2 py-0.5 rounded-md bg-blue-500/25 text-blue-200 border border-blue-400/25 text-[10px] font-bold uppercase">
+                    {previewItem.item.resourceType.replace(/_/g, ' ')}
+                  </span>
+                  {previewItem.item.semester && (
+                    <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-200 border border-amber-400/20 text-[10px] font-semibold">
+                      Sem {previewItem.item.semester}
+                    </span>
+                  )}
+                  <span className="hidden lg:flex items-center gap-1 text-[11px] text-emerald-300 font-medium bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    Verified Department Resource
+                  </span>
+                </div>
+
+                {/* View Mode Switcher */}
+                <div className="flex items-center bg-black/25 p-0.5 rounded-xl border border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewMode('doc')}
+                    className={cn(
+                      'px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1',
+                      previewMode === 'doc'
+                        ? 'bg-white text-[#071A3D] shadow-xs'
+                        : 'text-white/70 hover:text-white'
+                    )}
+                  >
+                    <Eye className="w-3 h-3" />
+                    <span>Document View</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewMode('cover')}
+                    className={cn(
+                      'px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1',
+                      previewMode === 'cover'
+                        ? 'bg-[#F4C430] text-[#071A3D] shadow-xs'
+                        : 'text-white/70 hover:text-white'
+                    )}
+                  >
+                    <FileBadge className="w-3 h-3" />
+                    <span>Cover Letterhead</span>
+                  </button>
+                </div>
               </div>
             </div>
 
+            {/* Document Frame / Cover Sheet Frame */}
             <div className="flex-1 bg-slate-100 p-2 overflow-hidden flex items-center justify-center">
-              {previewItem.url ? (
-                <iframe
-                  src={previewItem.url}
-                  className="w-full h-full rounded-2xl border border-gray-200 bg-white"
-                  title={previewItem.item.name}
-                />
+              {previewMode === 'doc' ? (
+                previewItem.url ? (
+                  <iframe
+                    src={previewItem.url}
+                    className="w-full h-full rounded-2xl border border-gray-200 bg-white"
+                    title={previewItem.item.name}
+                  />
+                ) : (
+                  <div className="text-center p-8">
+                    <p className="text-xs text-gray-500 mb-3">Preview loading...</p>
+                    <button
+                      onClick={() => handleFastDownload(previewItem.item)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold text-xs"
+                    >
+                      Open Document Directly
+                    </button>
+                  </div>
+                )
               ) : (
-                <div className="text-center p-8">
-                  <p className="text-xs text-gray-500 mb-3">Preview loading...</p>
-                  <button
-                    onClick={() => handleFastDownload(previewItem.item)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold text-xs"
-                  >
-                    Open Document Directly
-                  </button>
-                </div>
+                /* Cover Page High-Definition Letterhead View */
+                <iframe
+                  src={generateCoverPageDataUri({
+                    fileUrl: previewItem.url,
+                    fileName: previewItem.item.fileName,
+                    title: previewItem.item.name,
+                    resourceType: previewItem.item.resourceType,
+                    uploadedByName: previewItem.item.uploadedByName || 'Department Faculty',
+                    semester: previewItem.item.semester,
+                    subjectCode: previewItem.item.subject?.code,
+                    subjectName: previewItem.item.subject?.name,
+                    academicYear: previewItem.item.academicYear,
+                    description: previewItem.item.description || undefined,
+                  })}
+                  className="w-full h-full rounded-2xl border border-gray-200 bg-white"
+                  title="Official Letterhead Cover"
+                />
               )}
             </div>
           </div>

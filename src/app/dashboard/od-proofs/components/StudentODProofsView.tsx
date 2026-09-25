@@ -324,6 +324,31 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
     }
   }
 
+  // 2d. DELETE ALL OD EVENTS
+  const handleDeleteAllEvents = async () => {
+    if (!confirm('Are you sure you want to permanently delete all your OD event proofs? This cannot be undone.')) {
+      return
+    }
+
+    setLoading(true)
+    try {
+      const res = await fetch('/api/od-proofs?all=true', {
+        method: 'DELETE',
+      })
+      const result = await res.json()
+      if (res.ok && result.success) {
+        toast.success(result.message || 'All OD events permanently removed.')
+        setProofs([])
+      } else {
+        toast.error(result.message || 'Failed to remove events.')
+      }
+    } catch {
+      toast.error('Network error removing events.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // 3. SUBMIT GEOTAG PHOTO FOR SPECIFIC DAY
   const handleGeoSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -546,11 +571,24 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
 
       {/* OD Proof Submissions List */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-base sm:text-lg font-black text-[#071A3D] flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-[#1455D9]" /> My Registered &amp; Sanctioned OD Events
           </h2>
-          <span className="text-xs text-gray-500 font-medium">{filteredProofs.length} of {proofs.length} Events</span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-gray-500 font-medium">{filteredProofs.length} of {proofs.length} Events</span>
+            {proofs.length > 0 && (
+              <button
+                type="button"
+                onClick={handleDeleteAllEvents}
+                disabled={loading}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-200 hover:bg-rose-100 hover:text-rose-700 transition-all cursor-pointer shadow-2xs"
+                title="Permanently remove all OD events"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Clear All Proofs
+              </button>
+            )}
+          </div>
         </div>
 
         {filteredProofs.length === 0 ? (

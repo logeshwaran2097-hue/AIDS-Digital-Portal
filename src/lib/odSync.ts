@@ -32,7 +32,47 @@ async function syncSanctionedODsDirect(activeReg: string, studentInfo?: any) {
     } catch {}
   }
 
-  // 2, 3, 4. Fetch auditLogs, attendance records, and existing proofs in parallel!
+  // 2. Fetch deleted records audit logs to ensure deleted proofs are NEVER resurrected!
+  const deletedLogs = await prisma.auditLog.findMany({
+    where: {
+      action: 'od_proof_deleted',
+      OR: [
+        { userName: { contains: activeReg } },
+        { details: { contains: activeReg } },
+      ],
+    },
+    select: { id: true, details: true },
+    orderBy: { createdAt: 'desc' },
+    take: 100,
+  }).catch(() => [])
+
+  // Build sets of permanently deleted request IDs, event names, and dates
+  const deletedOdRequestIds = new Set<string>()
+  const deletedEventNames = new Set<string>()
+  const deletedEventDates = new Set<string>()
+
+  for (const dLog of deletedLogs) {
+    deletedOdRequestIds.add(dLog.id)
+    const dText = dLog.details || ''
+    const reqMatch = dText.match(/ReqId:\s*([a-zA-Z0-9_-]+)/i)
+    if (reqMatch && reqMatch[1] && reqMatch[1] !== 'N/A') {
+      deletedOdRequestIds.add(reqMatch[1].trim())
+    }
+    const recMatch = dText.match(/(?:record|ID:)\s*([a-zA-Z0-9_-]+)/i)
+    if (recMatch && recMatch[1]) {
+      deletedOdRequestIds.add(recMatch[1].trim())
+    }
+    const evMatch = dText.match(/Event:\s*([^.|]+)/i)
+    if (evMatch && evMatch[1]?.trim()) {
+      deletedEventNames.add(evMatch[1].trim().toLowerCase())
+    }
+    const dateMatch = dText.match(/Date:\s*([^|]+)/i)
+    if (dateMatch && dateMatch[1]?.trim()) {
+      deletedEventDates.add(dateMatch[1].trim())
+    }
+  }
+
+  // 3. Fetch auditLogs (strictly legitimate sanctioned/submitted logs, EXCLUDING deletion logs!), attendance, and existing proofs
   const [auditLogs, odAttendance, existingProofs] = await Promise.all([
     prisma.auditLog.findMany({
       where: {
@@ -42,12 +82,26 @@ async function syncSanctionedODsDirect(activeReg: string, studentInfo?: any) {
         ],
         AND: [
           {
+            // STRICTLY exclude any deletion, dismiss, or status-change logs from creating events!
+            action: {
+              notIn: [
+                'od_proof_deleted',
+                'od_deleted',
+                'od_dismissed',
+                'od_proof_advisor_verified',
+                'LOGIN_FAILED_STUDENT',
+                'LOGIN_FAILED_HOD',
+                'ABSENT_ALERT_SENT',
+              ],
+            },
+          },
+          {
             OR: [
               { action: 'od_application_submitted' },
-              { action: { contains: 'od' } },
-              { details: { contains: 'OD' } },
-              { details: { contains: 'On-Duty' } },
-              { details: { contains: 'sanction' } },
+              { action: 'od_proof_hod_sanctioned' },
+              { action: 'od_proof_admin_sanctioned' },
+              { details: { contains: 'HOD granted executive sanction' } },
+              { details: { contains: 'Super Admin sanctioned' } },
             ],
           },
         ],
@@ -149,6 +203,16 @@ async function syncSanctionedODsDirect(activeReg: string, studentInfo?: any) {
     const checkpoints = generateDailyProofCheckpoints(category, eventDate, durationFormat)
     const dailyProofsJson = JSON.stringify(checkpoints)
 
+    // Check if proof was intentionally deleted by student or admin - NEVER resurrect deleted proofs!
+    if (
+      deletedOdRequestIds.has(log.id) ||
+      deletedEventNames.has(eventName.toLowerCase()) ||
+      (fromDate && deletedEventDates.has(fromDate)) ||
+      (eventDate && deletedEventDates.has(eventDate))
+    ) {
+      continue
+    }
+
     // Check if proof already exists
     const alreadyExists = existingProofs.find(
       (p) =>
@@ -238,6 +302,14 @@ async function syncSanctionedODsDirect(activeReg: string, studentInfo?: any) {
   // 6. Sync from attendance records with status 'OD'
   for (const att of odAttendance) {
     const attDateStr = new Date(att.createdAt).toISOString().split('T')[0]
+    // Skip if user or admin intentionally removed proofs for this date or event
+    if (
+      deletedEventNames.has('sanctioned on-duty attendance') ||
+      deletedEventDates.has(attDateStr)
+    ) {
+      continue
+    }
+
     const alreadyExists = existingProofs.find((p) => p.eventDate === attDateStr)
     if (!alreadyExists) {
       try {
@@ -500,31 +572,45 @@ export async function allocateSanctionedAttendance(params: AllocateSanctionedAtt
         },
       })
     } else {
-      await prisma.oDProof.create({
-        data: {
-          studentId: student.id,
-          registerNumber: regUpper,
-          studentName: studentDisplayName,
-          year: student.year || 2,
-          section: student.section || 'B',
-          semester: student.semester || 3,
-          eventName: eventName || applicationType || 'Sanctioned Academic Activity',
-          category: typeLower.includes('hackathon')
-            ? 'Hackathon'
-            : typeLower.includes('paper')
-            ? 'Paper Presentation'
-            : typeLower.includes('internship')
-            ? 'Internship'
-            : 'Academic Activity',
-          eventDate: from,
-          venueCollege: 'Official Academic Host',
-          status: 'verified',
-          attendanceCredited: true,
-          verifiedByName: reviewerName,
-          verifiedAt: new Date(),
-          advisorRemarks: `HOD Sanctioned: Attendance credited for ${dateList.length} day(s).`,
+      // Check if user previously deleted this event proof
+      const isDeleted = await prisma.auditLog.findFirst({
+        where: {
+          action: 'od_proof_deleted',
+          OR: [
+            { userName: { contains: regUpper } },
+            { details: { contains: regUpper } },
+          ],
+          details: { contains: eventName || 'OD' },
         },
-      })
+      }).catch(() => null)
+
+      if (!isDeleted) {
+        await prisma.oDProof.create({
+          data: {
+            studentId: student.id,
+            registerNumber: regUpper,
+            studentName: studentDisplayName,
+            year: student.year || 2,
+            section: student.section || 'B',
+            semester: student.semester || 3,
+            eventName: eventName || applicationType || 'Sanctioned Academic Activity',
+            category: typeLower.includes('hackathon')
+              ? 'Hackathon'
+              : typeLower.includes('paper')
+              ? 'Paper Presentation'
+              : typeLower.includes('internship')
+              ? 'Internship'
+              : 'Academic Activity',
+            eventDate: from,
+            venueCollege: 'Official Academic Host',
+            status: 'verified',
+            attendanceCredited: true,
+            verifiedByName: reviewerName,
+            verifiedAt: new Date(),
+            advisorRemarks: `HOD Sanctioned: Attendance credited for ${dateList.length} day(s).`,
+          },
+        })
+      }
     }
   } catch (err) {
     console.warn('[allocateSanctionedAttendance] ODProof note:', err)

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
+import { cachedDbQuery } from '@/lib/dbCache'
 import { StudentAttendanceView } from './components/StudentAttendanceView'
 
 export const dynamic = 'force-dynamic'
@@ -31,29 +32,41 @@ export default async function StudentAttendancePage() {
       section: 'A',
     }
 
-  const semesters = await prisma.semester.findMany({
-    where: { number: student.semester },
-    select: { id: true },
-  }).catch(() => [])
-  const semesterIds = semesters.map((s) => s.id)
+  const activeReg = student.registerNumber || student.id
+  const cacheKey = `student_attendance_page_${activeReg}`
+  const { subjects, attendanceRecords } = await cachedDbQuery(
+    cacheKey,
+    async () => {
+      const [semesters, attendanceRecords] = await Promise.all([
+        prisma.semester.findMany({
+          where: { number: student.semester },
+          select: { id: true },
+        }).catch(() => []),
+        prisma.attendanceRecord.findMany({
+          where: {
+            OR: [
+              { studentId: student.id },
+              { registerNumber: student.registerNumber },
+            ],
+          },
+          include: {
+            session: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        }).catch(() => []),
+      ])
 
-  const subjects = await prisma.subject.findMany({
-    where: semesterIds.length > 0 ? { semesterId: { in: semesterIds } } : undefined,
-    orderBy: { code: 'asc' },
-  }).catch(() => [])
+      const semesterIds = semesters.map((s) => s.id)
+      const subjects = await prisma.subject.findMany({
+        where: semesterIds.length > 0 ? { semesterId: { in: semesterIds } } : undefined,
+        orderBy: { code: 'asc' },
+      }).catch(() => [])
 
-  const attendanceRecords = await prisma.attendanceRecord.findMany({
-    where: {
-      OR: [
-        { studentId: student.id },
-        { registerNumber: student.registerNumber },
-      ],
+      return { subjects, attendanceRecords }
     },
-    include: {
-      session: true,
-    },
-    orderBy: { createdAt: 'desc' },
-  }).catch(() => [])
+    6000,
+    ['attendance', 'subjects']
+  )
 
   const totalSessions = attendanceRecords.length
   const presentSessions = attendanceRecords.filter((r) => r.status === 'P' || r.status === 'OD').length
