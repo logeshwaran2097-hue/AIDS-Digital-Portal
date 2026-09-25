@@ -8,8 +8,8 @@ export default async function Page() {
   const session = await requireRoleSession(['admin'])
 
   return (
-    <PortalLayout role="admin" userName={session.name || 'admin'}>
-      <div className="py-4">
+    <PortalLayout role="admin" userName={session.name || 'admin'} fullWidth>
+      <div className="py-2 w-full animate-fade-in">
         <AIAgentsPanel />
       </div>
     </PortalLayout>
