@@ -20,9 +20,9 @@ public class MainActivity extends AppCompatActivity {
     // Production: "https://vsb-aids.vercel.app"
     // Local Wi-Fi (Physical Phone): "http://10.201.60.220:3001"
     // Local Emulator: "http://10.0.2.2:3001"
-    public static final String APP_URL = "https://vsb-aids-portal.vercel.app";
-    public static final String FALLBACK_URL_1 = "https://vsb-aids.vercel.app";
-    public static final String FALLBACK_URL_2 = "https://vsb-aids-portal.onrender.com";
+    public static final String APP_URL = "https://aids-digital-portal-logeshwaran.vercel.app";
+    public static final String FALLBACK_URL_1 = "https://vsb-aids-portal.vercel.app";
+    public static final String FALLBACK_URL_2 = "https://vsb-aids.vercel.app";
     public static final String LOCAL_FALLBACK_URL = "http://10.201.60.220:3001";
 
     @Override
@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 // If link is part of our portal domain or local dev server, load inside WebView
-                if (url.contains("vsb-aids-portal.vercel.app") || url.contains("vsb-aids.vercel.app") || url.contains("vsb-aids-portal.onrender.com") || url.contains("10.201.60.220") || url.contains("localhost") || url.contains("10.0.2.2")) {
+                if (url.contains("aids-digital-portal-logeshwaran.vercel.app") || url.contains("vsb-aids-portal.vercel.app") || url.contains("vsb-aids.vercel.app") || url.contains("10.201.60.220") || url.contains("localhost") || url.contains("10.0.2.2")) {
                     view.loadUrl(url);
                     return false;
                 }

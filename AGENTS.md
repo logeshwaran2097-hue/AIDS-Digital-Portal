@@ -39,3 +39,11 @@ Before any major feature or PR completion, apply CodeRabbit quality criteria:
 - **Performance:** Check for N+1 queries, unindexed lookups, memory bloat, and re-render cycles.
 - **Architecture:** Clean modularity, strict TypeScript typing without `any`, and adherence to repository conventions.
 - **Verification:** Run builds (`npm run build` / `tsc`) and test suites to prove correctness.
+
+---
+
+## ☁️ 5. Infrastructure & Deployment: Vercel Only (No Render)
+- **Platform:** Strictly **Vercel** (`https://aids-digital-portal-logeshwaran.vercel.app`).
+- **Policy:** Never configure, deploy to, or query Render services. All production builds, serverless routes, cron jobs, and DNS run entirely on Vercel.
+- **Database:** Supabase PostgreSQL with PgBouncer connection pooling.
+- **Mobile APK:** Configured to target the live Vercel production domain.
