@@ -56,12 +56,6 @@ const STUDY_PAGES = [
     href: '/dashboard/gpa-calculator',
     icon: Calculator,
   },
-  {
-    name: 'AI Assistant',
-    description: '2-Mark/16-Mark Q&A Tutor',
-    href: '/dashboard/study-assistant',
-    icon: Sparkles,
-  },
 ]
 
 export function StudyNavigationHeader({
