@@ -20,7 +20,6 @@ import {
   AlertTriangle,
   RefreshCw,
   Camera,
-  ShieldCheck,
   Activity,
   KeyRound,
   Eye,
@@ -470,71 +469,34 @@ export function AdminProfileView({ initialProfile }: { initialProfile: AdminProf
         )}
       </div>
 
-      {/* Institutional Details & Directorate Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Institutional Governance Profile */}
-        <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm space-y-4">
-          <div className="flex items-center gap-3 border-b border-gray-100 pb-3">
-            <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#1455D9] flex items-center justify-center font-bold">
-              <Building className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-black text-[#071A3D]">Institutional Governance</h3>
-              <p className="text-[11px] text-gray-500">Autonomous college jurisdiction &amp; department placement</p>
-            </div>
+      {/* Institutional Details & Governance */}
+      <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm space-y-4">
+        <div className="flex items-center gap-3 border-b border-gray-100 pb-3">
+          <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#1455D9] flex items-center justify-center font-bold">
+            <Building className="w-5 h-5" />
           </div>
-
-          <div className="space-y-2.5 text-xs text-gray-700">
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50">
-              <span className="font-bold text-gray-500">Institution:</span>
-              <span className="font-bold text-[#071A3D] text-right">V.S.B. Engineering College (Autonomous)</span>
-            </div>
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50">
-              <span className="font-bold text-gray-500">Department:</span>
-              <span className="font-bold text-[#1455D9] text-right">Artificial Intelligence &amp; Data Science</span>
-            </div>
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50">
-              <span className="font-bold text-gray-500">Affiliation:</span>
-              <span className="font-bold text-gray-800 text-right">Anna University · NBA &amp; NAAC &apos;A&apos;</span>
-            </div>
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50">
-              <span className="font-bold text-gray-500">Office Cabin:</span>
-              <span className="font-bold text-amber-700 text-right">{profile.officeLocation || 'Main Admin Block, Cabin A-101'}</span>
-            </div>
+          <div>
+            <h3 className="text-sm font-black text-[#071A3D]">Institutional Governance</h3>
+            <p className="text-[11px] text-gray-500">Autonomous college jurisdiction &amp; department placement</p>
           </div>
         </div>
 
-        {/* Security & Access Clearance Summary */}
-        <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm space-y-4">
-          <div className="flex items-center gap-3 border-b border-gray-100 pb-3">
-            <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-700 flex items-center justify-center font-bold">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-black text-[#071A3D]">Security Clearance &amp; Authority</h3>
-              <p className="text-[11px] text-gray-500">Role-based privileges &amp; cryptographic governance</p>
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs text-gray-700">
+          <div className="flex flex-col gap-1 p-3.5 rounded-2xl bg-gray-50 border border-gray-100">
+            <span className="font-bold text-gray-400 uppercase text-[10px]">Institution</span>
+            <span className="font-bold text-[#071A3D] leading-snug">V.S.B. Engineering College (Autonomous)</span>
           </div>
-
-          <div className="space-y-2.5 text-xs text-gray-700">
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50">
-              <span className="font-bold text-gray-500">RBAC Tier:</span>
-              <span className="font-black text-rose-700 text-right">Tier-0 Super Administrator</span>
-            </div>
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50">
-              <span className="font-bold text-gray-500">Database CRUD:</span>
-              <span className="font-bold text-emerald-700 text-right">Unrestricted Full Stack Access</span>
-            </div>
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50">
-              <span className="font-bold text-gray-500">Authentication:</span>
-              <span className="font-bold text-[#1455D9] text-right">TLS 1.3 + OTP + Argon2id / Scrypt</span>
-            </div>
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50">
-              <span className="font-bold text-gray-500">Account Standing:</span>
-              <span className="font-bold text-emerald-700 text-right flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Fully Verified
-              </span>
-            </div>
+          <div className="flex flex-col gap-1 p-3.5 rounded-2xl bg-gray-50 border border-gray-100">
+            <span className="font-bold text-gray-400 uppercase text-[10px]">Department</span>
+            <span className="font-bold text-[#1455D9] leading-snug">Artificial Intelligence &amp; Data Science</span>
+          </div>
+          <div className="flex flex-col gap-1 p-3.5 rounded-2xl bg-gray-50 border border-gray-100">
+            <span className="font-bold text-gray-400 uppercase text-[10px]">Affiliation</span>
+            <span className="font-bold text-gray-800 leading-snug">Anna University · NBA &amp; NAAC &apos;A&apos;</span>
+          </div>
+          <div className="flex flex-col gap-1 p-3.5 rounded-2xl bg-gray-50 border border-gray-100">
+            <span className="font-bold text-gray-400 uppercase text-[10px]">Office Cabin</span>
+            <span className="font-bold text-amber-700 leading-snug">{profile.officeLocation || 'Main Admin Block, Cabin A-101'}</span>
           </div>
         </div>
       </div>
