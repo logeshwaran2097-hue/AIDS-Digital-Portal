@@ -92,16 +92,19 @@ export default async function StudentAttendancePage() {
     }
   })
 
-  const history = attendanceRecords.map((r) => ({
-    id: r.id,
-    date: r.session?.date || r.createdAt.toISOString().split('T')[0],
-    subjectCode: r.session?.subjectCode || 'Course Session',
-    subjectName: r.session?.subjectName || 'Theory / Practical',
-    hour: r.session?.hour || 'Period 1',
-    status: r.status,
-    takenByName: r.session?.takenByName || 'Faculty Instructor',
-    remarks: r.remarks || '',
-  }))
+  const history = attendanceRecords.map((r) => {
+    const rawDate = r.session?.date || (r.createdAt instanceof Date ? r.createdAt.toISOString().split('T')[0] : typeof r.createdAt === 'string' ? (r.createdAt as string).split('T')[0] : new Date().toISOString().split('T')[0])
+    return {
+      id: r.id,
+      date: rawDate,
+      subjectCode: r.session?.subjectCode || 'Course Session',
+      subjectName: r.session?.subjectName || 'Theory / Practical',
+      hour: r.session?.hour || 'Period 1',
+      status: r.status,
+      takenByName: r.session?.takenByName || 'Faculty Instructor',
+      remarks: r.remarks || '',
+    }
+  })
 
   return (
     <PortalLayout

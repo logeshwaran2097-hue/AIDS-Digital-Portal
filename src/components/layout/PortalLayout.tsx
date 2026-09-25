@@ -888,16 +888,6 @@ export function PortalLayout({
       ? '/admin/profile'
       : '/dashboard/profile'
 
-  // Eagerly prefetch all portal nav routes in parallel for instant 0ms switching
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      resolvedNavItems.forEach((item) => {
-        try {
-          router.prefetch(item.href)
-        } catch {}
-      })
-    }
-  }, [resolvedNavItems, router])
 
   // Close drawer and stop navigation progress on route change
   useEffect(() => {
@@ -979,51 +969,21 @@ export function PortalLayout({
     window.location.href = '/login'
   }
 
-  // Instantly reset navigation state when pathname changes to new destination
-  useEffect(() => {
-    setIsNavigating(false)
-    setActivePath('')
-  }, [pathname])
-
   // Safety fallback so loading state never remains stuck if a navigation fails or is aborted
   useEffect(() => {
     if (!isNavigating) return
     const timer = setTimeout(() => {
       setIsNavigating(false)
       setActivePath('')
-    }, 5000)
+    }, 4000)
     return () => clearTimeout(timer)
   }, [isNavigating])
-
-  // Intelligent idle prefetch of primary sibling routes for instantaneous menu navigation
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const prefetchRoutes = () => {
-      resolvedNavItems.forEach((item) => {
-        if (item.href && item.href !== pathname) {
-          try {
-            router.prefetch(item.href)
-          } catch {}
-        }
-      })
-    }
-    if ('requestIdleCallback' in window) {
-      const id = (window as any).requestIdleCallback(prefetchRoutes, { timeout: 1500 })
-      return () => (window as any).cancelIdleCallback(id)
-    } else {
-      const timer = setTimeout(prefetchRoutes, 600)
-      return () => clearTimeout(timer)
-    }
-  }, [pathname, resolvedNavItems, router])
 
   const handleNavClick = (href: string) => {
     setIsDrawerOpen(false)
     if (href && href !== pathname) {
       setIsNavigating(true)
       setActivePath(href)
-      try {
-        router.prefetch(href)
-      } catch {}
     }
   }
 
