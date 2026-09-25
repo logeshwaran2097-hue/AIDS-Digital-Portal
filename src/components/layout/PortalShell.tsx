@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { VSBAnimatedEmblem } from '@/components/ui/VSBAnimatedEmblem'
 
 const studentNav = [
   { name: 'Dashboard', href: '/dashboard' },
@@ -119,9 +120,7 @@ export function Sidebar({ role }: { role: string }) {
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-navy text-white hidden lg:flex flex-col">
       <div className="flex items-center gap-3 p-5 border-b border-white/10">
-        <div className="w-10 h-10 shrink-0">
-          <Image src="/app-logo.png" alt="V.S.B. Engineering College Logo" width={40} height={40} className="w-full h-full object-contain rounded-xl drop-shadow-md hover:scale-105 transition-transform" priority />
-        </div>
+        <VSBAnimatedEmblem size="md" priority />
         <div className="min-w-0">
           <p className="text-sm font-bold text-white leading-tight">V.S.B. Engineering College</p>
           <p className="text-xs text-gold">AI &amp; DS Digital Portal</p>
@@ -176,9 +175,7 @@ export function TopBar({ role, userName }: { role: string; userName: string }) {
           </svg>
         </button>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 shrink-0">
-            <Image src="/app-logo.png" alt="College Logo" width={32} height={32} className="w-full h-full object-contain rounded-lg drop-shadow-sm" priority />
-          </div>
+          <VSBAnimatedEmblem size="sm" showSparkle={false} />
           <span className="hidden sm:inline text-sm font-semibold text-navy">V.S.B. AI &amp; DS Portal</span>
         </div>
         <div className="ml-auto flex items-center gap-2">

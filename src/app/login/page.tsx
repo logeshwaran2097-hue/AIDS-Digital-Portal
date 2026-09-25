@@ -43,6 +43,7 @@ import { AppSecurityInstallModal } from '@/components/pwa/AppSecurityInstallModa
 import { VisionMissionModal } from '@/components/about/VisionMissionModal'
 import { APP_VERSION_LABEL } from '@/lib/version'
 import { triggerPortalUpdateCheck } from '@/components/pwa/VersionUpdateNotifier'
+import { VSBAnimatedEmblem } from '@/components/ui/VSBAnimatedEmblem'
 
 export default function LoginPage() {
   const [selectedRole, setSelectedRole] = React.useState<'student' | 'faculty' | 'advisor' | 'hod' | 'admin'>('student')
@@ -1009,15 +1010,8 @@ export default function LoginPage() {
         style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}
       >
         <div className="flex flex-col items-center text-center space-y-4 max-w-sm relative z-10 animate-in fade-in zoom-in-95 duration-300">
-          <div className="w-20 h-20 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse">
-            <Image
-              src="/app-logo.png"
-              alt="VSB Portal"
-              width={80}
-              height={80}
-              className="w-full h-full object-contain rounded-2xl drop-shadow-md"
-              priority
-            />
+          <div className="flex items-center justify-center">
+            <VSBAnimatedEmblem size="lg" priority />
           </div>
           <div className="space-y-1">
             <span className="text-[11px] font-black uppercase tracking-widest text-[#E7B93E] bg-[#E7B93E]/10 px-3 py-0.5 rounded-full border border-[#E7B93E]/20">
@@ -1130,39 +1124,12 @@ export default function LoginPage() {
           )}
         </div>
 
-        {/* Stage 2: INSTAGRAM-STYLE MODERN SQUIRCLE EMBLEM */}
+        {/* Stage 2: ANIMATED ROUND V.S.B. COLLEGE EMBLEM */}
         <div className={cn(
-          "relative flex items-center justify-center h-24 sm:h-28 my-1 anim-medallion-levitate transition-all duration-700 ease-out transform",
+          "relative flex items-center justify-center my-2 anim-medallion-levitate transition-all duration-700 ease-out transform",
           animStage >= 2 ? "opacity-100 scale-100" : "opacity-0 scale-75"
         )}>
-          {/* Outer Pulsing Gradient Aura */}
-          <div className="absolute w-22 h-22 sm:w-26 sm:h-26 rounded-[28px] bg-gradient-to-tr from-[#1455D9]/30 via-[#06B6D4]/25 to-[#EAB308]/30 blur-md animate-pulse" />
-
-          {/* Modern Instagram-Style Radiant Squircle */}
-          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] sm:rounded-[26px] p-1 bg-gradient-to-tr from-[#051329] via-[#1455D9] via-60%-[#06B6D4] to-[#FACC15] shadow-[0_12px_32px_rgba(7,26,65,0.28),0_0_20px_rgba(6,182,212,0.35)] ring-1.5 ring-white/60 overflow-hidden hover:scale-105 transition-all duration-500 group cursor-pointer">
-            {/* Top-Right Sunlight Flare */}
-            <div className="absolute top-0 right-0 w-12 h-12 bg-radial from-[#FDE047]/60 via-[#06B6D4]/20 to-transparent pointer-events-none" />
-
-            {/* Specular Sheen Sweep */}
-            <div className="anim-gold-sheen" />
-
-            {/* Inner Housing Authentic Official Logo */}
-            <div className="w-full h-full rounded-[18px] sm:rounded-[22px] bg-white flex items-center justify-center p-1 shadow-[0_4px_12px_rgba(5,19,41,0.2)] overflow-hidden relative z-10 group-hover:scale-105 transition-transform duration-500">
-              <Image
-                src="/app-logo.png"
-                alt="V.S.B. Engineering College Logo"
-                width={80}
-                height={80}
-                className="w-full h-full object-contain rounded-[16px] drop-shadow-xs"
-                priority
-              />
-            </div>
-          </div>
-
-          {/* Sparkling Diamond Glint at Top-Right */}
-          <div className="absolute top-0.5 right-1/2 translate-x-10 sm:translate-x-12 -translate-y-1 text-[#FACC15] anim-diamond-twinkle pointer-events-none">
-            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FACC15] drop-shadow-[0_0_8px_rgba(250,204,21,0.9)]" />
-          </div>
+          <VSBAnimatedEmblem size="xl" priority />
         </div>
 
         {/* Master Branding Typography with Staged Reveals */}

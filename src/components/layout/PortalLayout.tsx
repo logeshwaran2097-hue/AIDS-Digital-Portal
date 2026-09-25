@@ -49,6 +49,7 @@ import { toast } from '@/components/ui/Toast'
 import { VisionMissionModal } from '@/components/about/VisionMissionModal'
 import { APP_VERSION, APP_VERSION_LABEL } from '@/lib/version'
 import { triggerPortalUpdateCheck } from '@/components/pwa/VersionUpdateNotifier'
+import { VSBAnimatedEmblem } from '@/components/ui/VSBAnimatedEmblem'
 
 export interface NavItem {
   label: string
@@ -1055,15 +1056,8 @@ export function PortalLayout({
         {/* Drawer Header with Official Emblem */}
         <div className="p-4 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="relative group shrink-0">
-              <Image
-                src="/app-logo.png"
-                alt="V.S.B. Engineering College Official Emblem"
-                width={44}
-                height={44}
-                className="w-11 h-11 object-contain rounded-[14px] drop-shadow-[0_4px_12px_rgba(20,85,217,0.35)] transition-all duration-300 group-hover:scale-105"
-                priority
-              />
+            <div className="relative shrink-0">
+              <VSBAnimatedEmblem size="md" priority />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
@@ -1357,15 +1351,7 @@ export function PortalLayout({
 
 
             <Link href={role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard'} className="flex items-center gap-2.5 lg:hidden">
-              <div className="w-8 h-8 shrink-0">
-                <Image
-                  src="/app-logo.png"
-                  alt="V.S.B. Emblem"
-                  width={32}
-                  height={32}
-                  className="w-full h-full rounded-lg object-contain drop-shadow-sm"
-                />
-              </div>
+              <VSBAnimatedEmblem size="sm" showSparkle={false} />
               <span className="text-sm font-black text-[#071A3D] tracking-tight">Digital Portal of AI&amp;DS</span>
             </Link>
           </div>
