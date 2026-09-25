@@ -30,23 +30,34 @@ export function HODOnboardingWrapper({
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const isDone =
+
+    // Has HOD completed their real profile in the database?
+    const hasCompletedDbProfile = Boolean(
+      hodData.qualification &&
+      hodData.qualification.trim().length > 0 &&
+      hodData.phone &&
+      hodData.phone.trim().length > 0
+    )
+
+    const isMarkedDone =
       localStorage.getItem(`vsb_staff_onboarding_done_${hodKey}`) === 'true' ||
       sessionStorage.getItem(`vsb_staff_onboarding_done_${hodKey}`) === 'true'
 
-    setIsCompleted(Boolean(isDone))
+    setIsCompleted(Boolean(isMarkedDone && hasCompletedDbProfile))
 
-    // Check if triggered via query param: ?onboarding=1 or ?onboarding=true
+    // 1. Check if triggered via query param: ?onboarding=1 or ?onboarding=true
     const queryTrigger = searchParams?.get('onboarding')
     if (queryTrigger === '1' || queryTrigger === 'true' || queryTrigger === 'hod') {
       setIsOpen(true)
       return
     }
 
-    if (!isDone && initialMustChangePassword) {
+    // 2. Automatically launch if profile is incomplete or password reset required
+    const isDismissedThisSession = sessionStorage.getItem(`vsb_staff_onboarding_dismissed_${hodKey}`) === 'true'
+    if ((!hasCompletedDbProfile || initialMustChangePassword) && !isDismissedThisSession) {
       setIsOpen(true)
     }
-  }, [hodKey, initialMustChangePassword, searchParams])
+  }, [hodKey, initialMustChangePassword, searchParams, hodData.qualification, hodData.phone])
 
   useEffect(() => {
     const handleOpen = () => setIsOpen(true)
@@ -97,7 +108,7 @@ export function HODOnboardingWrapper({
         onClose={() => {
           setIsOpen(false)
           if (typeof window !== 'undefined') {
-            sessionStorage.setItem(`vsb_staff_onboarding_done_${hodKey}`, 'true')
+            sessionStorage.setItem(`vsb_staff_onboarding_dismissed_${hodKey}`, 'true')
           }
         }}
         initialData={{
@@ -106,8 +117,8 @@ export function HODOnboardingWrapper({
           phone: hodData.phone || '',
           facultyId: hodData.facultyId,
           designation: hodData.designation || 'Professor & Head of Department',
-          qualification: hodData.qualification || 'Ph.D. (AI & DS), M.Tech (CSE)',
-          experience: hodData.experience || 18,
+          qualification: hodData.qualification || '',
+          experience: hodData.experience ?? 0,
           department: hodData.department || 'Artificial Intelligence & Data Science',
         }}
         onComplete={() => {
@@ -116,6 +127,8 @@ export function HODOnboardingWrapper({
           if (typeof window !== 'undefined') {
             localStorage.setItem(`vsb_staff_onboarding_done_${hodKey}`, 'true')
             sessionStorage.setItem(`vsb_staff_onboarding_done_${hodKey}`, 'true')
+            sessionStorage.removeItem(`vsb_staff_onboarding_dismissed_${hodKey}`)
+            window.location.reload()
           }
         }}
       />

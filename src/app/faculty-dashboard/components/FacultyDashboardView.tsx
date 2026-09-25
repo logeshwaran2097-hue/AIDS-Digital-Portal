@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import {
   BookOpen,
   Users,
@@ -103,18 +104,24 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
     { label: 'Circular Notices', href: '/faculty-dashboard/announcements', icon: <Megaphone className="w-5 h-5" />, bg: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20 hover:bg-indigo-500/20' },
   ], [])
 
+  const searchParams = useSearchParams()
+
   useEffect(() => {
     if (typeof window === 'undefined') return
     const isCompletedLocally =
       localStorage.getItem(`vsb_staff_onboarding_done_${facultyKey}`) === 'true' ||
       sessionStorage.getItem(`vsb_staff_onboarding_done_${facultyKey}`) === 'true'
 
-    if (!isCompletedLocally && isInitialNeedsOnboarding) {
+    const queryTrigger = searchParams?.get('onboarding') === '1'
+    const isProfileIncomplete = !data.faculty?.qualification || data.faculty.qualification.trim().length === 0
+    const dismissedThisSession = sessionStorage.getItem(`vsb_staff_onboarding_dismissed_${facultyKey}`) === 'true'
+
+    if (queryTrigger || ((!isCompletedLocally || isProfileIncomplete || isInitialNeedsOnboarding) && !dismissedThisSession)) {
       setIsOnboardingOpen(true)
     } else {
       setIsOnboardingOpen(false)
     }
-  }, [facultyKey, isInitialNeedsOnboarding])
+  }, [facultyKey, isInitialNeedsOnboarding, searchParams, data.faculty?.qualification])
 
   const assignedSubjects = data.assignedSubjects || []
   const todayTimetable = data.todayTimetable || []
@@ -134,7 +141,16 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
         onClose={() => {
           setIsOnboardingOpen(false)
           if (typeof window !== 'undefined') {
+            sessionStorage.setItem(`vsb_staff_onboarding_dismissed_${facultyKey}`, 'true')
+          }
+        }}
+        onComplete={() => {
+          setIsOnboardingOpen(false)
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(`vsb_staff_onboarding_done_${facultyKey}`, 'true')
             sessionStorage.setItem(`vsb_staff_onboarding_done_${facultyKey}`, 'true')
+            sessionStorage.removeItem(`vsb_staff_onboarding_dismissed_${facultyKey}`)
+            window.location.reload()
           }
         }}
         initialData={{

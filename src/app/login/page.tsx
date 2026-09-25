@@ -539,9 +539,24 @@ export default function LoginPage() {
         advisor: '/faculty-dashboard/attendance?mode=morning&role=advisor',
         hod: '/hod-dashboard',
       }
-      const targetUrl = (selectedRole === 'advisor')
-        ? (data.user?.mustChangePassword ? '/faculty-dashboard' : '/faculty-dashboard/attendance?mode=morning&role=advisor')
-        : dashboardMap[selectedRole] || '/dashboard'
+      let targetUrl = dashboardMap[selectedRole] || '/dashboard'
+      if (selectedRole === 'advisor') {
+        targetUrl = data.user?.mustChangePassword ? '/faculty-dashboard?onboarding=1' : '/faculty-dashboard/attendance?mode=morning&role=advisor'
+      } else if (selectedRole === 'hod') {
+        const hodNeedsOnboarding = Boolean(
+          data.user?.mustChangePassword ||
+          !data.user?.qualification ||
+          data.user?.qualification.trim().length === 0
+        )
+        targetUrl = hodNeedsOnboarding ? '/hod-dashboard?onboarding=1' : '/hod-dashboard'
+      } else if (selectedRole === 'faculty') {
+        const facultyNeedsOnboarding = Boolean(
+          data.user?.mustChangePassword ||
+          !data.user?.qualification ||
+          data.user?.qualification.trim().length === 0
+        )
+        targetUrl = facultyNeedsOnboarding ? '/faculty-dashboard?onboarding=1' : '/faculty-dashboard'
+      }
 
       setSuccessDestination(targetUrl)
       setAuthStatus('success')
