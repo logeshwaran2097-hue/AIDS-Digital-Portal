@@ -337,13 +337,17 @@ export const updateProjectSchema = createProjectSchema
 
 export const attendanceRecordItemSchema = z
   .object({
+    id: z.string().optional(),
     studentId: z.string().optional(),
-    registerNumber: z.string().min(3).max(30),
-    studentName: z.string().max(100).optional(),
-    status: z.enum(['P', 'A', 'OD', 'ML', 'L']),
-    remarks: z.string().max(200).optional().nullable(),
+    registerNumber: z.string().min(1).max(50),
+    name: z.string().max(150).optional(),
+    studentName: z.string().max(150).optional(),
+    gender: z.string().max(20).optional().nullable(),
+    status: z.enum(['P', 'A', 'OD', 'ML', 'L', 'p', 'a', 'od', 'ml', 'l']),
+    remarks: z.string().max(500).optional().nullable(),
+    cumulativeAttendance: z.union([z.number(), z.string()]).optional().nullable(),
   })
-  .strict()
+  .passthrough()
 
 export const saveAttendanceSchema = z
   .object({
@@ -351,15 +355,17 @@ export const saveAttendanceSchema = z
     subjectCode: z.string().max(50).optional().nullable(),
     subjectName: z.string().max(150).optional().nullable(),
     year: z.union([z.number().int().min(1).max(5), z.string()]),
-    section: z.string().max(10),
-    semester: z.union([z.number().int().min(1).max(10), z.string()]).optional(),
-    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+    section: z.string().max(20),
+    semester: z.union([z.number().int().min(1).max(10), z.string()]).optional().nullable(),
+    academicYear: z.string().max(50).optional().nullable(),
+    date: z.string().max(50),
     hour: z.string().max(50).optional().nullable(),
+    periodType: z.string().max(50).optional().nullable(),
     isLocked: z.boolean().optional(),
     records: z.array(attendanceRecordItemSchema).optional(),
     students: z.array(attendanceRecordItemSchema).optional(),
   })
-  .strict()
+  .passthrough()
   .refine((d) => (d.records && d.records.length > 0) || (d.students && d.students.length > 0), {
     message: 'Attendance records must contain at least one student',
   })
@@ -370,7 +376,7 @@ export const attendanceUnlockActionSchema = z
     id: z.string().optional(),
     sessionId: z.string().optional(),
     year: z.union([z.number(), z.string()]).optional(),
-    section: z.string().max(10).optional(),
+    section: z.string().max(20).optional(),
     semester: z.union([z.number(), z.string()]).optional(),
     academicYear: z.string().max(50).optional(),
     sessionType: z.string().max(50).optional(),
@@ -378,12 +384,12 @@ export const attendanceUnlockActionSchema = z
     subjectName: z.string().max(150).optional(),
     hour: z.string().max(50).optional(),
     date: z.string().max(30).optional(),
-    reason: z.string().max(500).optional(),
-    targetStudent: z.string().max(50).optional(),
-    intendedStatus: z.string().max(20).optional(),
-    reviewNote: z.string().max(500).optional(),
+    reason: z.string().max(2000).optional(),
+    targetStudent: z.string().max(250).optional(),
+    intendedStatus: z.string().max(50).optional(),
+    reviewNote: z.string().max(2000).optional(),
   })
-  .strict()
+  .passthrough()
 
 // ==========================================
 // 6. OD Applications & Proofs

@@ -30,6 +30,7 @@ import {
   KeyRound,
   FileText,
   Eye,
+  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { AdvisorODReviewModal } from '@/components/od/AdvisorODReviewModal'
@@ -235,6 +236,7 @@ export function GovernmentAttendanceSystem({
   const [searchFilter, setSearchFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; msg: string } | null>(null)
+  const toastTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
   const [dataLoaded, setDataLoaded] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>('card')
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
@@ -473,8 +475,16 @@ export function GovernmentAttendanceSystem({
   }
 
   const showToast = (type: 'success' | 'error' | 'info', msg: string) => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current)
+    }
     setToast({ type, msg })
-    setTimeout(() => setToast(null), 3500)
+    // Error clears faster (2000ms), info/success clears in 2500ms
+    const delay = type === 'error' ? 2000 : 2500
+    toastTimeoutRef.current = setTimeout(() => {
+      setToast(null)
+      toastTimeoutRef.current = null
+    }, delay)
   }
 
   const applyQuickPreset = (presetText: string) => {
@@ -629,8 +639,10 @@ export function GovernmentAttendanceSystem({
       {/* Toast Notification */}
       {toast && (
         <div
+          role="status"
+          onClick={() => setToast(null)}
           className={cn(
-            'fixed top-4 right-4 left-4 sm:left-auto z-50 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300 border backdrop-blur-md',
+            'fixed top-4 right-4 left-4 sm:left-auto z-50 px-4 py-3 rounded-2xl shadow-2xl flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-4 duration-300 border backdrop-blur-md cursor-pointer select-none transition-all hover:scale-[1.01]',
             toast.type === 'success'
               ? 'bg-[#071A3D]/95 border-emerald-500/40 text-white'
               : toast.type === 'error'
@@ -638,14 +650,27 @@ export function GovernmentAttendanceSystem({
               : 'bg-[#0A2540]/95 border-cyan-400/40 text-white'
           )}
         >
-          {toast.type === 'success' ? (
-            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-          ) : toast.type === 'error' ? (
-            <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />
-          ) : (
-            <Info className="w-5 h-5 text-cyan-400 shrink-0" />
-          )}
-          <span className="text-xs sm:text-sm font-semibold">{toast.msg}</span>
+          <div className="flex items-center gap-3">
+            {toast.type === 'success' ? (
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+            ) : toast.type === 'error' ? (
+              <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />
+            ) : (
+              <Info className="w-5 h-5 text-cyan-400 shrink-0" />
+            )}
+            <span className="text-xs sm:text-sm font-semibold">{toast.msg}</span>
+          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              setToast(null)
+            }}
+            title="Dismiss notification"
+            className="p-1 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors ml-2 shrink-0 cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 

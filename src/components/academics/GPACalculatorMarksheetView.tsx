@@ -35,7 +35,7 @@ import {
   getAbsoluteGradeIIYear
 } from '@/lib/assessmentR2023'
 import { StudyNavigationHeader } from '@/components/study/StudyNavigationHeader'
-import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { generateAndDownloadPDF, generateOfficialCollegeMarksheetPDF } from '@/lib/pdfGenerator'
 
 interface SubjectGradeRow {
   id: string
@@ -289,10 +289,26 @@ export default function GPACalculatorMarksheetView({
 
   // Download official semester marksheet PDF
   const handleDownloadSemesterMarksheetPDF = () => {
-    const rows = subjects.map((s, idx) => {
+    if (!hasAnyGrade || subjects.length === 0 || gradedCoursesCount === 0) {
+      toast.error('Please enter course grades first. Marksheet download is enabled after details are entered.')
+      return
+    }
+
+    const courses = subjects.map((s) => {
       const pt = s.grade && currentGradePoints[s.grade] !== undefined ? currentGradePoints[s.grade] : 0
       const ciGi = pt * s.credits
-      return `${idx + 1}. [${s.code}] ${s.name} | Credits: ${s.credits} | Grade: ${s.grade || 'Awaiting'} | Grade Point: ${pt} | Score: ${ciGi.toFixed(1)}`
+      const gradeUpper = (s.grade || '').toUpperCase()
+      const isPass = pt > 0 && !['U', 'RA', 'SA', 'W'].includes(gradeUpper)
+      return {
+        code: s.code,
+        name: s.name,
+        credits: s.credits,
+        courseType: s.courseType || 'Theory',
+        grade: s.grade || 'U',
+        gradePoint: pt,
+        creditPoints: ciGi,
+        result: (isPass ? 'PASS' : 'RA') as 'PASS' | 'RA',
+      }
     })
 
     const honors = calculatedSemesterGPA >= 8.5
@@ -303,73 +319,25 @@ export default function GPACalculatorMarksheetView({
       ? 'SECOND CLASS'
       : 'RE-APPEAR REQUIRED'
 
-    generateAndDownloadPDF({
-      title: 'DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE',
-      subtitle: `Official Semester ${selectedSemester} Grade Statement & Marksheet · Academic Year 2025-2026`,
-      subjectCode: `SEMESTER-${selectedSemester}-RESULTS`,
-      author: 'Office of the Controller of Examinations',
-      category: 'Autonomous Semester Grade Sheet',
-      sections: [
-        {
-          heading: '1. STUDENT ACADEMIC CREDENTIALS',
-          body: [
-            `Student Name: ${studentName || 'Student'}`,
-            `Register Number: ${registerNumber || '922522AD001'}`,
-            `Degree / Branch: B.Tech. Artificial Intelligence & Data Science`,
-            `Regulation: Autonomous Regulation 2023 (R2023)`,
-            `Semester / Academic Year: Semester ${selectedSemester} (Year ${Math.ceil(selectedSemester / 2)}) · 2025-2026`,
-            `Grading System Applied: ${gradingSystem === 'absolute_ii_year' ? 'Absolute Grading System (10-Point Scale)' : 'Relative Grading System (10-Point Scale)'}`,
-          ],
-        },
-        {
-          heading: `2. SEMESTER ${selectedSemester} COURSE-WISE GRADE POINT PERFORMANCE`,
-          table: {
-            headers: ['S.NO', 'COURSE CODE', 'COURSE TITLE', 'TYPE', 'CREDITS (Ci)', 'GRADE', 'GRADE PT (Gi)', 'CREDIT-POINTS (Ci×Gi)'],
-            rows: subjects.map((s, idx) => {
-              const pt = s.grade && currentGradePoints[s.grade] !== undefined ? currentGradePoints[s.grade] : 0
-              const ciGi = pt * s.credits
-              const isTop = pt >= 9
-              const isPassing = pt >= 6
-              return [
-                String(idx + 1),
-                s.code,
-                s.name,
-                s.courseType || 'Theory',
-                String(s.credits),
-                {
-                  text: s.grade || 'Awaiting',
-                  badge: true,
-                  badgeType: !s.grade ? 'warning' : isTop ? 'gold' : isPassing ? 'success' : 'danger'
-                },
-                s.grade ? String(pt) : '—',
-                s.grade ? ciGi.toFixed(1) : '—'
-              ]
-            }),
-            widths: [10, 24, 60, 24, 18, 16, 16, 18],
-            alignments: ['center', 'center', 'left', 'center', 'center', 'center', 'center', 'right']
-          },
-          body: rows,
-        },
-        {
-          heading: '3. SEMESTER CUMULATIVE SUMMARY & RESULT CLASSIFICATION',
-          statsGrid: [
-            { label: 'Registered Credits', value: `${currentSemesterCredits} Credits`, badgeColor: 'blue' },
-            { label: 'Earned Credit-Points', value: `${totalWeightedPoints} Pts`, badgeColor: 'gold' },
-            { label: 'Semester SGPA', value: `${hasAnyGrade ? calculatedSemesterGPA.toFixed(2) : 'Awaiting'} / 10.0`, badgeColor: 'emerald' },
-            { label: 'Result Standing', value: `${hasAnyGrade ? honors : 'Awaiting Evaluation'}`, badgeColor: 'purple' },
-          ],
-          body: [
-            `Total Registered Credits (∑Ci): ${currentSemesterCredits} Credits`,
-            `Total Earned Credit-Points (∑Ci × Gi): ${totalWeightedPoints} Points`,
-            `Calculated Semester Grade Point Average (SGPA): ${hasAnyGrade ? calculatedSemesterGPA.toFixed(2) : 'Awaiting Input'} / 10.00`,
-            `Official Academic Standing: ${hasAnyGrade ? honors : 'Awaiting Examination Results'}`,
-            `Declaration: Verified and validated against V.S.B. Autonomous ERP academic ledgers.`,
-          ],
-        },
-      ],
+    generateOfficialCollegeMarksheetPDF({
+      registerNumber: registerNumber || '922525243103',
+      studentName: studentName || 'Student',
+      degree: 'B.Tech.',
+      branch: 'Artificial Intelligence & Data Science',
+      semester: selectedSemester,
+      academicYear: '2025-2026',
+      regulation: 'Autonomous Regulation 2023 (R2023)',
+      examSession: `B.Tech. DEGREE EXAMINATIONS — SEMESTER 0${selectedSemester} (ACADEMIC YEAR 2025-2026)`,
+      gradingSystem,
+      courses,
+      totalRegisteredCredits: currentSemesterCredits,
+      totalEarnedCredits: gradedSemesterCredits,
+      totalGradePoints: totalWeightedPoints,
+      sgpa: calculatedSemesterGPA,
+      classification: honors,
       fileName: `VSB_AIDS_Sem${selectedSemester}_Official_GradeSheet_${registerNumber || 'Student'}`,
     })
-    toast.success(`Downloaded Semester ${selectedSemester} Marksheet PDF!`)
+    toast.success(`Downloaded Official Semester ${selectedSemester} Marksheet PDF!`)
   }
 
 
@@ -432,6 +400,8 @@ export default function GPACalculatorMarksheetView({
       hasAnyGrade: gradedCount > 0
     }
   }, [subjects, currentGradePoints])
+
+  const isDownloadReady = Boolean(hasAnyGrade && subjects.length > 0 && gradedCoursesCount > 0)
 
   // Live CGPA Calculations (Slide 14: sum(Semester Credits * SGPA) / sum(Semester Credits))
   const { currentCGPA, completedCredits, totalCompletedSemesters, totalCreditPointsCGPA } = useMemo(() => {
@@ -633,10 +603,20 @@ export default function GPACalculatorMarksheetView({
           
           <button
             onClick={handleDownloadSemesterMarksheetPDF}
-            className="px-4 py-2.5 rounded-xl bg-[#F4C430] hover:bg-[#e0b028] text-[#071A3D] font-extrabold text-xs transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer shrink-0"
+            disabled={!isDownloadReady}
+            title={
+              !isDownloadReady
+                ? 'Enter course grades in the table to enable marksheet download'
+                : `Download Semester ${selectedSemester} Official Marksheet PDF`
+            }
+            className={`px-4 py-2.5 rounded-xl font-extrabold text-xs transition-all shadow-md flex items-center justify-center gap-2 shrink-0 ${
+              isDownloadReady
+                ? 'bg-[#F4C430] hover:bg-[#e0b028] text-[#071A3D] cursor-pointer'
+                : 'bg-slate-700/60 text-slate-400 border border-white/10 cursor-not-allowed opacity-60 hover:bg-slate-700/60'
+            }`}
           >
             <Download className="w-4 h-4" />
-            <span>Download Sem {selectedSemester} Marksheet PDF</span>
+            <span>{isDownloadReady ? `Download Sem ${selectedSemester} Marksheet PDF` : `Enter Grades to Download Marksheet`}</span>
           </button>
         </div>
 
@@ -1201,10 +1181,20 @@ export default function GPACalculatorMarksheetView({
                 {/* Action button inside card */}
                 <button
                   onClick={handleDownloadSemesterMarksheetPDF}
-                  className="w-full py-2.5 rounded-xl bg-[#F4C430] hover:bg-[#e0b028] text-[#071A3D] font-extrabold text-xs transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                  disabled={!isDownloadReady}
+                  title={
+                    !isDownloadReady
+                      ? 'Enter course grades in the table to enable marksheet download'
+                      : 'Download Verified Marksheet PDF'
+                  }
+                  className={`w-full py-2.5 rounded-xl font-extrabold text-xs transition-all shadow-md flex items-center justify-center gap-2 ${
+                    isDownloadReady
+                      ? 'bg-[#F4C430] hover:bg-[#e0b028] text-[#071A3D] cursor-pointer'
+                      : 'bg-slate-700/60 text-slate-400 border border-white/10 cursor-not-allowed opacity-60 hover:bg-slate-700/60'
+                  }`}
                 >
                   <Download className="w-4 h-4" />
-                  <span>Download Verified Marksheet PDF</span>
+                  <span>{isDownloadReady ? 'Download Verified Marksheet PDF' : 'Enter Grades to Download PDF'}</span>
                 </button>
               </div>
 

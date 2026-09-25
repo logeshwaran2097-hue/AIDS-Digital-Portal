@@ -371,7 +371,7 @@ export async function POST(request: Request) {
       if (db.attendanceSession) {
         if (sessionType === 'morning') {
           const existing = await db.attendanceSession.findFirst({
-            where: { sessionType: 'morning', year: parseInt(year), section, date },
+            where: { sessionType: 'morning', year: parseInt(String(year)), section, date },
           })
 
           if (existing) {
@@ -393,9 +393,9 @@ export async function POST(request: Request) {
             attSession = await db.attendanceSession.create({
               data: {
                 sessionType: 'morning',
-                year: parseInt(year),
+                year: parseInt(String(year)),
                 section,
-                semester: parseInt(semester),
+                semester: parseInt(String(semester || '1')),
                 date,
                 isLocked,
                 totalStudents,
@@ -411,7 +411,7 @@ export async function POST(request: Request) {
           }
         } else {
           const existing = await db.attendanceSession.findFirst({
-            where: { sessionType: 'subject', subjectCode, year: parseInt(year), section, date, hour },
+            where: { sessionType: 'subject', subjectCode, year: parseInt(String(year)), section, date, hour },
           })
 
           if (existing) {
@@ -435,9 +435,9 @@ export async function POST(request: Request) {
                 sessionType: 'subject',
                 subjectCode,
                 subjectName: subjectName || subjectCode,
-                year: parseInt(year),
+                year: parseInt(String(year)),
                 section,
-                semester: parseInt(semester),
+                semester: parseInt(String(semester || '1')),
                 date,
                 hour,
                 isLocked,
@@ -486,7 +486,7 @@ export async function POST(request: Request) {
           let changed = false
           allRequests.forEach((r: any) => {
             const sameSession =
-              r.year === parseInt(year) &&
+              r.year === parseInt(String(year)) &&
               r.section?.toUpperCase() === section?.toUpperCase() &&
               r.date === date &&
               r.sessionType === sessionType &&

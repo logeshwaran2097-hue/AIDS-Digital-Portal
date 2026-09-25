@@ -3311,3 +3311,654 @@ export async function downloadWithDeptHeader(options: DeptHeaderDownloadOptions)
     document.body.removeChild(a)
   }
 }
+
+// ============================================================================
+// 10. AUTHENTIC INSTITUTIONAL COLLEGE MARKSHEET / GRADE SHEET GENERATOR
+// ============================================================================
+
+export interface CollegeMarksheetCourse {
+  code: string
+  name: string
+  credits: number
+  courseType?: string
+  grade: string
+  gradePoint: number
+  creditPoints: number
+  result: 'PASS' | 'RA' | 'SA' | 'W'
+}
+
+export interface CollegeMarksheetPDFData {
+  registerNumber: string
+  studentName: string
+  degree?: string
+  branch?: string
+  semester: number
+  academicYear?: string
+  regulation?: string
+  examSession?: string
+  gradingSystem?: 'absolute_ii_year' | 'relative_iii_iv_year' | string
+  courses: CollegeMarksheetCourse[]
+  totalRegisteredCredits: number
+  totalEarnedCredits: number
+  totalGradePoints: number
+  sgpa: number
+  cgpa?: number
+  classification?: string
+  folioNumber?: string
+  dateOfIssue?: string
+  fileName?: string
+}
+
+/**
+ * Generates an authentic, official collegiate Grade Sheet matching
+ * Anna University / V.S.B. Autonomous standards with full institutional borders,
+ * tabular course breakdown, SGPA calculation, grading scale legend,
+ * and Controller of Examinations authentication seals.
+ */
+export function generateOfficialCollegeMarksheetPDF(data: CollegeMarksheetPDFData) {
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+  })
+
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const pageHeight = doc.internal.pageSize.getHeight()
+  const marginX = 10
+  const contentW = pageWidth - marginX * 2 // 190mm
+
+  // ── 1. Official Institutional Double Frame ──────────────────────────────────
+  // Outer navy border
+  doc.setDrawColor(7, 26, 61)
+  doc.setLineWidth(0.7)
+  doc.rect(marginX - 2, marginX - 2, contentW + 4, pageHeight - (marginX - 2) * 2, 'S')
+
+  // Inner gold hairline border
+  doc.setDrawColor(218, 165, 32)
+  doc.setLineWidth(0.3)
+  doc.rect(marginX - 0.7, marginX - 0.7, contentW + 1.4, pageHeight - (marginX - 0.7) * 2, 'S')
+
+  // Corner decorative marks
+  const corners = [
+    [marginX - 1.5, marginX - 1.5],
+    [marginX + contentW + 1.5, marginX - 1.5],
+    [marginX - 1.5, pageHeight - marginX + 1.5],
+    [marginX + contentW + 1.5, pageHeight - marginX + 1.5],
+  ]
+  doc.setFillColor(218, 165, 32)
+  corners.forEach(([cx, cy]) => {
+    doc.circle(cx, cy, 0.8, 'F')
+  })
+
+  // ── 2. Prestigious Institutional Letterhead ─────────────────────────────────
+  doc.setFillColor(252, 253, 255)
+  doc.rect(marginX, marginX, contentW, 31, 'F')
+
+  // College Crest Mount
+  const logoX = marginX + 2.5
+  const logoY = marginX + 2
+  const logoSize = 22
+
+  doc.setFillColor(255, 255, 255)
+  doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 1, 'F')
+  doc.setDrawColor(218, 165, 32)
+  doc.setLineWidth(0.5)
+  doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 1, 'S')
+
+  try {
+    doc.addImage(VSB_LOGO_BASE64, 'PNG', logoX + 2, logoY + 2, logoSize - 4, logoSize - 4)
+  } catch (e) {
+    console.error('Failed to embed logo in marksheet PDF:', e)
+  }
+
+  // Header Center Typography
+  const headerCenterX = marginX + logoSize + (contentW - logoSize) / 2
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(14.5)
+  doc.setTextColor(7, 26, 61)
+  doc.text('V.S.B. ENGINEERING COLLEGE', headerCenterX, marginX + 5.2, { align: 'center' })
+
+  // Autonomous Pill
+  doc.setFillColor(231, 185, 62)
+  doc.roundedRect(headerCenterX - 23, marginX + 7, 46, 3.8, 1, 1, 'F')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.8)
+  doc.setTextColor(7, 26, 61)
+  doc.text('AN AUTONOMOUS INSTITUTION', headerCenterX, marginX + 9.8, { align: 'center' })
+
+  // Department
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8.8)
+  doc.setTextColor(21, 87, 192)
+  doc.text('DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE', headerCenterX, marginX + 15.2, { align: 'center' })
+
+  // Affiliation & Accreditation
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(6.5)
+  doc.setTextColor(75, 85, 105)
+  doc.text('Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai · Karur - 639 111, Tamil Nadu', headerCenterX, marginX + 19.5, { align: 'center' })
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.2)
+  doc.setTextColor(100, 115, 135)
+  doc.text('Accredited by NAAC with "A" Grade  ·  NBA Accredited Programs  ·  ISO 9001:2015 Certified', headerCenterX, marginX + 23.5, { align: 'center' })
+
+  // Gold & Blue Beam
+  const beamY = marginX + 26
+  doc.setFillColor(21, 87, 192)
+  doc.rect(marginX, beamY, contentW, 1.2, 'F')
+  doc.setFillColor(231, 185, 62)
+  doc.rect(marginX, beamY + 1.2, contentW, 0.6, 'F')
+
+  let currentY = beamY + 5.5
+
+  // ── 3. Examination Authority & Document Title Banner ────────────────────────
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8.5)
+  doc.setTextColor(14, 44, 102)
+  doc.text('OFFICE OF THE CONTROLLER OF EXAMINATIONS', marginX + contentW / 2, currentY, { align: 'center' })
+  currentY += 4.5
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(12.5)
+  doc.setTextColor(7, 26, 61)
+  doc.text('GRADE SHEET / STATEMENT OF GRADES', marginX + contentW / 2, currentY, { align: 'center' })
+  currentY += 4
+
+  const examSessionText = data.examSession || `B.Tech. DEGREE EXAMINATIONS — SEMESTER 0${data.semester} (${data.academicYear || '2025-2026'})`
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7.5)
+  doc.setTextColor(21, 87, 192)
+  doc.text(examSessionText, marginX + contentW / 2, currentY, { align: 'center' })
+  currentY += 4.5
+
+  // Metadata Strip (Folio, Regulation, Issue Date)
+  const metaStripH = 6.2
+  doc.setFillColor(245, 248, 255)
+  doc.rect(marginX, currentY, contentW, metaStripH, 'F')
+  doc.setDrawColor(215, 226, 242)
+  doc.setLineWidth(0.3)
+  doc.rect(marginX, currentY, contentW, metaStripH, 'S')
+
+  const now = new Date()
+  const todayStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+  const folio = data.folioNumber || `VSB-COE/${data.academicYear ? data.academicYear.split('-')[0] : '2026'}/G-${data.registerNumber}`
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.5)
+  doc.setTextColor(71, 85, 105)
+  doc.text('FOLIO NO:', marginX + 3, currentY + 4.2)
+  doc.setTextColor(7, 26, 61)
+  doc.text(folio, marginX + 17, currentY + 4.2)
+
+  doc.setTextColor(71, 85, 105)
+  doc.text('REGULATION:', marginX + contentW / 2 - 15, currentY + 4.2)
+  doc.setTextColor(7, 26, 61)
+  doc.text(data.regulation || '2023 (Autonomous)', marginX + contentW / 2 + 5, currentY + 4.2)
+
+  doc.setTextColor(71, 85, 105)
+  doc.text('DATE OF ISSUE:', marginX + contentW - 38, currentY + 4.2)
+  doc.setTextColor(7, 26, 61)
+  doc.text(data.dateOfIssue || todayStr, marginX + contentW - 3, currentY + 4.2, { align: 'right' })
+
+  currentY += metaStripH + 3
+
+  // ── 4. Student Academic Credentials Matrix (Clean 4-Cell Grid) ──────────────
+  const credBoxH = 13.5
+  doc.setFillColor(255, 255, 255)
+  doc.roundedRect(marginX, currentY, contentW, credBoxH, 1, 1, 'FD')
+  doc.setDrawColor(203, 213, 225)
+  doc.setLineWidth(0.3)
+  doc.roundedRect(marginX, currentY, contentW, credBoxH, 1, 1, 'S')
+
+  // Vertical separator
+  doc.line(marginX + contentW / 2, currentY, marginX + contentW / 2, currentY + credBoxH)
+  // Horizontal divider
+  doc.line(marginX, currentY + credBoxH / 2, marginX + contentW, currentY + credBoxH / 2)
+
+  // Cell 1: Register Number
+  const r1Y = currentY + 4.6
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.5)
+  doc.setTextColor(100, 116, 139)
+  doc.text('REGISTER NUMBER:', marginX + 3.5, r1Y)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7.8)
+  doc.setTextColor(7, 26, 61)
+  doc.text(data.registerNumber, marginX + 32, r1Y)
+
+  // Cell 2: Student Name
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.5)
+  doc.setTextColor(100, 116, 139)
+  doc.text('STUDENT NAME:', marginX + contentW / 2 + 3.5, r1Y)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7.8)
+  doc.setTextColor(7, 26, 61)
+  doc.text((data.studentName || 'STUDENT').toUpperCase(), marginX + contentW / 2 + 28, r1Y)
+
+  // Cell 3: Degree & Branch
+  const r2Y = currentY + credBoxH / 2 + 4.6
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.5)
+  doc.setTextColor(100, 116, 139)
+  doc.text('DEGREE & BRANCH:', marginX + 3.5, r2Y)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7.2)
+  doc.setTextColor(21, 87, 192)
+  doc.text('B.Tech. Artificial Intelligence & Data Science', marginX + 32, r2Y)
+
+  // Cell 4: Semester & Session
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.5)
+  doc.setTextColor(100, 116, 139)
+  doc.text('SEMESTER / YEAR:', marginX + contentW / 2 + 3.5, r2Y)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7.2)
+  doc.setTextColor(7, 26, 61)
+  doc.text(`Semester ${data.semester} (Year ${Math.ceil(data.semester / 2)}) · ${data.academicYear || '2025-2026'}`, marginX + contentW / 2 + 28, r2Y)
+
+  currentY += credBoxH + 3.5
+
+  // ── 5. Official Course-Wise Grade Performance Table ─────────────────────────
+  // Columns: [S.NO, CODE, TITLE, TYPE, CREDITS, GRADE, GP, CREDIT-PTS, RESULT]
+  // Total widths = 10 + 22 + 74 + 18 + 14 + 14 + 12 + 14 + 12 = 190mm
+  const colWidths = [10, 22, 74, 18, 14, 14, 12, 14, 12]
+  const colHeaders = [
+    'S.NO',
+    'COURSE CODE',
+    'COURSE TITLE',
+    'CATEGORY',
+    'CREDITS (C)',
+    'GRADE (G)',
+    'GP',
+    'PTS (C×G)',
+    'RESULT',
+  ]
+
+  // Table Header Row
+  const thH = 7.2
+  doc.setFillColor(7, 26, 61) // Deep Navy
+  doc.rect(marginX, currentY, contentW, thH, 'F')
+  doc.setDrawColor(7, 26, 61)
+  doc.setLineWidth(0.3)
+  doc.rect(marginX, currentY, contentW, thH, 'S')
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.2)
+  doc.setTextColor(255, 255, 255)
+
+  let curX = marginX
+  colHeaders.forEach((hdr, idx) => {
+    const w = colWidths[idx]
+    if (idx === 2) {
+      // Title left aligned
+      doc.text(hdr, curX + 2.5, currentY + 4.8)
+    } else {
+      doc.text(hdr, curX + w / 2, currentY + 4.8, { align: 'center' })
+    }
+    // Vertical divider inside header
+    if (idx > 0) {
+      doc.setDrawColor(255, 255, 255)
+      doc.setLineWidth(0.15)
+      doc.line(curX, currentY + 1, curX, currentY + thH - 1)
+    }
+    curX += w
+  })
+
+  currentY += thH
+
+  // Course Rows
+  const rowH = 6.2
+  const courses = data.courses || []
+
+  courses.forEach((course, cIdx) => {
+    // Check if new page is needed
+    if (currentY + rowH > pageHeight - 65) {
+      doc.addPage()
+      // Outer border on subsequent page
+      doc.setDrawColor(7, 26, 61)
+      doc.setLineWidth(0.7)
+      doc.rect(marginX - 2, marginX - 2, contentW + 4, pageHeight - (marginX - 2) * 2, 'S')
+      doc.setDrawColor(218, 165, 32)
+      doc.setLineWidth(0.3)
+      doc.rect(marginX - 0.7, marginX - 0.7, contentW + 1.4, pageHeight - (marginX - 0.7) * 2, 'S')
+      currentY = drawRunningPageHeader(doc, marginX, contentW)
+    }
+
+    const isEven = cIdx % 2 === 0
+    doc.setFillColor(isEven ? 255 : 249, isEven ? 255 : 250, isEven ? 255 : 252)
+    doc.rect(marginX, currentY, contentW, rowH, 'F')
+
+    // Cell outer border
+    doc.setDrawColor(226, 232, 240)
+    doc.setLineWidth(0.2)
+    doc.rect(marginX, currentY, contentW, rowH, 'S')
+
+    let rowX = marginX
+    const gradeUpper = (course.grade || '').toUpperCase()
+    const isPassing = !['U', 'RA', 'SA', 'W'].includes(gradeUpper) && course.gradePoint > 0
+
+    // 0: S.No
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(6.8)
+    doc.setTextColor(71, 85, 105)
+    doc.text(String(cIdx + 1), rowX + colWidths[0] / 2, currentY + 4.2, { align: 'center' })
+    rowX += colWidths[0]
+
+    // 1: Course Code
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(6.8)
+    doc.setTextColor(7, 26, 61)
+    doc.text(course.code || '—', rowX + colWidths[1] / 2, currentY + 4.2, { align: 'center' })
+    rowX += colWidths[1]
+
+    // 2: Course Title
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(6.7)
+    doc.setTextColor(30, 41, 59)
+    const title = doc.splitTextToSize(course.name || 'Subject', colWidths[2] - 4)
+    doc.text(title[0] || '', rowX + 2, currentY + 4.2)
+    rowX += colWidths[2]
+
+    // 3: Category
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(6.2)
+    doc.setTextColor(100, 116, 139)
+    doc.text(course.courseType || 'Theory', rowX + colWidths[3] / 2, currentY + 4.2, { align: 'center' })
+    rowX += colWidths[3]
+
+    // 4: Credits
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(6.8)
+    doc.setTextColor(7, 26, 61)
+    doc.text(String(course.credits), rowX + colWidths[4] / 2, currentY + 4.2, { align: 'center' })
+    rowX += colWidths[4]
+
+    // 5: Letter Grade with badge
+    const badgeW = 9.5
+    const badgeH = 4.2
+    const badgeX = rowX + (colWidths[5] - badgeW) / 2
+    const badgeY = currentY + (rowH - badgeH) / 2
+
+    if (gradeUpper === 'O' || gradeUpper === 'A+') {
+      doc.setFillColor(236, 253, 245)
+      doc.setDrawColor(16, 185, 129)
+      doc.setTextColor(4, 120, 87)
+    } else if (gradeUpper === 'A' || gradeUpper === 'B+') {
+      doc.setFillColor(239, 246, 255)
+      doc.setDrawColor(59, 130, 246)
+      doc.setTextColor(29, 78, 216)
+    } else if (gradeUpper === 'B' || gradeUpper === 'C') {
+      doc.setFillColor(254, 252, 232)
+      doc.setDrawColor(234, 179, 8)
+      doc.setTextColor(161, 98, 7)
+    } else {
+      doc.setFillColor(254, 242, 242)
+      doc.setDrawColor(239, 68, 68)
+      doc.setTextColor(185, 28, 28)
+    }
+
+    doc.setLineWidth(0.2)
+    doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 0.8, 0.8, 'FD')
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(6.8)
+    doc.text(course.grade || '—', badgeX + badgeW / 2, badgeY + 3.0, { align: 'center' })
+    rowX += colWidths[5]
+
+    // 6: Grade Point
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(6.8)
+    doc.setTextColor(7, 26, 61)
+    doc.text(String(course.gradePoint), rowX + colWidths[6] / 2, currentY + 4.2, { align: 'center' })
+    rowX += colWidths[6]
+
+    // 7: Points (C x G)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(6.8)
+    doc.setTextColor(21, 87, 192)
+    doc.text(course.creditPoints.toFixed(1), rowX + colWidths[7] / 2, currentY + 4.2, { align: 'center' })
+    rowX += colWidths[7]
+
+    // 8: Result (PASS / RA)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(6.4)
+    if (isPassing) {
+      doc.setTextColor(5, 150, 105)
+      doc.text('PASS', rowX + colWidths[8] / 2, currentY + 4.2, { align: 'center' })
+    } else {
+      doc.setTextColor(220, 38, 38)
+      doc.text('RA', rowX + colWidths[8] / 2, currentY + 4.2, { align: 'center' })
+    }
+
+    currentY += rowH
+  })
+
+  // Table Footer Row: Cumulative Totals
+  const tFootH = 6.8
+  doc.setFillColor(241, 245, 252)
+  doc.rect(marginX, currentY, contentW, tFootH, 'F')
+  doc.setDrawColor(180, 200, 230)
+  doc.setLineWidth(0.3)
+  doc.rect(marginX, currentY, contentW, tFootH, 'S')
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.8)
+  doc.setTextColor(7, 26, 61)
+  doc.text('SEMESTER TOTALS:', marginX + 3.5, currentY + 4.5)
+
+  const footX1 = marginX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3]
+  doc.text(String(data.totalRegisteredCredits), footX1 + colWidths[4] / 2, currentY + 4.5, { align: 'center' })
+
+  const footX2 = footX1 + colWidths[4] + colWidths[5] + colWidths[6]
+  doc.setTextColor(21, 87, 192)
+  doc.text(data.totalGradePoints.toFixed(1), footX2 + colWidths[7] / 2, currentY + 4.5, { align: 'center' })
+
+  const allPassed = courses.every((c) => c.gradePoint > 0 && !['U', 'RA', 'SA', 'W'].includes((c.grade || '').toUpperCase()))
+  doc.setTextColor(allPassed ? 5 : 220, allPassed ? 150 : 38, allPassed ? 105 : 38)
+  doc.text(allPassed ? 'ALL PASS' : 'RE-APPEAR', footX2 + colWidths[7] + colWidths[8] / 2, currentY + 4.5, { align: 'center' })
+
+  currentY += tFootH + 3.5
+
+  // ── 6. Official Academic Performance Ledger & Result Classification ─────────
+  const summaryBoxH = 14
+  doc.setFillColor(255, 255, 255)
+  doc.roundedRect(marginX, currentY, contentW, summaryBoxH, 1, 1, 'FD')
+  doc.setDrawColor(21, 87, 192)
+  doc.setLineWidth(0.4)
+  doc.roundedRect(marginX, currentY, contentW, summaryBoxH, 1, 1, 'S')
+
+  // Top Accent stripe
+  doc.setFillColor(21, 87, 192)
+  doc.rect(marginX, currentY, contentW, 1.2, 'F')
+
+  // 4 Horizontal KPI blocks
+  const cellW = contentW / 4
+  const stats = [
+    { label: 'REGISTERED CREDITS', value: `${data.totalRegisteredCredits} Credits`, color: [7, 26, 61] },
+    { label: 'EARNED CREDITS', value: `${data.totalEarnedCredits} Credits`, color: [5, 122, 85] },
+    { label: 'CUMULATIVE POINTS (Ci×Gi)', value: `${data.totalGradePoints.toFixed(1)} Pts`, color: [21, 87, 192] },
+    { label: 'SEMESTER SGPA', value: `${data.sgpa.toFixed(2)} / 10.00`, color: [16, 185, 129] },
+  ]
+
+  stats.forEach((st, sIdx) => {
+    const sX = marginX + sIdx * cellW
+    if (sIdx > 0) {
+      doc.setDrawColor(226, 232, 240)
+      doc.setLineWidth(0.2)
+      doc.line(sX, currentY + 1.2, sX, currentY + summaryBoxH)
+    }
+
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(5.8)
+    doc.setTextColor(100, 116, 139)
+    doc.text(st.label, sX + cellW / 2, currentY + 5.2, { align: 'center' })
+
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(8.8)
+    doc.setTextColor(st.color[0], st.color[1], st.color[2])
+    doc.text(st.value, sX + cellW / 2, currentY + 10.2, { align: 'center' })
+  })
+
+  currentY += summaryBoxH + 2.5
+
+  // Result Standing Banner
+  const bannerH = 6.2
+  doc.setFillColor(allPassed ? 240 : 254, allPassed ? 253 : 242, allPassed ? 244 : 242)
+  doc.roundedRect(marginX, currentY, contentW, bannerH, 0.8, 0.8, 'F')
+  doc.setDrawColor(allPassed ? 16 : 239, allPassed ? 185 : 68, allPassed ? 129 : 68)
+  doc.setLineWidth(0.3)
+  doc.roundedRect(marginX, currentY, contentW, bannerH, 0.8, 0.8, 'S')
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.8)
+  doc.setTextColor(7, 26, 61)
+  doc.text('OFFICIAL RESULT CLASSIFICATION:', marginX + 4, currentY + 4.2)
+
+  const classificationText = data.classification || (data.sgpa >= 8.5 ? 'FIRST CLASS WITH DISTINCTION' : data.sgpa >= 6.5 ? 'FIRST CLASS' : data.sgpa >= 5.0 ? 'SECOND CLASS' : 'RE-APPEAR')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7.2)
+  doc.setTextColor(allPassed ? 5 : 220, allPassed ? 122 : 38, allPassed ? 85 : 38)
+  doc.text(allPassed ? `PASS — ${classificationText}` : 'RE-APPEAR REQUIRED', marginX + 54, currentY + 4.2)
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.2)
+  doc.setTextColor(100, 116, 139)
+  doc.text('Status: Verified against V.S.B. Autonomous ERP Ledger', marginX + contentW - 4, currentY + 4.2, { align: 'right' })
+
+  currentY += bannerH + 3
+
+  // ── 7. Statutory 10-Point Scale Autonomous Grading Scale Legend ─────────────
+  const legendH = 11.5
+  doc.setFillColor(248, 250, 252)
+  doc.roundedRect(marginX, currentY, contentW, legendH, 1, 1, 'FD')
+  doc.setDrawColor(226, 232, 240)
+  doc.setLineWidth(0.2)
+  doc.roundedRect(marginX, currentY, contentW, legendH, 1, 1, 'S')
+
+  const lCols = [
+    { grade: 'O', pts: '10', range: '91-100', desc: 'Outstanding' },
+    { grade: 'A+', pts: '9', range: '81-90', desc: 'Excellent' },
+    { grade: 'A', pts: '8', range: '71-80', desc: 'Very Good' },
+    { grade: 'B+', pts: '7', range: '61-70', desc: 'Good' },
+    { grade: 'B', pts: '6', range: '50-60', desc: 'Above Avg' },
+    { grade: 'C', pts: '5', range: '45-49', desc: 'Average' },
+    { grade: 'U', pts: '0', range: '<45', desc: 'Re-appear' },
+    { grade: 'SA', pts: '0', range: 'Shortage', desc: 'Attendance' },
+    { grade: 'W', pts: '—', range: 'Withdrawal', desc: 'Withdrawn' },
+  ]
+
+  const legCellW = contentW / (lCols.length + 1)
+
+  // Label column
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(5.5)
+  doc.setTextColor(71, 85, 105)
+  doc.text('LETTER GRADE', marginX + 2, currentY + 3.2)
+  doc.text('GRADE POINT', marginX + 2, currentY + 6.6)
+  doc.text('PERFORMANCE', marginX + 2, currentY + 10.0)
+
+  lCols.forEach((col, lIdx) => {
+    const lx = marginX + legCellW + lIdx * ((contentW - legCellW) / lCols.length)
+    const cw = (contentW - legCellW) / lCols.length
+
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(5.8)
+    doc.setTextColor(col.grade === 'U' ? 220 : 7, col.grade === 'U' ? 38 : 26, col.grade === 'U' ? 38 : 61)
+    doc.text(col.grade, lx + cw / 2, currentY + 3.2, { align: 'center' })
+
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(5.6)
+    doc.setTextColor(71, 85, 105)
+    doc.text(col.pts, lx + cw / 2, currentY + 6.6, { align: 'center' })
+
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(4.8)
+    doc.setTextColor(100, 116, 139)
+    doc.text(col.desc, lx + cw / 2, currentY + 10.0, { align: 'center' })
+  })
+
+  currentY += legendH + 3.5
+
+  // ── 8. Official Signatures & COE Digital Seal Block ─────────────────────────
+  const sigH = 19
+  const sigColW = contentW / 3
+
+  // Col 1: Class Advisor
+  doc.setDrawColor(203, 213, 225)
+  doc.setLineWidth(0.3)
+  doc.line(marginX + 6, currentY + 10, marginX + sigColW - 6, currentY + 10)
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.8)
+  doc.setTextColor(7, 26, 61)
+  doc.text('FACULTY CLASS ADVISOR', marginX + sigColW / 2, currentY + 13.5, { align: 'center' })
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(5.8)
+  doc.setTextColor(100, 116, 139)
+  doc.text('Dept. of Artificial Intelligence & Data Science', marginX + sigColW / 2, currentY + 16.8, { align: 'center' })
+
+  // Col 2: Autonomous COE Institutional Seal
+  const sealCenterX = marginX + contentW / 2
+  const sealCenterY = currentY + 8
+  const sealR = 8.5
+
+  doc.setFillColor(250, 252, 255)
+  doc.circle(sealCenterX, sealCenterY, sealR, 'F')
+  doc.setDrawColor(21, 87, 192)
+  doc.setLineWidth(0.5)
+  doc.circle(sealCenterX, sealCenterY, sealR, 'S')
+
+  doc.setDrawColor(231, 185, 62)
+  doc.setLineWidth(0.25)
+  doc.circle(sealCenterX, sealCenterY, sealR - 1.5, 'S')
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.4)
+  doc.setTextColor(21, 87, 192)
+  doc.text('V.S.B. ENGINEERING COLLEGE', sealCenterX, sealCenterY - 3.2, { align: 'center' })
+  doc.text('AUTONOMOUS', sealCenterX, sealCenterY - 0.5, { align: 'center' })
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.0)
+  doc.setTextColor(231, 185, 62)
+  doc.text('★ OFFICE OF COE ★', sealCenterX, sealCenterY + 2.2, { align: 'center' })
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.2)
+  doc.setTextColor(5, 122, 85)
+  doc.text('OFFICIALLY VERIFIED', sealCenterX, sealCenterY + 4.8, { align: 'center' })
+
+  // Col 3: Controller of Examinations
+  const col3X = marginX + sigColW * 2
+  doc.setDrawColor(203, 213, 225)
+  doc.setLineWidth(0.3)
+  doc.line(col3X + 6, currentY + 10, col3X + sigColW - 6, currentY + 10)
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.8)
+  doc.setTextColor(7, 26, 61)
+  doc.text('CONTROLLER OF EXAMINATIONS', col3X + sigColW / 2, currentY + 13.5, { align: 'center' })
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(5.8)
+  doc.setTextColor(100, 116, 139)
+  doc.text('V.S.B. Engineering College (Autonomous)', col3X + sigColW / 2, currentY + 16.8, { align: 'center' })
+
+  currentY += sigH + 1
+
+  // ── 9. Official Universal Digital Portal Notice Footer ───────────────────────
+  drawDigitalPortalDocumentNotice(doc, {
+    y: Math.min(currentY, pageHeight - 32),
+    contentW,
+    marginX,
+    recordType: 'AUTONOMOUS SEMESTER GRADE SHEET RECORD',
+    verificationCode: folio,
+    repositoryName: 'Centralized Autonomous Examination ERP',
+    issuingAuthority: 'Office of the Controller of Examinations',
+    boxHeight: 22,
+  })
+
+  // ── 10. Save and Trigger Download ───────────────────────────────────────────
+  const downloadFileName = data.fileName || `VSB_AIDS_Sem${data.semester}_Official_GradeSheet_${data.registerNumber}`
+  const finalName = downloadFileName.endsWith('.pdf') ? downloadFileName : `${downloadFileName}.pdf`
+  doc.save(finalName)
+}
