@@ -154,7 +154,6 @@ export function PortalLayout({
   const isInitialSyncDone = useRef<boolean>(false)
 
   const notificationRef = useRef<HTMLDivElement>(null)
-  const menuNotifRef = useRef<HTMLDivElement>(null)
   const navContainerRef = useRef<HTMLElement>(null)
   const pathname = usePathname()
   const router = useRouter()
@@ -162,7 +161,6 @@ export function PortalLayout({
   const [visibleMenuMap, setVisibleMenuMap] = useState<Record<string, boolean>>({})
   const [menuMetaMap, setMenuMetaMap] = useState<Record<string, { label?: string; badgeText?: string; badgeColor?: string }>>({})
   const [apiMenuCounts, setApiMenuCounts] = useState<Record<string, number>>({})
-  const [isMenuNotifOpen, setIsMenuNotifOpen] = useState(false)
   const [activeVersion, setActiveVersion] = useState<string>(APP_VERSION_LABEL)
 
   useEffect(() => {
@@ -366,94 +364,168 @@ export function PortalLayout({
     }
   }, [])
 
-  // Sync real-time notifications from API
-  const syncNotifications = async () => {
+  // Process real-time notification data received via SSE stream or REST API
+  const applyNotificationData = useCallback((data: any) => {
+    if (!data || !Array.isArray(data.notifications)) return
+    if (data.menuCounts && typeof data.menuCounts === 'object') {
+      setApiMenuCounts(data.menuCounts)
+    }
+    const fetchedList = data.notifications
+    const notifLink =
+      role === 'admin'
+        ? '/admin/notifications'
+        : role === 'hod'
+        ? '/hod-dashboard/notifications'
+        : role === 'faculty'
+        ? '/faculty-dashboard/notifications'
+        : '/dashboard/notifications'
+
+    if (!isInitialSyncDone.current) {
+      // Initial population
+      fetchedList.forEach((n: any) => knownNotificationIds.current.add(n.id))
+
+      const formatted: NotificationItem[] = fetchedList.map((n: any) => ({
+        id: n.id,
+        title: n.title,
+        description: n.message,
+        time: n.createdAt
+          ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : 'Recently',
+        unread: typeof n.isRead === 'boolean' ? !n.isRead : true,
+        type: 'info',
+        link: notifLink,
+      }))
+      setNotifications(formatted)
+      isInitialSyncDone.current = true
+    } else {
+      // Detect brand new real-time notifications
+      const newItems = fetchedList.filter((n: any) => !knownNotificationIds.current.has(n.id))
+      if (newItems.length > 0) {
+        newItems.forEach((n: any) => {
+          knownNotificationIds.current.add(n.id)
+        })
+
+        const latest = newItems[0]
+
+        // 1. Dispatch native system notification (Android status bar / lock screen)
+        dispatchNativeNotification({
+          id: latest.id,
+          title: latest.title,
+          message: latest.message,
+          createdByName: latest.createdByName,
+          link: notifLink,
+        }).then((dispatched) => {
+          // Always guarantee visual floating card banner on screen
+          setRealtimeToast({
+            id: latest.id,
+            title: latest.title,
+            message: latest.message,
+            createdByName: latest.createdByName,
+            link: notifLink,
+          })
+
+          // If native system dispatch failed (e.g. permission not yet allowed), play chime with visual card
+          if (!dispatched) {
+            playNotificationChime()
+            triggerDeviceVibration([200, 100, 200])
+          }
+        })
+
+        const formattedNew: NotificationItem[] = newItems.map((n: any) => ({
+          id: n.id,
+          title: n.title,
+          description: n.message,
+          time: 'Just now',
+          unread: typeof n.isRead === 'boolean' ? !n.isRead : true,
+          type: 'info',
+          link: notifLink,
+        }))
+
+        setNotifications((prev) => [...formattedNew, ...prev])
+      } else {
+        // Update read statuses of existing notifications if changed
+        setNotifications((prev) =>
+          prev.map((item) => {
+            const match = fetchedList.find((f: any) => f.id === item.id)
+            if (match && typeof match.isRead === 'boolean') {
+              return { ...item, unread: !match.isRead }
+            }
+            return item
+          })
+        )
+      }
+    }
+  }, [role])
+
+  // Sync notifications from REST API (used as fallback or manual refresh)
+  const syncNotifications = useCallback(async () => {
     try {
       const res = await fetch(`/api/notifications?role=${role}&limit=20`)
       if (!res.ok) return
       const data = await res.json()
-      if (data.success && Array.isArray(data.notifications)) {
-        if (data.menuCounts && typeof data.menuCounts === 'object') {
-          setApiMenuCounts(data.menuCounts)
-        }
-        const fetchedList = data.notifications
-
-        if (!isInitialSyncDone.current) {
-          // Initial population
-          fetchedList.forEach((n: any) => knownNotificationIds.current.add(n.id))
-
-          const notifLink = role === 'admin' ? '/admin/notifications' : role === 'hod' ? '/hod-dashboard/notifications' : role === 'faculty' ? '/faculty-dashboard/notifications' : '/dashboard/notifications'
-
-          const formatted: NotificationItem[] = fetchedList.map((n: any) => ({
-            id: n.id,
-            title: n.title,
-            description: n.message,
-            time: n.createdAt ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently',
-            unread: typeof n.isRead === 'boolean' ? !n.isRead : true,
-            type: 'info',
-            link: notifLink,
-          }))
-          setNotifications(formatted)
-          isInitialSyncDone.current = true
-        } else {
-          // Detect brand new real-time notifications
-          const newItems = fetchedList.filter((n: any) => !knownNotificationIds.current.has(n.id))
-          if (newItems.length > 0) {
-            const notifLink = role === 'admin' ? '/admin/notifications' : role === 'hod' ? '/hod-dashboard/notifications' : role === 'faculty' ? '/faculty-dashboard/notifications' : '/dashboard/notifications'
-
-            newItems.forEach((n: any) => {
-              knownNotificationIds.current.add(n.id)
-            })
-
-            const latest = newItems[0]
-
-            // 1. Dispatch native system notification (Android status bar / lock screen)
-            dispatchNativeNotification({
-              id: latest.id,
-              title: latest.title,
-              message: latest.message,
-              createdByName: latest.createdByName,
-              link: notifLink,
-            }).then((dispatched) => {
-              // Always guarantee visual floating card banner on screen
-              setRealtimeToast({
-                id: latest.id,
-                title: latest.title,
-                message: latest.message,
-                createdByName: latest.createdByName,
-                link: notifLink,
-              })
-
-              // If native system dispatch failed (e.g. permission not yet allowed), play chime with visual card
-              if (!dispatched) {
-                playNotificationChime()
-                triggerDeviceVibration([200, 100, 200])
-              }
-            })
-
-            const formattedNew: NotificationItem[] = newItems.map((n: any) => ({
-              id: n.id,
-              title: n.title,
-              description: n.message,
-              time: 'Just now',
-              unread: typeof n.isRead === 'boolean' ? !n.isRead : true,
-              type: 'info',
-              link: notifLink,
-            }))
-
-            setNotifications((prev) => [...formattedNew, ...prev])
-          }
-        }
+      if (data.success) {
+        applyNotificationData(data)
       }
     } catch {}
-  }
+  }, [role, applyNotificationData])
 
-  // Polling loop: gentle background check every 45s to avoid exhausting database connections
+  // Real-time notification delivery via Server-Sent Events (SSE) stream
   useEffect(() => {
+    let eventSource: EventSource | null = null
+    let fallbackInterval: NodeJS.Timeout | null = null
+
+    // Initial load
     syncNotifications()
-    const interval = setInterval(syncNotifications, 45000)
-    return () => clearInterval(interval)
-  }, [role])
+
+    // Establish persistent SSE connection if supported in browser/app
+    if (typeof window !== 'undefined' && 'EventSource' in window) {
+      try {
+        eventSource = new EventSource('/api/notifications/stream')
+
+        eventSource.addEventListener('snapshot', (event: MessageEvent) => {
+          try {
+            const data = JSON.parse(event.data)
+            applyNotificationData(data)
+          } catch {}
+        })
+
+        eventSource.addEventListener('update', (event: MessageEvent) => {
+          try {
+            const data = JSON.parse(event.data)
+            applyNotificationData(data)
+          } catch {}
+        })
+
+        eventSource.onerror = () => {
+          // EventSource automatically handles reconnect attempts
+        }
+      } catch {
+        // Fallback polling if EventSource instantiation fails
+        fallbackInterval = setInterval(syncNotifications, 30000)
+      }
+    } else {
+      // Periodic fallback for environments without EventSource
+      fallbackInterval = setInterval(syncNotifications, 30000)
+    }
+
+    // Refresh when user returns to tab
+    const handleVisibilityChange = () => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        syncNotifications()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      if (eventSource) {
+        eventSource.close()
+      }
+      if (fallbackInterval) {
+        clearInterval(fallbackInterval)
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [role, syncNotifications, applyNotificationData])
 
   // Auto-sync real mobile push subscription if permission already granted
   useEffect(() => {
@@ -841,33 +913,6 @@ export function PortalLayout({
     [notifications, unreadCount, apiMenuCounts]
   )
 
-  const menusWithNotifications = useMemo(() => {
-    return resolvedNavItems
-      .filter((item) => {
-        // Exclude generic notifications inbox from menu breakdown
-        if (item.href.includes('/notifications') || item.label.toLowerCase() === 'notifications') {
-          return false
-        }
-        // Exclude root dashboards from menu breakdown
-        const isRootDashboard =
-          item.href === '/dashboard' ||
-          item.href === '/faculty-dashboard' ||
-          item.href === '/hod-dashboard' ||
-          item.href === '/admin' ||
-          item.href === '/admin/dashboard'
-        if (isRootDashboard) return false
-
-        return getMenuNotificationCount(item.href, item.label) > 0
-      })
-      .map((item) => ({
-        ...item,
-        count: getMenuNotificationCount(item.href, item.label),
-      }))
-  }, [resolvedNavItems, getMenuNotificationCount])
-
-  const totalMenuNotifications = useMemo(() => {
-    return menusWithNotifications.reduce((acc, item) => acc + item.count, 0)
-  }, [menusWithNotifications])
 
   // Role-specific URLs
   const notificationsHref =
@@ -893,7 +938,6 @@ export function PortalLayout({
   useEffect(() => {
     setIsDrawerOpen(false)
     setIsNotificationOpen(false)
-    setIsMenuNotifOpen(false)
     setIsNavigating(false)
     setActivePath(pathname)
   }, [pathname])
@@ -903,9 +947,6 @@ export function PortalLayout({
     function handleClickOutside(event: MouseEvent) {
       if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
         setIsNotificationOpen(false)
-      }
-      if (menuNotifRef.current && !menuNotifRef.current.contains(event.target as Node)) {
-        setIsMenuNotifOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -1306,155 +1347,14 @@ export function PortalLayout({
               aria-label="Open Navigation Drawer"
             >
               <Menu className="w-6 h-6" />
-              {totalMenuNotifications > 0 && (
+              {unreadCount > 0 && (
                 <span className="absolute top-1 right-1 min-w-[17px] h-[17px] px-1 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center border-2 border-white shadow-xs animate-pulse">
-                  {totalMenuNotifications > 99 ? '99+' : totalMenuNotifications}
+                  {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}
             </button>
 
-            {/* Top Menu Bar: Active Menu Notifications & Dropdown */}
-            {menusWithNotifications.length > 0 && (
-              <div className="relative flex items-center gap-2" ref={menuNotifRef}>
-                {/* 1. Direct Quick Chips for top 2 active menus (visible on desktop) */}
-                <div className="hidden xl:flex items-center gap-2">
-                  {menusWithNotifications.slice(0, 2).map((m) => (
-                    <Link
-                      key={m.href}
-                      href={m.href}
-                      onClick={() => handleNavClick(m.href)}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100/90 hover:bg-blue-50 border border-slate-200/80 hover:border-blue-200 text-[#071A3D] hover:text-[#1455D9] transition-all text-xs font-bold shadow-2xs group cursor-pointer"
-                      title={`${m.count} new notification${m.count > 1 ? 's' : ''} in ${m.label}`}
-                    >
-                      <span className="text-blue-600 group-hover:scale-110 transition-transform">
-                        {m.icon}
-                      </span>
-                      <span className="truncate max-w-[130px]">{m.label}</span>
-                      <span className="min-w-[18px] h-[18px] px-1 bg-red-500 text-white rounded-full text-[10px] font-black flex items-center justify-center shadow-xs animate-pulse">
-                        {m.count > 99 ? '99+' : m.count}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
 
-                {/* 2. Interactive Menu Updates Pill Button (visible across screen sizes) */}
-                <button
-                  type="button"
-                  onClick={() => setIsMenuNotifOpen((prev) => !prev)}
-                  className={cn(
-                    'flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full border text-xs font-bold transition-all shadow-xs cursor-pointer',
-                    isMenuNotifOpen
-                      ? 'bg-red-500 text-white border-red-600 ring-2 ring-red-300/50'
-                      : 'bg-red-50 hover:bg-red-100/90 text-red-700 border-red-200 hover:border-red-300'
-                  )}
-                  title="Click to view all menus with notifications"
-                  aria-expanded={isMenuNotifOpen}
-                >
-                  <span className="relative flex h-2 w-2 shrink-0">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                  </span>
-                  <span className="tracking-tight">
-                    {menusWithNotifications.length}{' '}
-                    <span className="hidden sm:inline">Menu{menusWithNotifications.length > 1 ? 's' : ''}</span>
-                    <span className="sm:hidden">Menu{menusWithNotifications.length > 1 ? 's' : ''}</span>
-                  </span>
-                  <span
-                    className={cn(
-                      'px-1.5 py-0.2 rounded-full text-[10px] font-black',
-                      isMenuNotifOpen ? 'bg-white text-red-600' : 'bg-red-500 text-white'
-                    )}
-                  >
-                    {totalMenuNotifications}
-                  </span>
-                  <ChevronDown
-                    className={cn(
-                      'w-3.5 h-3.5 transition-transform duration-200',
-                      isMenuNotifOpen ? 'rotate-180' : ''
-                    )}
-                  />
-                </button>
-
-                {/* 3. Dropdown Popover showing all menus with their notification counts */}
-                {isMenuNotifOpen && (
-                  <>
-                    {/* Mobile Backdrop */}
-                    <div
-                      onClick={() => setIsMenuNotifOpen(false)}
-                      className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs sm:hidden"
-                    />
-
-                    <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-auto sm:left-0 sm:top-full sm:mt-2 w-auto sm:w-80 rounded-2xl bg-white border border-slate-200 shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 origin-top-left flex flex-col font-sans">
-                      <div className="p-3.5 bg-[#071A41] text-white flex items-center justify-between shadow-xs">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-lg bg-red-500/20 border border-red-400/30 flex items-center justify-center text-red-300">
-                            <Bell className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <h4 className="text-xs font-black tracking-wide text-white">Menu Notifications</h4>
-                            <p className="text-[10px] text-blue-200">
-                              {totalMenuNotifications} alert{totalMenuNotifications > 1 ? 's' : ''} across {menusWithNotifications.length} menu{menusWithNotifications.length > 1 ? 's' : ''}
-                            </p>
-                          </div>
-                        </div>
-                        <span className="px-2 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-black">
-                          Active
-                        </span>
-                      </div>
-
-                      <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 p-1.5 bg-white" style={{ scrollbarWidth: 'thin' }}>
-                        {menusWithNotifications.map((m) => (
-                          <Link
-                            key={m.href}
-                            href={m.href}
-                            onClick={() => {
-                              handleNavClick(m.href)
-                              setIsMenuNotifOpen(false)
-                            }}
-                            className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition-colors group cursor-pointer"
-                          >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#1455D9] group-hover:bg-[#1455D9] group-hover:text-white transition-colors flex items-center justify-center shrink-0 shadow-2xs">
-                                {m.icon}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-xs font-bold text-slate-800 group-hover:text-[#1455D9] truncate">
-                                  {m.label}
-                                </p>
-                                <p className="text-[10px] text-slate-500 truncate">
-                                  Click to open this section
-                                </p>
-                              </div>
-                            </div>
-                            <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200 text-xs font-black shrink-0 shadow-2xs group-hover:bg-red-500 group-hover:text-white group-hover:border-red-500 transition-colors">
-                              {m.count} new
-                            </span>
-                          </Link>
-                        ))}
-                      </div>
-
-                      <div className="p-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs">
-                        <Link
-                          href={notificationsHref}
-                          onClick={() => setIsMenuNotifOpen(false)}
-                          className="text-[11px] font-bold text-[#1455D9] hover:underline inline-flex items-center gap-1"
-                        >
-                          <span>All Notifications</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => setIsMenuNotifOpen(false)}
-                          className="text-[11px] font-bold text-slate-500 hover:text-slate-800 cursor-pointer"
-                        >
-                          Close
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
 
             <Link href={role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard'} className="flex items-center gap-2.5 lg:hidden">
               <div className="w-8 h-8 shrink-0">
