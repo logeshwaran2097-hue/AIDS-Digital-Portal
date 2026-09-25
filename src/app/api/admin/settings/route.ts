@@ -33,6 +33,12 @@ const DEFAULT_SETTINGS = {
   requireNumbers: true,
   requireSpecialChars: true,
   passwordExpiryDays: 90,
+  // Administrative Access & Session Security Governance
+  adminIpWhitelistEnabled: false,
+  adminAllowedIps: '10.0.0.0/8, 192.168.1.0/24, 127.0.0.1',
+  singleAdminSessionOnly: true,
+  maxFailedLogins: 5,
+  lockoutDurationMinutes: 30,
   // Notification Preferences
   notifyEmail: true,
   notifyInApp: true,
@@ -129,6 +135,9 @@ export async function POST(request: NextRequest) {
     // Check if it's a password change request
     if (body.action === 'CHANGE_PASSWORD') {
       const { currentPassword, newPassword } = body
+      if (!currentPassword || !newPassword) {
+        return NextResponse.json({ error: 'Current and new password are required' }, { status: 400 })
+      }
 
       const user = await prisma.user.findUnique({
         where: { id: session.userId },

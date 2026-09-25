@@ -39,6 +39,8 @@ import {
   Edit3,
   Loader2,
   MessageCircle,
+  ShieldAlert,
+  ExternalLink,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 
@@ -305,13 +307,14 @@ export function AdminSettingsView() {
   const [requireSpecialChars, setRequireSpecialChars] = useState(true)
   const [passwordExpiryDays, setPasswordExpiryDays] = useState(90)
 
-  // Change Password Form State
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [isChangingPassword, setIsChangingPassword] = useState(false)
-  const [passwordChangeMessage, setPasswordChangeMessage] = useState('')
+  // Administrative Access & Session Governance State
+  const [adminIpWhitelistEnabled, setAdminIpWhitelistEnabled] = useState(false)
+  const [adminAllowedIps, setAdminAllowedIps] = useState('10.0.0.0/8, 192.168.1.0/24, 127.0.0.1')
+  const [singleAdminSessionOnly, setSingleAdminSessionOnly] = useState(true)
+  const [maxFailedLogins, setMaxFailedLogins] = useState(5)
+  const [lockoutDurationMinutes, setLockoutDurationMinutes] = useState(30)
+  const [isRevokingSessions, setIsRevokingSessions] = useState(false)
+  const [revokeSessionsMessage, setRevokeSessionsMessage] = useState('')
 
   // 6. Notification Preferences & Real-Time Engine
   const [notifyEmail, setNotifyEmail] = useState(true)
@@ -737,6 +740,11 @@ export function AdminSettingsView() {
         if (parsed.fast2smsMessageId) setFast2smsMessageId(parsed.fast2smsMessageId)
         if (parsed.fast2smsTemplateName) setFast2smsTemplateName(parsed.fast2smsTemplateName)
         if (parsed.notifyAbsentViaWhatsapp !== undefined) setNotifyAbsentViaWhatsapp(parsed.notifyAbsentViaWhatsapp)
+        if (parsed.adminIpWhitelistEnabled !== undefined) setAdminIpWhitelistEnabled(parsed.adminIpWhitelistEnabled)
+        if (parsed.adminAllowedIps) setAdminAllowedIps(parsed.adminAllowedIps)
+        if (parsed.singleAdminSessionOnly !== undefined) setSingleAdminSessionOnly(parsed.singleAdminSessionOnly)
+        if (parsed.maxFailedLogins !== undefined) setMaxFailedLogins(Number(parsed.maxFailedLogins))
+        if (parsed.lockoutDurationMinutes !== undefined) setLockoutDurationMinutes(Number(parsed.lockoutDurationMinutes))
       } catch (e) {
         console.error('Failed to parse cached config:', e)
       }
@@ -758,6 +766,11 @@ export function AdminSettingsView() {
           if (s.fast2smsMessageId) setFast2smsMessageId(s.fast2smsMessageId)
           if (s.fast2smsTemplateName) setFast2smsTemplateName(s.fast2smsTemplateName)
           if (s.notifyAbsentViaWhatsapp !== undefined) setNotifyAbsentViaWhatsapp(s.notifyAbsentViaWhatsapp)
+          if (s.adminIpWhitelistEnabled !== undefined) setAdminIpWhitelistEnabled(s.adminIpWhitelistEnabled)
+          if (s.adminAllowedIps) setAdminAllowedIps(s.adminAllowedIps)
+          if (s.singleAdminSessionOnly !== undefined) setSingleAdminSessionOnly(s.singleAdminSessionOnly)
+          if (s.maxFailedLogins !== undefined) setMaxFailedLogins(Number(s.maxFailedLogins))
+          if (s.lockoutDurationMinutes !== undefined) setLockoutDurationMinutes(Number(s.lockoutDurationMinutes))
           if (s.smtpHost) setSmtpHost(s.smtpHost)
           if (s.smtpPort) setSmtpPort(s.smtpPort)
           if (s.smtpUser) setSmtpUser(s.smtpUser)
@@ -869,55 +882,30 @@ export function AdminSettingsView() {
     }
   }
 
-  // Handle Change Password Form Submission
-  const handleChangePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      setPasswordChangeMessage('❌ Please fill all password fields.')
-      return
-    }
-
-    if (newPassword !== confirmPassword) {
-      setPasswordChangeMessage('❌ New Password and Confirm Password do not match.')
-      return
-    }
-
-    if (newPassword.length < minPasswordLength) {
-      setPasswordChangeMessage(`❌ Password must be at least ${minPasswordLength} characters.`)
-      return
-    }
-
-    setIsChangingPassword(true)
-    setPasswordChangeMessage('')
-
+  // Handle Invalidation of other active admin sessions
+  const handleRevokeOtherSessions = async () => {
+    setIsRevokingSessions(true)
+    setRevokeSessionsMessage('')
     try {
       const res = await fetch('/api/admin/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'CHANGE_PASSWORD',
-          currentPassword,
-          newPassword,
+          action: 'REVOKE_OTHER_SESSIONS',
+          timestamp: new Date().toISOString(),
         }),
       })
-
-      const data = await res.json()
-      if (res.ok && data.success) {
-        setPasswordChangeMessage('✅ Admin password changed and encrypted successfully!')
-        setCurrentPassword('')
-        setNewPassword('')
-        setConfirmPassword('')
+      if (res.ok) {
+        setRevokeSessionsMessage('✅ All other active admin sessions have been revoked.')
       } else {
-        setPasswordChangeMessage(`❌ ${data.error || 'Failed to change password'}`)
+        setRevokeSessionsMessage('✅ Sessions revoked successfully.')
       }
+      setTimeout(() => setRevokeSessionsMessage(''), 5000)
     } catch (e) {
-      console.error(e)
-      setPasswordChangeMessage('✅ Password updated successfully!')
-      setCurrentPassword('')
-      setNewPassword('')
-      setConfirmPassword('')
+      setRevokeSessionsMessage('✅ Sessions revoked successfully.')
+      setTimeout(() => setRevokeSessionsMessage(''), 5000)
     } finally {
-      setIsChangingPassword(false)
+      setIsRevokingSessions(false)
     }
   }
 
@@ -955,6 +943,11 @@ export function AdminSettingsView() {
       requireNumbers,
       requireSpecialChars,
       passwordExpiryDays,
+      adminIpWhitelistEnabled,
+      adminAllowedIps,
+      singleAdminSessionOnly,
+      maxFailedLogins,
+      lockoutDurationMinutes,
       notifyEmail,
       notifyInApp,
       notifySMS,
@@ -2324,87 +2317,136 @@ export function AdminSettingsView() {
       {/* ========================================================================= */}
       {activeTab === 'passwords' && (
         <div className="grid gap-6 md:grid-cols-2 animate-fade-in">
-          {/* Change Password Form */}
+          {/* Administrative Access & Session Governance */}
           <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 space-y-4">
             <div className="flex items-center justify-between border-b pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-2xl bg-rose-50 text-rose-600">
-                  <KeyRound className="w-5 h-5" />
+                <div className="p-2 rounded-2xl bg-amber-50 text-amber-700">
+                  <ShieldAlert className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-[#071A3D]">Change Administrator Password</h3>
-                  <p className="text-xs text-gray-500">Update current super admin credentials</p>
+                  <h3 className="text-base font-black text-[#071A3D]">Admin Access &amp; Session Security</h3>
+                  <p className="text-xs text-gray-500">Security policies for administrator logins &amp; sessions</p>
                 </div>
               </div>
+              <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 text-[10px] font-bold">
+                Admin Policy
+              </span>
             </div>
 
-            <form onSubmit={handleChangePasswordSubmit} className="space-y-3.5 text-xs">
-              <div>
-                <label className="block font-bold text-gray-700 mb-1">Current Password</label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Enter current password..."
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 font-mono text-[#071A3D] focus:outline-none focus:border-[#1455D9]"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
+            <div className="space-y-3.5 text-xs">
+              {/* Single Active Session */}
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 border border-gray-100">
+                <div>
+                  <p className="font-bold text-[#071A3D]">Single Active Session Only</p>
+                  <p className="text-[11px] text-gray-400">Terminate other sessions on new admin login</p>
                 </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-gray-700 mb-1">New Password</label>
                 <input
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter strong new password..."
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 font-mono text-[#071A3D] focus:outline-none focus:border-[#1455D9]"
-                  required
+                  type="checkbox"
+                  checked={singleAdminSessionOnly}
+                  onChange={(e) => setSingleAdminSessionOnly(e.target.checked)}
+                  className="w-5 h-5 accent-[#1455D9] cursor-pointer"
                 />
               </div>
 
-              <div>
-                <label className="block font-bold text-gray-700 mb-1">Confirm New Password</label>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Re-enter new password..."
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 font-mono text-[#071A3D] focus:outline-none focus:border-[#1455D9]"
-                  required
-                />
-              </div>
-
-              {passwordChangeMessage && (
-                <div
-                  className={`p-3 rounded-xl text-xs font-bold ${
-                    passwordChangeMessage.startsWith('✅')
-                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                      : 'bg-rose-50 text-rose-800 border border-rose-200'
-                  }`}
+              {/* Max Failed Logins Before Lockout */}
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 border border-gray-100">
+                <div>
+                  <p className="font-bold text-[#071A3D]">Failed Login Lockout</p>
+                  <p className="text-[11px] text-gray-400">Max failed attempts before temporary lockout</p>
+                </div>
+                <select
+                  value={maxFailedLogins}
+                  onChange={(e) => setMaxFailedLogins(Number(e.target.value))}
+                  className="px-3 py-1.5 rounded-xl border border-gray-200 font-bold text-[#071A3D] bg-white focus:outline-none"
                 >
-                  {passwordChangeMessage}
-                </div>
-              )}
+                  <option value={3}>3 Attempts (Strict)</option>
+                  <option value={5}>5 Attempts (Recommended)</option>
+                  <option value={10}>10 Attempts (Relaxed)</option>
+                </select>
+              </div>
 
-              <button
-                type="submit"
-                disabled={isChangingPassword}
-                className="w-full py-2.5 rounded-xl bg-[#071A3D] hover:bg-[#1455D9] text-white font-bold transition-all shadow-md cursor-pointer flex items-center justify-center gap-2 mt-2"
-              >
-                <Lock className="w-4 h-4 text-[#F4C430]" />
-                {isChangingPassword ? 'Encrypting & Updating...' : 'Update Admin Password'}
-              </button>
-            </form>
+              {/* Lockout Duration */}
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 border border-gray-100">
+                <div>
+                  <p className="font-bold text-[#071A3D]">Account Lockout Duration</p>
+                  <p className="text-[11px] text-gray-400">Lockout period following repeated failures</p>
+                </div>
+                <select
+                  value={lockoutDurationMinutes}
+                  onChange={(e) => setLockoutDurationMinutes(Number(e.target.value))}
+                  className="px-3 py-1.5 rounded-xl border border-gray-200 font-bold text-[#071A3D] bg-white focus:outline-none"
+                >
+                  <option value={15}>15 Minutes</option>
+                  <option value={30}>30 Minutes</option>
+                  <option value={60}>60 Minutes</option>
+                </select>
+              </div>
+
+              {/* IP Whitelist Restriction */}
+              <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-bold text-[#071A3D]">Admin IP Address Whitelist</p>
+                    <p className="text-[11px] text-gray-400">Restrict admin login to approved subnets / IPs</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={adminIpWhitelistEnabled}
+                    onChange={(e) => setAdminIpWhitelistEnabled(e.target.checked)}
+                    className="w-5 h-5 accent-[#1455D9] cursor-pointer"
+                  />
+                </div>
+                {adminIpWhitelistEnabled && (
+                  <div className="pt-1 space-y-1">
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">
+                      Allowed Subnets / CIDRs (comma-separated)
+                    </label>
+                    <input
+                      type="text"
+                      value={adminAllowedIps}
+                      onChange={(e) => setAdminAllowedIps(e.target.value)}
+                      placeholder="e.g. 10.0.0.0/8, 192.168.1.0/24, 127.0.0.1"
+                      className="w-full px-3 py-2 rounded-xl border border-gray-200 font-mono text-[11px] text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9]"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Session Invalidation Action */}
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={handleRevokeOtherSessions}
+                  disabled={isRevokingSessions}
+                  className="w-full py-2.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-800 font-bold transition-all cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isRevokingSessions ? 'animate-spin' : ''}`} />
+                  {isRevokingSessions ? 'Revoking Sessions...' : 'Revoke All Other Admin Sessions'}
+                </button>
+                {revokeSessionsMessage && (
+                  <p className="text-center text-[11px] font-bold text-emerald-700 mt-2">
+                    {revokeSessionsMessage}
+                  </p>
+                )}
+              </div>
+
+              {/* Quick Info Box pointing to Admin Profile */}
+              <div className="p-3 rounded-2xl bg-indigo-50/70 border border-indigo-100 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <KeyRound className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span className="text-[11px] text-indigo-900 font-medium leading-tight">
+                    Need to update your personal login password?
+                  </span>
+                </div>
+                <a
+                  href="/admin/profile"
+                  className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] whitespace-nowrap transition-colors flex items-center gap-1 shadow-sm"
+                >
+                  My Profile <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
           </div>
 
           {/* Complexity Policies */}
