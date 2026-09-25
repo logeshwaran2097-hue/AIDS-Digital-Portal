@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import {
   CheckCircle2,
@@ -55,11 +56,26 @@ export function StudentOnboardingModal({
   onComplete,
   initialData,
 }: StudentOnboardingModalProps) {
+  const [mounted, setMounted] = useState(false)
   // Steps: 1: Review Academic Details -> 2: Set Password & Email OTP Verification -> 3: Verify All Details & Confirm
   const [onboardingStep, setOnboardingStep] = useState<1 | 2 | 3>(1)
   const [loading, setLoading] = useState(false)
   const [step3Confirmed, setStep3Confirmed] = useState(false)
   const [step3Error, setStep3Error] = useState<string | null>(null)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = originalOverflow
+      }
+    }
+  }, [isOpen])
 
   // Form State
   const [form, setForm] = useState({
@@ -574,11 +590,16 @@ export function StudentOnboardingModal({
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-[99999] bg-[#071A41]/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+  if (!isOpen || !mounted) return null
+
+  return createPortal(
+    <div 
+      onClick={() => onClose?.()}
+      className="fixed inset-0 z-[999999] bg-[#071A41]/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200"
+    >
       <div 
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-7 shadow-2xl space-y-4 border border-gray-100 max-h-[94vh] overflow-y-auto animate-in zoom-in-95 duration-200"
+        className="bg-white rounded-3xl max-w-2xl sm:max-w-3xl w-full p-6 sm:p-8 shadow-2xl space-y-5 border border-slate-100 max-h-[92vh] overflow-y-auto animate-in zoom-in-95 duration-200 relative my-auto"
       >
         
         {/* Modal Header with Progress Step Indicator (Exact Match with Image 1) */}
@@ -591,6 +612,16 @@ export function StudentOnboardingModal({
               <span className="text-[11px] font-mono font-bold text-slate-500">
                 {initialData.registerNumber}
               </span>
+              {onClose && (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors flex items-center justify-center cursor-pointer shadow-2xs shrink-0"
+                  title="Close and continue to dashboard"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
           
@@ -1769,6 +1800,7 @@ export function StudentOnboardingModal({
           </div>
         </div>
       )}
-    </div>
+    </div>,
+    document.body
   )
 }

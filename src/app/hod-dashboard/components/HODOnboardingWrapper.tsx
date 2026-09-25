@@ -95,36 +95,42 @@ export function HODOnboardingWrapper({
         </button>
       </div>
 
-      <StaffOnboardingModal
-        isOpen={isOpen}
-        role="hod"
-        onClose={() => {
-          setIsOpen(false)
-          if (typeof window !== 'undefined') {
-            sessionStorage.setItem(`vsb_staff_onboarding_dismissed_${hodKey}`, 'true')
-          }
-        }}
-        initialData={{
-          name: hodData.name,
-          email: hodData.email,
-          phone: hodData.phone || '',
-          facultyId: hodData.facultyId,
-          designation: hodData.designation || 'Professor & Head of Department',
-          qualification: hodData.qualification || '',
-          experience: hodData.experience ?? 0,
-          department: hodData.department || 'Artificial Intelligence & Data Science',
-        }}
-        onComplete={() => {
-          setIsOpen(false)
-          setIsCompleted(true)
-          if (typeof window !== 'undefined') {
-            localStorage.setItem(`vsb_staff_onboarding_done_${hodKey}`, 'true')
-            sessionStorage.setItem(`vsb_staff_onboarding_done_${hodKey}`, 'true')
-            sessionStorage.removeItem(`vsb_staff_onboarding_dismissed_${hodKey}`)
-            window.location.reload()
-          }
-        }}
-      />
+      {isOpen && (
+        <StaffOnboardingModal
+          isOpen={isOpen}
+          role="hod"
+          onClose={() => {
+            setIsOpen(false)
+            if (typeof window !== 'undefined') {
+              sessionStorage.setItem(`vsb_staff_onboarding_dismissed_${hodKey}`, 'true')
+              // Also clear the query param ?onboarding=1 from URL cleanly without reloading
+              const url = new URL(window.location.href)
+              url.searchParams.delete('onboarding')
+              window.history.replaceState({}, '', url.pathname + (url.search ? url.search : ''))
+            }
+          }}
+          initialData={{
+            name: hodData.name,
+            email: hodData.email,
+            phone: hodData.phone || '',
+            facultyId: hodData.facultyId,
+            designation: hodData.designation || 'Professor & Head of Department',
+            qualification: hodData.qualification || '',
+            experience: hodData.experience ?? 0,
+            department: hodData.department || 'Artificial Intelligence & Data Science',
+          }}
+          onComplete={() => {
+            setIsOpen(false)
+            setIsCompleted(true)
+            if (typeof window !== 'undefined') {
+              localStorage.setItem(`vsb_staff_onboarding_done_${hodKey}`, 'true')
+              sessionStorage.setItem(`vsb_staff_onboarding_done_${hodKey}`, 'true')
+              sessionStorage.removeItem(`vsb_staff_onboarding_dismissed_${hodKey}`)
+              window.location.reload()
+            }
+          }}
+        />
+      )}
     </>
   )
 }
