@@ -61,7 +61,38 @@ export async function sendWhatsAppText(to: string, message: string): Promise<boo
 }
 
 /**
+ * Mark an incoming WhatsApp message as read immediately.
+ * This triggers instant double blue checkmarks (✓✓) on the sender's phone.
+ */
+export async function markWhatsAppMessageRead(messageId: string): Promise<boolean> {
+  if (!messageId) return false
+  const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID || FALLBACK_PHONE_ID
+  const token = process.env.WHATSAPP_ACCESS_TOKEN || FALLBACK_ACCESS_TOKEN
+
+  if (!phoneId || !token) return false
+
+  try {
+    const res = await fetch(`${GRAPH_API_BASE}/${phoneId}/messages`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        status: 'read',
+        message_id: messageId,
+      }),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
+/**
  * Send interactive buttons to a WhatsApp recipient (Up to 3 buttons)
+ * Optimized for sub-second execution with automated parameter compliance.
  */
 export async function sendWhatsAppButtons(
   to: string,
@@ -80,6 +111,13 @@ export async function sendWhatsAppButtons(
 
   const cleanRecipient = to.replace(/\D/g, '')
 
+  // Meta interactive button body limit is strictly 1024 characters.
+  // If the body is too long or there are no buttons, bypass interactive mode directly to avoid a 1.5s failed roundtrip.
+  if (!buttons || buttons.length === 0 || bodyText.length > 1000) {
+    const combined = `${headerText ? headerText + '\n\n' : ''}${bodyText}${footerText ? '\n\n' + footerText : ''}`
+    return sendWhatsAppText(cleanRecipient, combined)
+  }
+
   const payload: any = {
     messaging_product: 'whatsapp',
     recipient_type: 'individual',
@@ -87,13 +125,13 @@ export async function sendWhatsAppButtons(
     type: 'interactive',
     interactive: {
       type: 'button',
-      body: { text: bodyText },
+      body: { text: bodyText.slice(0, 1024) },
       action: {
         buttons: buttons.slice(0, 3).map((b) => ({
           type: 'reply',
           reply: {
-            id: b.id,
-            title: b.title.slice(0, 20), // WhatsApp max title limit is 20 chars
+            id: b.id.slice(0, 256),
+            title: b.title.slice(0, 20), // WhatsApp strict max 20 chars
           },
         })),
       },
@@ -103,13 +141,13 @@ export async function sendWhatsAppButtons(
   if (headerText) {
     payload.interactive.header = {
       type: 'text',
-      text: headerText,
+      text: headerText.slice(0, 60), // WhatsApp strict max 60 chars
     }
   }
 
   if (footerText) {
     payload.interactive.footer = {
-      text: footerText,
+      text: footerText.slice(0, 60), // WhatsApp strict max 60 chars
     }
   }
 
@@ -125,9 +163,9 @@ export async function sendWhatsAppButtons(
 
     const data = await res.json()
     if (!res.ok) {
-      console.error('[WhatsApp Bot] Failed to dispatch interactive buttons:', data)
-      // Fallback to text if interactive template is rejected
-      return sendWhatsAppText(to, `${headerText ? headerText + '\n\n' : ''}${bodyText}`)
+      console.warn('[WhatsApp Bot] Button dispatch failed, sending text fallback:', data)
+      const combined = `${headerText ? headerText + '\n\n' : ''}${bodyText}`
+      return sendWhatsAppText(cleanRecipient, combined)
     }
 
     return true
@@ -136,3 +174,4 @@ export async function sendWhatsAppButtons(
     return false
   }
 }
+

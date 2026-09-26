@@ -1360,11 +1360,12 @@ Answer the student or faculty query with high academic rigor, clear headings, de
               systemInstruction: systemInstructions,
             })
 
+            const maxTokens = isOdDrafting ? 100 : isQuestionGen ? 1500 : 750
             const result = await m.generateContent({
               contents: [{ role: 'user', parts: [{ text: query }] }],
               generationConfig: {
-                maxOutputTokens: 2500,
-                temperature: 0.7,
+                maxOutputTokens: maxTokens,
+                temperature: 0.6,
               },
             })
 
