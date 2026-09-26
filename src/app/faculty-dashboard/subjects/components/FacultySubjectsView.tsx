@@ -31,7 +31,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { generateAndDownloadPDF, downloadWithDeptHeader } from '@/lib/pdfGenerator'
 
 interface CourseSubject {
   code: string
@@ -569,15 +569,29 @@ export function FacultySubjectsView({
     })
   }
 
-  const handleDownloadNote = (n: CourseSubject['notes'][0]) => {
+  const handleDownloadNote = async (n: CourseSubject['notes'][0]) => {
     if (n.fileUrl) {
-      const a = document.createElement('a')
-      a.href = n.fileUrl
-      a.download = n.fileName || `${n.title}.pdf`
-      a.target = '_blank'
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
+      const fileName = n.fileName || `${n.title}.pdf`
+      try {
+        await downloadWithDeptHeader({
+          fileUrl: n.fileUrl,
+          fileName,
+          title: n.title,
+          resourceType: 'LECTURE_NOTES',
+          uploadedByName: 'Department Faculty',
+          subjectCode: currentCourse?.code,
+          subjectName: currentCourse?.name,
+        })
+      } catch (err) {
+        console.error('Failed to download with dept header:', err)
+        const a = document.createElement('a')
+        a.href = n.fileUrl
+        a.download = fileName
+        a.target = '_blank'
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+      }
     } else {
       generateAndDownloadPDF({
         title: `${currentCourse?.code || 'COURSE'} - ${n.title}`,
@@ -600,15 +614,29 @@ export function FacultySubjectsView({
     }
   }
 
-  const handleDownloadLabGuide = (l: CourseSubject['labs'][0]) => {
+  const handleDownloadLabGuide = async (l: CourseSubject['labs'][0]) => {
     if (l.fileUrl) {
-      const a = document.createElement('a')
-      a.href = l.fileUrl
-      a.download = l.guideFile || `${currentCourse?.code}_Exp${l.expNo}.pdf`
-      a.target = '_blank'
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
+      const fileName = l.guideFile || `${currentCourse?.code}_Exp${l.expNo}.pdf`
+      try {
+        await downloadWithDeptHeader({
+          fileUrl: l.fileUrl,
+          fileName,
+          title: l.title,
+          resourceType: 'LAB_MANUAL',
+          uploadedByName: 'Department Lab In-Charge',
+          subjectCode: currentCourse?.code,
+          subjectName: currentCourse?.name,
+        })
+      } catch (err) {
+        console.error('Failed to download with dept header:', err)
+        const a = document.createElement('a')
+        a.href = l.fileUrl
+        a.download = fileName
+        a.target = '_blank'
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+      }
     } else {
       generateAndDownloadPDF({
         title: `${currentCourse?.code} - Experiment ${l.expNo}`,

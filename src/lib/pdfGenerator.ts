@@ -3045,23 +3045,24 @@ export interface DeptHeaderDownloadOptions {
  * Creates the official V.S.B. Department Letterhead Banner matching the institutional format.
  */
 export function buildDeptHeaderBannerDoc(widthMm: number = 210, heightMm: number = 34): jsPDF {
-  const isLandscape = widthMm > 250
+  // CRITICAL: In jsPDF, when width is greater than height, orientation MUST be 'landscape'.
+  // Passing 'portrait' causes jsPDF to swap dimensions (34mm wide by 210mm high), squashing and cutting off all content.
   const doc = new jsPDF({
-    orientation: isLandscape ? 'landscape' : 'portrait',
+    orientation: 'landscape',
     unit: 'mm',
-    format: [widthMm, heightMm],
+    format: [Math.min(widthMm, heightMm), Math.max(widthMm, heightMm)],
   })
 
   const marginX = 8
   const contentW = widthMm - marginX * 2
 
-  // Background tint
-  doc.setFillColor(252, 253, 255)
+  // Background: Pristine clean white
+  doc.setFillColor(255, 255, 255)
   doc.rect(0, 0, widthMm, heightMm, 'F')
 
   // Top accent border (thin gold bar)
   doc.setFillColor(231, 185, 62)
-  doc.rect(0, 0, widthMm, 0.7, 'F')
+  doc.rect(0, 0, widthMm, 0.8, 'F')
 
   // Logo
   const logoX = marginX + 1
@@ -3110,7 +3111,7 @@ export function buildDeptHeaderBannerDoc(widthMm: number = 210, heightMm: number
   doc.text('Accredited by NAAC with "A" Grade  ·  NBA Accredited Programs  ·  ISO 9001:2015 Certified', hCX, 25.5, { align: 'center' })
 
   // Separator beam
-  const beamY = 30
+  const beamY = 29.5
   doc.setFillColor(21, 87, 192)
   doc.rect(marginX, beamY, contentW, 1.3, 'F')
   doc.setFillColor(231, 185, 62)
@@ -3171,8 +3172,8 @@ export function buildDeptHeaderCoverDoc(options: DeptHeaderDownloadOptions): jsP
   const beamY = marginX + 34
   doc.setFillColor(21, 87, 192); doc.rect(marginX, beamY, contentW, 1.4, 'F')
   doc.setFillColor(231, 185, 62); doc.rect(marginX, beamY + 1.4, contentW, 0.7, 'F')
-  doc.setFillColor(231, 185, 62); doc.circle(marginX + contentW / 2, beamY + 1, 1.8, 'F')
-  doc.setFillColor(7, 26, 61); doc.circle(marginX + contentW / 2, beamY + 1, 0.9, 'F')
+  doc.setFillColor(231, 185, 62); doc.circle(marginX + contentW / 2, beamY + 1.8, 1.8, 'F')
+  doc.setFillColor(7, 26, 61); doc.circle(marginX + contentW / 2, beamY + 1.8, 0.9, 'F')
 
   // Clean, official institutional document overview card
   let curY = beamY + 12
@@ -3262,25 +3263,29 @@ export async function downloadWithDeptHeader(options: DeptHeaderDownloadOptions)
       throw new Error('PDF document has no pages.')
     }
 
-    // Get primary page width from the first page
-    const firstPage = originalDoc.getPage(0)
-    const { width: firstW } = firstPage.getSize()
-    const widthMm = (firstW * 25.4) / 72
-    const headerHeightMm = 34
-
-    // Build the official V.S.B. Department Letterhead Banner
-    const headerDoc = buildDeptHeaderBannerDoc(widthMm, headerHeightMm)
-    const headerPdfBytes = headerDoc.output('arraybuffer')
-
-    const loadedHeaderDoc = await PDFDocument.load(headerPdfBytes)
     const mergedPdf = await PDFDocument.create()
-    const embeddedHeader = await mergedPdf.embedPage(loadedHeaderDoc.getPage(0))
 
-    // Copy all original pages (NO separate blank cover page prepended)
+    // Copy all original pages
     const pageIndices = Array.from({ length: pageCount }, (_, i) => i)
     const copiedPages = await mergedPdf.copyPages(originalDoc, pageIndices)
 
+    const headerHeightMm = 34
     const headerHeightPt = (headerHeightMm * 72) / 25.4
+
+    // Cache embedded headers by width so that different orientations (portrait vs landscape) are seamlessly handled
+    const headerCache = new Map<number, any>()
+    const getEmbeddedHeader = async (targetWidthPt: number) => {
+      const targetWidthMm = Math.max(100, Math.round((targetWidthPt * 25.4) / 72))
+      if (headerCache.has(targetWidthMm)) {
+        return headerCache.get(targetWidthMm)
+      }
+      const headerDoc = buildDeptHeaderBannerDoc(targetWidthMm, headerHeightMm)
+      const headerPdfBytes = headerDoc.output('arraybuffer')
+      const loadedHeaderDoc = await PDFDocument.load(headerPdfBytes)
+      const emb = await mergedPdf.embedPage(loadedHeaderDoc.getPage(0))
+      headerCache.set(targetWidthMm, emb)
+      return emb
+    }
 
     // Apply official header to ALL pages of the PDF
     for (let i = 0; i < copiedPages.length; i++) {
@@ -3288,17 +3293,22 @@ export async function downloadWithDeptHeader(options: DeptHeaderDownloadOptions)
       mergedPdf.addPage(page)
       const { width, height } = page.getSize()
 
-      // Scale content slightly and offset downwards to comfortably accommodate the header without obscuring content
-      const scale = 0.88
+      // Calculate scale so that content fits neatly below the header banner without collision
+      const availableHeight = height - headerHeightPt - 18
+      const scaleY = availableHeight / height
+      const scale = Math.min(0.85, Math.max(0.70, scaleY))
       const offsetX = (width * (1 - scale)) / 2
-      const offsetY = 12
+      const targetContentTop = height - headerHeightPt - 8
+      const offsetY = Math.max(8, targetContentTop - (height * scale))
 
       try {
         page.scaleContent(scale, scale)
-        page.translateContent(offsetX / scale, offsetY / scale)
+        page.translateContent(offsetX, offsetY)
       } catch (scaleErr) {
         console.warn('Could not transform page content, drawing header directly:', scaleErr)
       }
+
+      const embeddedHeader = await getEmbeddedHeader(width)
 
       // Draw official header banner across the top of this page
       page.drawPage(embeddedHeader, {

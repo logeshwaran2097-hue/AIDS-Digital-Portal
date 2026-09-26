@@ -28,9 +28,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { EmptyState } from '@/components/portal/states'
-import { cn } from '@/lib/utils'
-import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
-import { STUDY_DATABASE } from '@/data/studyDatabase'
+import { generateAndDownloadPDF, downloadWithDeptHeader } from '@/lib/pdfGenerator'
 import { StudyNavigationHeader } from '@/components/study/StudyNavigationHeader'
 import { getCurriculumBySemester, type CurriculumCourse } from '@/lib/assessmentR2023'
 
@@ -279,16 +277,33 @@ ANSWER: [Comprehensive model answer with formulas/points/pseudocode]`
   }
 
   // 2. Download Lecture Note PDF
-  const handleDownloadNote = (n: Note) => {
+  const handleDownloadNote = async (n: Note) => {
     if (!current) return
-    if ((n as any).fileUrl && ((n as any).fileUrl.startsWith('/uploads/') || (n as any).fileUrl.startsWith('data:') || (n as any).fileUrl.startsWith('http'))) {
-      const link = document.createElement('a')
-      link.href = (n as any).fileUrl
-      link.download = (n as any).fileName || n.title + '.pdf'
-      link.target = '_blank'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+    const fileUrl = (n as any).fileUrl
+    if (fileUrl && (fileUrl.startsWith('/uploads/') || fileUrl.startsWith('data:') || fileUrl.startsWith('http') || fileUrl.startsWith('blob:'))) {
+      const fileName = (n as any).fileName || `${current.code}_${n.title}.pdf`
+      try {
+        await downloadWithDeptHeader({
+          fileUrl,
+          fileName,
+          title: n.title,
+          resourceType: 'LECTURE_NOTES',
+          uploadedByName: n.uploaderName || 'Department Faculty',
+          semester: student.semester,
+          subjectCode: current.code,
+          subjectName: current.name,
+          academicYear: '2023-2024',
+        })
+      } catch (err) {
+        console.error('Failed to download with dept header:', err)
+        const link = document.createElement('a')
+        link.href = fileUrl
+        link.download = fileName
+        link.target = '_blank'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      }
       return
     }
     generateAndDownloadPDF({
@@ -303,16 +318,33 @@ ANSWER: [Comprehensive model answer with formulas/points/pseudocode]`
   }
 
   // 3. Download Lab Manual PDF
-  const handleDownloadLab = (l: LabManual) => {
+  const handleDownloadLab = async (l: LabManual) => {
     if (!current) return
-    if ((l as any).fileUrl && ((l as any).fileUrl.startsWith('/uploads/') || (l as any).fileUrl.startsWith('data:') || (l as any).fileUrl.startsWith('http'))) {
-      const link = document.createElement('a')
-      link.href = (l as any).fileUrl
-      link.download = (l as any).fileName || l.title + '.pdf'
-      link.target = '_blank'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+    const fileUrl = (l as any).fileUrl
+    if (fileUrl && (fileUrl.startsWith('/uploads/') || fileUrl.startsWith('data:') || fileUrl.startsWith('http') || fileUrl.startsWith('blob:'))) {
+      const fileName = (l as any).fileName || `${current.code}_Exp${l.experimentNumber}_${l.title}.pdf`
+      try {
+        await downloadWithDeptHeader({
+          fileUrl,
+          fileName,
+          title: `Experiment ${l.experimentNumber}: ${l.experimentName || l.title}`,
+          resourceType: 'LAB_MANUAL',
+          uploadedByName: 'Department Laboratory In-Charge',
+          semester: student.semester,
+          subjectCode: current.code,
+          subjectName: current.name,
+          academicYear: '2023-2024',
+        })
+      } catch (err) {
+        console.error('Failed to download with dept header:', err)
+        const link = document.createElement('a')
+        link.href = fileUrl
+        link.download = fileName
+        link.target = '_blank'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      }
       return
     }
     generateAndDownloadPDF({
