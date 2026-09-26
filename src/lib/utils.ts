@@ -16,6 +16,25 @@ export function normalizeIndianPhone(raw: string | null | undefined): string {
   return num.length >= 10 ? num.slice(-10) : num // take last 10 digits
 }
 
+/**
+ * Detects whether an email address is an auto-generated internal placeholder
+ * (e.g. 922523243054@vsb.ac.in, 922525243202@vsb.student.edu) rather than a real student email.
+ */
+export function isPlaceholderEmail(email?: string | null, registerNumber?: string | null): boolean {
+  if (!email || !email.trim()) return true
+  const lower = email.trim().toLowerCase()
+  if (lower.endsWith('@vsb.student.edu') || lower.endsWith('@student.vsb.edu.in')) return true
+  if (registerNumber && registerNumber.trim()) {
+    const regLower = registerNumber.trim().toLowerCase()
+    if (lower.startsWith(regLower)) return true
+    if (lower === `${regLower}@vsb.ac.in`) return true
+  }
+  // Any email that starts with a register number (6 or more digits followed by @)
+  if (/^\d{6,}@/i.test(lower)) return true
+  if (lower.includes('placeholder') || lower.includes('notregistered') || lower.includes('dummy')) return true
+  return false
+}
+
 
 export function formatDate(date: Date | string, format: string = 'dd/MM/yyyy'): string {
   const d = new Date(date)

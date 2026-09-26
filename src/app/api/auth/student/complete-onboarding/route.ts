@@ -37,8 +37,19 @@ export async function POST(request: NextRequest) {
       residencyStatus?: string | null; bloodGroup?: string | null; isParentWhatsapp?: boolean;
       hostelBlock?: string | null; roomNo?: string | null; busNo?: string | null;
       boardingPoint?: string | null; profileImage?: string | null;
+      gender?: string | null; fatherName?: string | null; motherName?: string | null; address?: string | null;
+      sslcDistrict?: string | null; sslcSchool?: string | null; sslcMarks?: number | string | null;
+      sslcPercentage?: number | string | null; sslcMedium?: string | null;
+      hscDistrict?: string | null; hscSchool?: string | null; hscMarks?: number | string | null;
+      hscPercentage?: number | string | null; hscCutoff?: number | string | null; hscMedium?: string | null;
     }
-    const { name, phone, parentPhone, dateOfBirth, email, otp, newPassword, skipEmailVerification, residencyStatus, bloodGroup, isParentWhatsapp, hostelBlock, roomNo, busNo, boardingPoint, profileImage } = body
+    const {
+      name, phone, parentPhone, dateOfBirth, email, otp, newPassword, skipEmailVerification,
+      residencyStatus, bloodGroup, isParentWhatsapp, hostelBlock, roomNo, busNo, boardingPoint, profileImage,
+      gender, fatherName, motherName, address,
+      sslcDistrict, sslcSchool, sslcMarks, sslcPercentage, sslcMedium,
+      hscDistrict, hscSchool, hscMarks, hscPercentage, hscCutoff, hscMedium,
+    } = body
 
     const isCustomEmail = email && email.includes('@')
 
@@ -99,6 +110,7 @@ export async function POST(request: NextRequest) {
       if (roomNo !== undefined) studentUpdateData.roomNo = roomNo
       if (busNo !== undefined) studentUpdateData.busNo = busNo
       if (boardingPoint !== undefined) studentUpdateData.boardingPoint = boardingPoint
+      if (address !== undefined) studentUpdateData.address = address ? address.trim() : null
 
       if (Object.keys(studentUpdateData).length > 0) {
         let student = await prisma.student.update({
@@ -340,6 +352,7 @@ export async function POST(request: NextRequest) {
     if (roomNo !== undefined) studentUpdateData.roomNo = roomNo
     if (busNo !== undefined) studentUpdateData.busNo = busNo
     if (boardingPoint !== undefined) studentUpdateData.boardingPoint = boardingPoint
+    if (address !== undefined) studentUpdateData.address = address ? address.trim() : null
 
     if (Object.keys(studentUpdateData).length > 0) {
       let student = await prisma.student.update({
@@ -403,6 +416,21 @@ export async function POST(request: NextRequest) {
         profileImage: updatedUser.profileImage || null,
         emailVerified: true,
         mustChangePassword: false,
+        address: studentUpdateData.address || null,
+        gender: body.gender || null,
+        fatherName: body.fatherName || null,
+        motherName: body.motherName || null,
+        sslcDistrict: body.sslcDistrict || null,
+        sslcSchool: body.sslcSchool || null,
+        sslcMarks: body.sslcMarks || null,
+        sslcPercentage: body.sslcPercentage || null,
+        sslcMedium: body.sslcMedium || null,
+        hscDistrict: body.hscDistrict || null,
+        hscSchool: body.hscSchool || null,
+        hscMarks: body.hscMarks || null,
+        hscPercentage: body.hscPercentage || null,
+        hscCutoff: body.hscCutoff || null,
+        hscMedium: body.hscMedium || null,
       },
       message: 'Onboarding complete! Your details have been saved.',
     })

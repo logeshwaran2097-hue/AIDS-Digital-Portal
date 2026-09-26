@@ -2,6 +2,7 @@ import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { HODStudentsView, DBStudent, ClassMeta } from './components/HODStudentsView'
+import { isPlaceholderEmail } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -80,7 +81,7 @@ export default async function HODStudentsPage() {
       id: s.id,
       registerNumber: s.registerNumber,
       name: u?.name || s.registerNumber,
-      email: u?.email || `${s.registerNumber.toLowerCase()}@vsb.ac.in`,
+      email: isPlaceholderEmail(u?.email, s.registerNumber) ? '' : (u?.email || ''),
       profileImage: u?.profileImage || null,
       year: s.year,
       semester: s.semester,

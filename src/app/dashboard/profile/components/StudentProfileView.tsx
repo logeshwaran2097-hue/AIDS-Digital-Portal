@@ -78,6 +78,20 @@ interface StudentFullProfile {
   roomNo?: string
   parentPhone?: string
   isParentWhatsapp?: boolean
+  gender?: string
+  fatherName?: string
+  motherName?: string
+  sslcDistrict?: string
+  sslcSchool?: string
+  sslcMarks?: string
+  sslcPercentage?: string
+  sslcMedium?: string
+  hscDistrict?: string
+  hscSchool?: string
+  hscMarks?: string
+  hscPercentage?: string
+  hscCutoff?: string
+  hscMedium?: string
   registerNumber: string
   department: string
   degreeProgram: string
@@ -168,6 +182,21 @@ export function StudentProfileView({
     boardingPoint: (initialStudent as any).boardingPoint || '',
     hostelBlock: (initialStudent as any).hostelBlock || '',
     roomNo: (initialStudent as any).roomNo || '',
+    gender: (initialStudent as any).gender || '',
+    fatherName: (initialStudent as any).fatherName || '',
+    motherName: (initialStudent as any).motherName || '',
+    address: (initialStudent as any).address || '',
+    sslcDistrict: '',
+    sslcSchool: '',
+    sslcMarks: '',
+    sslcPercentage: '',
+    sslcMedium: 'English',
+    hscDistrict: '',
+    hscSchool: '',
+    hscMarks: '',
+    hscPercentage: '',
+    hscCutoff: '',
+    hscMedium: 'English',
     registerNumber: regNo,
     department: initialStudent.department || 'Artificial Intelligence & Data Science',
     degreeProgram: 'B.Tech Artificial Intelligence & Data Science',
@@ -522,13 +551,6 @@ Provide concise, highly actionable, industry-relevant guidance (recommended tool
             >
               <Download className="w-4 h-4" /> DOWNLOAD RECORD (PDF)
             </button>
-            <button
-              onClick={() => setIsEditOpen(true)}
-              type="button"
-              className="px-3.5 py-2 rounded text-xs font-semibold border border-[#E5E7EB] bg-white hover:bg-slate-50 text-[#1F2937] flex items-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <Edit3 className="w-4 h-4" /> EDIT DETAILS
-            </button>
           </div>
         </div>
 
@@ -714,7 +736,11 @@ Provide concise, highly actionable, industry-relevant guidance (recommended tool
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex flex-col gap-1">
+                  <span className="font-bold text-gray-500 text-[10px] uppercase">Gender</span>
+                  <span className="font-black text-[#071A3D] truncate">{profile.gender || 'Not specified'}</span>
+                </div>
                 <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex flex-col gap-1">
                   <span className="font-bold text-gray-500 text-[10px] uppercase">Date of Birth</span>
                   <span className="font-black text-[#071A3D] truncate">{profile.dateOfBirth || 'Not specified'}</span>
@@ -803,6 +829,92 @@ Provide concise, highly actionable, industry-relevant guidance (recommended tool
                   <span className="font-bold text-amber-700">Emergency / Parent:</span>
                 </div>
                 <span className="font-black text-[#071A3D]">{profile.parentPhone || 'Not specified'}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 3. Family & Schooling Academic Records (10th & 12th) */}
+        <Card className="rounded-3xl border-gray-200 shadow-xs hover:shadow-md transition-all relative group md:col-span-2">
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center">
+                  <BookOpen className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-sm text-[#071A3D]">Family Particulars &amp; Prior Schooling Records (10th &amp; 12th)</h3>
+                  <p className="text-[11px] text-gray-400">Authenticated parental details and secondary schooling qualifications</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              {/* Parental Particulars & Address */}
+              <div className="p-4 rounded-2xl bg-gray-50/80 border border-gray-200 space-y-2.5">
+                <span className="text-[10px] font-black text-gray-500 uppercase tracking-wider block">
+                  👨‍👩‍👧 PARENTAL &amp; RESIDENTIAL RECORD
+                </span>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <span className="text-gray-400 block text-[10px]">Father / Guardian:</span>
+                    <span className="font-black text-[#071A3D]">{profile.fatherName || 'Not specified'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 block text-[10px]">Mother Name:</span>
+                    <span className="font-black text-[#071A3D]">{profile.motherName || 'Not specified'}</span>
+                  </div>
+                </div>
+                <div>
+                  <span className="text-gray-400 block text-[10px]">Permanent Address:</span>
+                  <span className="font-semibold text-[#071A3D] leading-tight block mt-0.5">
+                    {profile.address || 'Not specified'}
+                  </span>
+                </div>
+              </div>
+
+              {/* 10th & 12th Records */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* 10th Record */}
+                <div className="p-3 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black text-blue-800 uppercase">10th (SSLC)</span>
+                    <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-1.5 py-0.2 rounded">
+                      {profile.sslcPercentage ? `${profile.sslcPercentage}%` : 'Verified'}
+                    </span>
+                  </div>
+                  <p className="font-bold text-[#071A41] text-xs leading-tight line-clamp-2">
+                    {profile.sslcSchool || 'School details on record'}
+                  </p>
+                  <p className="text-[10px] text-gray-500">
+                    District: {profile.sslcDistrict || 'N/A'} · {profile.sslcMedium || 'English'} Medium
+                  </p>
+                  {profile.sslcMarks && (
+                    <p className="text-[11px] font-mono font-bold text-blue-900 pt-1 border-t border-blue-200/60">
+                      Marks: {profile.sslcMarks} / 500
+                    </p>
+                  )}
+                </div>
+
+                {/* 12th Record */}
+                <div className="p-3 rounded-2xl bg-indigo-50/60 border border-indigo-200 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black text-indigo-800 uppercase">12th (HSC)</span>
+                    <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-1.5 py-0.2 rounded">
+                      {profile.hscCutoff ? `Cut-off: ${profile.hscCutoff}` : 'Verified'}
+                    </span>
+                  </div>
+                  <p className="font-bold text-[#071A41] text-xs leading-tight line-clamp-2">
+                    {profile.hscSchool || 'School details on record'}
+                  </p>
+                  <p className="text-[10px] text-gray-500">
+                    District: {profile.hscDistrict || 'N/A'} · {profile.hscMedium || 'English'} Medium
+                  </p>
+                  <div className="flex items-center justify-between pt-1 border-t border-indigo-200/60 text-[11px] font-mono font-bold text-indigo-900">
+                    <span>{profile.hscMarks ? `${profile.hscMarks} / 600` : ''}</span>
+                    <span>{profile.hscPercentage ? `(${profile.hscPercentage}%)` : ''}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </CardContent>

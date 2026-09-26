@@ -54,7 +54,7 @@ import {
   getYearFromSemester,
   getSemesterForYear,
 } from '@/lib/academicBatch'
-import { cn } from '@/lib/utils'
+import { cn, isPlaceholderEmail } from '@/lib/utils'
 
 export interface StudentRecord {
   id: string
@@ -576,7 +576,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               s.registerNumber,
               s.name,
               `Yr ${s.year} · Sem ${s.semester} · Sec ${s.section}`,
-              s.phone || s.email || 'N/A',
+              s.phone || (!isPlaceholderEmail(s.email, s.registerNumber) ? s.email : 'N/A'),
               {
                 text: s.status.toUpperCase(),
                 badge: true,
@@ -588,7 +588,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           },
           body: students.map(
             (s, idx) =>
-              `${idx + 1}. [${s.registerNumber}] ${s.name} — Year ${s.year}, Sem ${s.semester}, Sec ${s.section} · Contact: ${s.phone || s.email || 'N/A'} · Status: ${s.status.toUpperCase()}`
+              `${idx + 1}. [${s.registerNumber}] ${s.name} — Year ${s.year}, Sem ${s.semester}, Sec ${s.section} · Contact: ${s.phone || (!isPlaceholderEmail(s.email, s.registerNumber) ? s.email : 'N/A')} · Status: ${s.status.toUpperCase()}`
           ),
         },
       ],
@@ -810,7 +810,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   }
 
   const openEditModal = (s: StudentRecord) => {
-    const isPlaceholder = !s.email || s.email.endsWith('@vsb.student.edu') || s.email.endsWith('@student.vsb.edu.in') || (s.registerNumber && s.email.toLowerCase().startsWith(s.registerNumber.toLowerCase()))
+    const isPlaceholder = isPlaceholderEmail(s.email, s.registerNumber)
     const cleanEmail = isPlaceholder ? '' : s.email
     setSelectedStudent(s)
     const isHostel = (s.residencyStatus || '').toLowerCase().includes('hostel')
@@ -1676,7 +1676,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                       <span className="text-[10px] text-gray-400 font-normal">(Parent)</span>
                     </a>
                   )}
-                  {s.email && !s.email.endsWith('@vsb.student.edu') && !s.email.endsWith('@student.vsb.edu.in') && (
+                  {s.email && !isPlaceholderEmail(s.email, s.registerNumber) && (
                     <a
                       href={`mailto:${s.email}`}
                       className="flex items-center gap-2 text-slate-700 hover:text-[#1455D9] transition-colors py-0.5 truncate"
@@ -1824,7 +1824,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                       {/* Contact Details */}
                       <td className="py-3.5 px-3 whitespace-nowrap">
                         <div className="flex flex-col gap-0.5 text-[10.5px]">
-                          {s.email && !s.email.endsWith('@vsb.student.edu') && !s.email.endsWith('@student.vsb.edu.in') ? (
+                          {s.email && !isPlaceholderEmail(s.email, s.registerNumber) ? (
                             <a
                               href={`mailto:${s.email}`}
                               className="text-[#1455D9] font-medium whitespace-nowrap hover:underline block truncate max-w-[190px]"
@@ -3093,7 +3093,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               </div>
 
               <div className="space-y-2">
-                {selectedStudent.email && !selectedStudent.email.endsWith('@vsb.student.edu') && !selectedStudent.email.endsWith('@student.vsb.edu.in') ? (
+                {selectedStudent.email && !isPlaceholderEmail(selectedStudent.email, selectedStudent.registerNumber) ? (
                   <div className="flex items-center gap-2 text-gray-600">
                     <Mail className="w-4 h-4 text-[#1455D9]" />
                     <span className="font-semibold">{selectedStudent.email}</span>

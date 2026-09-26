@@ -2,6 +2,7 @@ import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { AdminStudentsView, StudentRecord } from './components/AdminStudentsView'
+import { isPlaceholderEmail } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -51,6 +52,8 @@ export default async function AdminStudentsPage() {
 
   const studentsList: StudentRecord[] = joinedRows.map((s) => {
     const rawEmail = s.user_email || ''
+    const isPlaceholder = isPlaceholderEmail(rawEmail, s.registerNumber)
+    const cleanEmail = isPlaceholder ? '' : rawEmail
     // A student is ACTIVE ONLY if they have authenticated and logged into the website
     const hasLoggedInWebsite = Boolean(s.user_last_login) && s.user_status?.toLowerCase() === 'active'
     const effectiveStatus = hasLoggedInWebsite ? 'active' : 'inactive'
@@ -60,7 +63,7 @@ export default async function AdminStudentsPage() {
       userId: s.userId,
       registerNumber: s.registerNumber,
       name: s.user_name || s.registerNumber,
-      email: rawEmail,
+      email: cleanEmail,
       phone: s.user_phone || '',
       parentPhone: s.parentPhone || '',
       dateOfBirth: s.dateOfBirth ? new Date(s.dateOfBirth).toISOString().split('T')[0] : null,

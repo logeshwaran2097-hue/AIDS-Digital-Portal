@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
-import { parseSafeDateOfBirth } from '@/lib/utils'
+import { parseSafeDateOfBirth, isPlaceholderEmail } from '@/lib/utils'
 import { getSession } from '@/lib/auth'
 import { validateBody, adminCreateStudentSchema, studentSelfUpdateSchema, adminUpdateStudentSchema } from '@/lib/validations/apiValidation'
 import { invalidateDbCache } from '@/lib/dbCache'
@@ -73,14 +73,7 @@ export async function GET(request: Request) {
 
       const result = rows.map((s) => {
         const rawEmail = s.user_email || ''
-        const isPlaceholderEmail = Boolean(
-          rawEmail && (
-            rawEmail.endsWith('@vsb.student.edu') ||
-            rawEmail.endsWith('@student.vsb.edu.in') ||
-            rawEmail.toLowerCase().startsWith(s.registerNumber.toLowerCase())
-          )
-        )
-        const displayEmail = isPlaceholderEmail ? '' : rawEmail
+        const displayEmail = isPlaceholderEmail(rawEmail, s.registerNumber) ? '' : rawEmail
         // A student is ACTIVE ONLY if they have authenticated and logged into the website
         const hasLoggedInWebsite = Boolean(s.user_last_login) && s.user_status?.toLowerCase() === 'active'
         const effectiveStatus = hasLoggedInWebsite ? 'active' : 'inactive'
@@ -158,14 +151,7 @@ export async function GET(request: Request) {
     const result = students.map((s) => {
       const u = userMap.get(s.userId)
       const rawEmail = u?.email || ''
-      const isPlaceholderEmail = Boolean(
-        rawEmail && (
-          rawEmail.endsWith('@vsb.student.edu') ||
-          rawEmail.endsWith('@student.vsb.edu.in') ||
-          rawEmail.toLowerCase().startsWith(s.registerNumber.toLowerCase())
-        )
-      )
-      const displayEmail = isPlaceholderEmail ? '' : rawEmail
+      const displayEmail = isPlaceholderEmail(rawEmail, s.registerNumber) ? '' : rawEmail
       // A student is ACTIVE ONLY if they have authenticated and logged into the website
       const hasLoggedInWebsite = Boolean(u?.lastLogin) && u?.status?.toLowerCase() === 'active'
       const effectiveStatus = hasLoggedInWebsite ? 'active' : 'inactive'
