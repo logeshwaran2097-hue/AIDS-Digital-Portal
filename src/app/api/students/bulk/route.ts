@@ -203,10 +203,12 @@ export async function POST(request: Request) {
                     semester: parsedSem,
                     batch,
                     section,
-                    bloodGroup: st.bloodGroup ? String(st.bloodGroup).trim() : (existingStudentByUserId as any).bloodGroup || 'O+',
+                    bloodGroup: st.bloodGroup ? String(st.bloodGroup).trim() : ((existingStudentByUserId as any).bloodGroup || null),
                     residencyStatus,
                     advisorName: st.advisorName ? String(st.advisorName).trim() : (existingStudentByUserId as any).advisorName,
                     parentPhone: st.parentPhone ? String(st.parentPhone).trim() : (existingStudentByUserId as any).parentPhone,
+                    cgpa: st.cgpa !== undefined && st.cgpa !== '' && !isNaN(parseFloat(String(st.cgpa))) ? parseFloat(String(st.cgpa)) : ((existingStudentByUserId as any).cgpa ?? null),
+                    attendance: st.attendance !== undefined && st.attendance !== '' ? String(st.attendance) : ((existingStudentByUserId as any).attendance ?? null),
                   } as any,
                 })
               } else {
@@ -222,10 +224,10 @@ export async function POST(request: Request) {
                     section,
                     advisorName: st.advisorName ? String(st.advisorName).trim() : null,
                     parentPhone: st.parentPhone ? String(st.parentPhone).trim() : null,
-                    bloodGroup: st.bloodGroup ? String(st.bloodGroup).trim() : 'O+',
+                    bloodGroup: st.bloodGroup ? String(st.bloodGroup).trim() : null,
                     residencyStatus,
-                    cgpa: st.cgpa !== undefined && st.cgpa !== '' && !isNaN(parseFloat(String(st.cgpa))) ? parseFloat(String(st.cgpa)) : 8.0,
-                    attendance: st.attendance !== undefined && st.attendance !== '' ? String(st.attendance) : '90%',
+                    cgpa: st.cgpa !== undefined && st.cgpa !== '' && !isNaN(parseFloat(String(st.cgpa))) ? parseFloat(String(st.cgpa)) : null,
+                    attendance: st.attendance !== undefined && st.attendance !== '' ? String(st.attendance) : null,
                   } as any,
                 })
               }
