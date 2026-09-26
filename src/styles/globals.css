@@ -3,14 +3,20 @@
 @tailwind utilities;
 
 :root {
-  --navy: #071A3D;
-  --royal: #1455D9;
-  --bright: #2878E8;
-  --gold: #F4C430;
-  --cyan: #22C7E8;
+  --navy: #003399;
+  --royal: #003399;
+  --bright: #1455D9;
+  --gold: #FFD700;
+  --cyan: #0088CC;
+  --crimson: #CC0000;
   --white: #FFFFFF;
-  --primary-accent: #1455D9;
-  --primary-accent-light: rgba(20, 85, 217, 0.15);
+  --college-bg: #F7F8FA;
+  --college-card: #FFFFFF;
+  --college-text: #1F2937;
+  --college-secondary: #6B7280;
+  --college-border: #E5E7EB;
+  --primary-accent: #003399;
+  --primary-accent-light: rgba(0, 51, 153, 0.08);
 }
 
 * {
@@ -22,17 +28,13 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
-  background-color: #f8fafd;
-  background-image: 
-    radial-gradient(at 100% 0%, rgba(20, 85, 217, 0.04) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(34, 199, 232, 0.03) 0px, transparent 50%);
-  background-attachment: fixed;
-  color: #071A3D;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  background-color: #F7F8FA;
+  color: #1F2937;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  transition: background-color 0.25s ease, color 0.25s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
   -webkit-tap-highlight-color: transparent;
 }
 

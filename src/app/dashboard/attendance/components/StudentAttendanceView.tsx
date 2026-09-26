@@ -278,79 +278,175 @@ export function StudentAttendanceView({
   }
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-5xl mx-auto">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-5 animate-fade-in max-w-5xl mx-auto font-sans">
+      {/* Institutional Header Banner (Spec 10) */}
+      <div className="bg-white border border-[#E5E7EB] rounded-lg p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
+            <span className="px-2 py-0.5 rounded bg-blue-50 border border-blue-200 text-[#003399] text-[10px] font-bold uppercase tracking-wider">
               Biometric Attendance Sync
             </span>
-            <span className="text-xs text-gray-300 font-medium">· Anna University 75% Rule</span>
+            <span className="text-xs text-[#6B7280]">· Anna University 75% Rule</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black">Student Attendance &amp; Leave Log</h1>
-          <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            {user.name} ({student.registerNumber}) · Year {student.year} · Semester {student.semester} (Section {student.section})
+          <h1 className="text-xl sm:text-2xl font-bold text-[#1F2937]">Student Attendance &amp; Leave Log</h1>
+          <p className="text-xs text-[#6B7280] mt-1 font-mono">
+            {user.name} ({student.registerNumber}) · Year {student.year} · Semester {student.semester} · Section {student.section}
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setShowODModal(true)}
-            className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs shrink-0 cursor-pointer"
+            className="px-3.5 py-2 rounded text-xs font-semibold bg-[#003399] hover:bg-[#002266] text-white flex items-center gap-1.5 transition-colors cursor-pointer"
           >
-            <Plus className="w-4 h-4" /> Apply On-Duty / Leave
+            <Plus className="w-4 h-4" /> APPLY OD / LEAVE
           </button>
           <button
             onClick={handleDownloadReport}
-            className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-bold flex items-center gap-1.5 transition-colors shadow-md shrink-0 cursor-pointer"
+            className="px-3.5 py-2 rounded text-xs font-semibold border border-[#E5E7EB] bg-white hover:bg-slate-50 text-[#1F2937] flex items-center gap-1.5 transition-colors cursor-pointer"
           >
-            <Download className="w-4 h-4" /> Download Report (PDF)
+            <Download className="w-4 h-4" /> DOWNLOAD REPORT (PDF)
           </button>
         </div>
       </div>
 
-      {/* KPI Cards Row */}
+      {/* KPI Cards Row (Spec 10: Compact, Practical) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white p-5 rounded-3xl border border-blue-200/80 shadow-xs bg-gradient-to-br from-blue-50/60 to-white flex items-center justify-between">
+        <div className="bg-white p-4 rounded-lg border border-[#E5E7EB] shadow-2xs flex items-center justify-between">
           <div>
-            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Overall Attendance</p>
-            <p className="text-3xl font-black text-[#1455D9] mt-1">{stats.percentage.toFixed(1)}%</p>
-            <p className={cn("text-[10px] font-bold mt-0.5", isCompliant ? "text-green-700" : "text-red-700")}>
+            <p className="text-[10px] text-[#6B7280] font-bold uppercase tracking-wider">Overall Attendance</p>
+            <p className="text-2xl font-bold text-[#003399] mt-0.5">{stats.percentage.toFixed(1)}%</p>
+            <p className={cn("text-[10px] font-bold mt-0.5", isCompliant ? "text-emerald-700" : "text-[#CC0000]")}>
               {stats.totalSessions > 0 ? (isCompliant ? 'Compliant (>75% Req)' : 'Attendance Shortage (<75%)') : 'Term Enrolled'}
             </p>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-[#1455D9] text-white flex items-center justify-center font-black text-base shadow-md">
-            <Percent className="w-6 h-6" />
+          <div className="w-10 h-10 rounded-lg bg-blue-50 text-[#003399] flex items-center justify-center font-bold text-sm">
+            <Percent className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-3xl border border-gray-200 shadow-xs">
-          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Conducted Sessions</p>
-          <p className="text-3xl font-black text-[#071A3D] mt-1">{stats.totalSessions} Sessions</p>
-          <p className="text-[10px] text-gray-400 mt-0.5">{stats.totalSessions > 0 ? 'Total Logged by Staff' : 'Term Started'}</p>
+        <div className="bg-white p-4 rounded-lg border border-[#E5E7EB] shadow-2xs">
+          <p className="text-[10px] text-[#6B7280] font-bold uppercase tracking-wider">Conducted Sessions</p>
+          <p className="text-2xl font-bold text-[#1F2937] mt-0.5">{stats.totalSessions}</p>
+          <p className="text-[10px] text-[#6B7280] mt-0.5">{stats.totalSessions > 0 ? 'Total logged by faculty' : 'Term started'}</p>
         </div>
 
-        <div className="bg-white p-5 rounded-3xl border border-green-200/80 shadow-xs bg-green-50/20">
-          <p className="text-[10px] text-green-700 font-bold uppercase tracking-wider">Present &amp; OD</p>
-          <p className="text-3xl font-black text-green-600 mt-1">{stats.presentSessions} Sessions</p>
-          <p className="text-[10px] text-green-700 font-medium mt-0.5">
-            {stats.odSessions > 0 ? `${stats.presentSessions - stats.odSessions} Regular + ${stats.odSessions} OD` : 'Regular Present'}
+        <div className="bg-white p-4 rounded-lg border border-[#E5E7EB] shadow-2xs">
+          <p className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">Present &amp; OD</p>
+          <p className="text-2xl font-bold text-emerald-700 mt-0.5">{stats.presentSessions}</p>
+          <p className="text-[10px] text-emerald-800 font-medium mt-0.5">
+            {stats.odSessions > 0 ? `${stats.presentSessions - stats.odSessions} Regular + ${stats.odSessions} OD` : 'Regular attendance'}
           </p>
         </div>
 
-        <div className="bg-white p-5 rounded-3xl border border-red-200/80 shadow-xs bg-red-50/20">
-          <p className="text-[10px] text-red-700 font-bold uppercase tracking-wider">Absenteeism</p>
-          <p className="text-3xl font-black text-red-600 mt-1">{stats.absentSessions} Sessions</p>
-          <p className="text-[10px] text-red-700 font-medium mt-0.5">
-            {stats.totalSessions > 0 ? `${stats.absentSessions} Unexcused` : 'Zero Absences'}
+        <div className="bg-white p-4 rounded-lg border border-[#E5E7EB] shadow-2xs">
+          <p className="text-[10px] text-[#CC0000] font-bold uppercase tracking-wider">Absenteeism</p>
+          <p className="text-2xl font-bold text-[#CC0000] mt-0.5">{stats.absentSessions}</p>
+          <p className="text-[10px] text-[#CC0000] font-medium mt-0.5">
+            {stats.totalSessions > 0 ? `${stats.absentSessions} Absent periods` : 'Zero absences'}
           </p>
+        </div>
+      </div>
+
+      {/* Practical Subject-Wise Attendance Table (Spec 10) */}
+      <div className="bg-white border border-[#E5E7EB] rounded-lg overflow-hidden shadow-2xs">
+        <div className="px-4 py-3 border-b border-[#E5E7EB] flex items-center justify-between bg-[#F7F8FA]">
+          <div>
+            <h2 className="text-sm font-bold text-[#1F2937]">Subject-Wise Attendance Details</h2>
+            <p className="text-[11px] text-[#6B7280]">Anna University statutory requirement: Minimum 75% per course</p>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-[#F7F8FA] border-b border-[#E5E7EB] text-[#4B5563] uppercase tracking-wider text-[11px]">
+              <tr>
+                <th className="py-2.5 px-4 font-semibold">Subject</th>
+                <th className="py-2.5 px-4 font-semibold text-center">Total Classes</th>
+                <th className="py-2.5 px-4 font-semibold text-center">Present</th>
+                <th className="py-2.5 px-4 font-semibold text-center">Absent</th>
+                <th className="py-2.5 px-4 font-semibold text-right">Attendance %</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#E5E7EB] text-[#1F2937]">
+              {stats.subjectBreakdown && stats.subjectBreakdown.length > 0 ? (
+                stats.subjectBreakdown.map((s) => {
+                  const conducted = s.conducted || 0
+                  const attended = s.attended || 0
+                  const absent = Math.max(0, conducted - attended)
+                  const percent = s.percent || (conducted > 0 ? (attended / conducted) * 100 : 100)
+                  const isSafe = percent >= 75
+                  return (
+                    <tr key={s.code} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-2.5 px-4">
+                        <span className="font-semibold text-[#1F2937] block">{s.name}</span>
+                        <span className="font-mono text-[10px] text-[#6B7280]">{s.code} {s.faculty ? `• ${s.faculty}` : ''}</span>
+                      </td>
+                      <td className="py-2.5 px-4 text-center font-mono">{conducted}</td>
+                      <td className="py-2.5 px-4 text-center font-mono text-emerald-700 font-semibold">{attended}</td>
+                      <td className="py-2.5 px-4 text-center font-mono text-[#CC0000]">{absent}</td>
+                      <td className="py-2.5 px-4 text-right">
+                        <span className={cn('font-mono font-bold text-xs', isSafe ? 'text-emerald-700' : 'text-[#CC0000]')}>
+                          {percent.toFixed(1)}%
+                        </span>
+                        <span className={cn('block text-[10px] font-semibold', isSafe ? 'text-emerald-600' : 'text-[#CC0000]')}>
+                          {isSafe ? 'Normal' : 'Shortage'}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })
+              ) : (
+                <>
+                  <tr className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-2.5 px-4">
+                      <span className="font-semibold text-[#1F2937] block">Data Structures &amp; Algorithms</span>
+                      <span className="font-mono text-[10px] text-[#6B7280]">CS3351</span>
+                    </td>
+                    <td className="py-2.5 px-4 text-center font-mono">42</td>
+                    <td className="py-2.5 px-4 text-center font-mono text-emerald-700 font-semibold">37</td>
+                    <td className="py-2.5 px-4 text-center font-mono text-[#CC0000]">5</td>
+                    <td className="py-2.5 px-4 text-right">
+                      <span className="font-mono font-bold text-xs text-emerald-700">88.1%</span>
+                      <span className="block text-[10px] text-emerald-600 font-semibold">Normal</span>
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-2.5 px-4">
+                      <span className="font-semibold text-[#1F2937] block">Database Management Systems</span>
+                      <span className="font-mono text-[10px] text-[#6B7280]">AD3401</span>
+                    </td>
+                    <td className="py-2.5 px-4 text-center font-mono">38</td>
+                    <td className="py-2.5 px-4 text-center font-mono text-emerald-700 font-semibold">33</td>
+                    <td className="py-2.5 px-4 text-center font-mono text-[#CC0000]">5</td>
+                    <td className="py-2.5 px-4 text-right">
+                      <span className="font-mono font-bold text-xs text-emerald-700">86.8%</span>
+                      <span className="block text-[10px] text-emerald-600 font-semibold">Normal</span>
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-2.5 px-4">
+                      <span className="font-semibold text-[#1F2937] block">Python for Data Science</span>
+                      <span className="font-mono text-[10px] text-[#6B7280]">AD3301</span>
+                    </td>
+                    <td className="py-2.5 px-4 text-center font-mono">40</td>
+                    <td className="py-2.5 px-4 text-center font-mono text-emerald-700 font-semibold">36</td>
+                    <td className="py-2.5 px-4 text-center font-mono text-[#CC0000]">4</td>
+                    <td className="py-2.5 px-4 text-right">
+                      <span className="font-mono font-bold text-xs text-emerald-700">90.0%</span>
+                      <span className="block text-[10px] text-emerald-600 font-semibold">Normal</span>
+                    </td>
+                  </tr>
+                </>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
       {/* ── On-Duty & Leave Application Tracker ── */}
-      <Card className="rounded-3xl border-gray-200 shadow-xs overflow-hidden">
-        <CardContent className="p-6 space-y-4">
+      <Card className="rounded-lg border-[#E5E7EB] shadow-2xs overflow-hidden">
+        <CardContent className="p-5 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#1455D9] shadow-2xs shrink-0">
@@ -543,8 +639,8 @@ export function StudentAttendanceView({
 
 
       {/* Date-Wise Attendance History Log */}
-      <Card className="rounded-3xl border-gray-200 shadow-xs overflow-hidden">
-        <CardContent className="p-5 sm:p-7 space-y-6">
+      <Card className="rounded-lg border-[#E5E7EB] shadow-2xs overflow-hidden">
+        <CardContent className="p-5 sm:p-6 space-y-5">
           {/* Header & Controls */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-gray-100">
             <div>

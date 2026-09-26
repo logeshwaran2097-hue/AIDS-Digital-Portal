@@ -29,25 +29,32 @@ import type { NavItem } from './PortalLayout'
 
 export const studentNavItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: <Home className="h-4 w-4" /> },
-  { label: 'Attendance', href: '/dashboard/attendance', icon: <CalendarDays className="h-4 w-4" /> },
-  { label: 'OD & Leave Requests', href: '/dashboard/od-applications', icon: <FileText className="h-4 w-4" /> },
-  { label: 'Event Proofs', href: '/dashboard/od-proofs', icon: <ShieldCheck className="h-4 w-4" /> },
-  { label: 'Bus & Hostel Pass', href: '/dashboard/digital-pass', icon: <Bus className="h-4 w-4" /> },
-  { label: 'GPA & Marksheets', href: '/dashboard/gpa-calculator', icon: <Calculator className="h-4 w-4" /> },
-  { label: 'Resume Generator', href: '/dashboard/resume', icon: <Briefcase className="h-4 w-4" /> },
-  { label: 'Study Details', href: '/dashboard/study', icon: <BookOpen className="h-4 w-4" /> },
-  { label: 'Subjects', href: '/dashboard/subjects', icon: <GraduationCap className="h-4 w-4" /> },
-  { label: 'Question Papers', href: '/dashboard/question-papers', icon: <FileQuestion className="h-4 w-4" /> },
-  { label: 'Projects', href: '/dashboard/projects', icon: <FolderOpen className="h-4 w-4" /> },
-  { label: 'Faculty', href: '/dashboard/faculty', icon: <Users className="h-4 w-4" /> },
-  { label: 'Events', href: '/dashboard/events', icon: <CalendarDays className="h-4 w-4" /> },
-  { label: 'Announcements', href: '/dashboard/announcements', icon: <Megaphone className="h-4 w-4" /> },
-  { label: 'Achievements', href: '/dashboard/achievements', icon: <Trophy className="h-4 w-4" /> },
-  { label: 'Resources', href: '/dashboard/resources', icon: <Database className="h-4 w-4" /> },
-  { label: 'Notifications', href: '/dashboard/notifications', icon: <Bell className="h-4 w-4" /> },
-  { label: 'Profile', href: '/dashboard/profile', icon: <User className="h-4 w-4" /> },
-  { label: 'Settings', href: '/dashboard/settings', icon: <Settings className="h-4 w-4" /> },
-  { label: 'About Portal', href: '/dashboard/about', icon: <Info className="h-4 w-4" /> },
+  
+  // Academic
+  { label: 'Attendance', href: '/dashboard/attendance', icon: <CalendarDays className="h-4 w-4" />, section: 'Academic' },
+  { label: 'Subjects', href: '/dashboard/subjects', icon: <BookOpen className="h-4 w-4" />, section: 'Academic' },
+  { label: 'Timetable & Syllabus', href: '/dashboard/study', icon: <GraduationCap className="h-4 w-4" />, section: 'Academic' },
+  { label: 'Internal Marks & GPA', href: '/dashboard/gpa-calculator', icon: <Calculator className="h-4 w-4" />, section: 'Academic' },
+  { label: 'OD & Leave Requests', href: '/dashboard/od-applications', icon: <FileText className="h-4 w-4" />, section: 'Academic' },
+  { label: 'Bus & Hostel Pass', href: '/dashboard/digital-pass', icon: <Bus className="h-4 w-4" />, section: 'Academic' },
+
+  // Learning
+  { label: 'Study Materials', href: '/dashboard/resources', icon: <Database className="h-4 w-4" />, section: 'Learning' },
+  { label: 'Question Papers', href: '/dashboard/question-papers', icon: <FileQuestion className="h-4 w-4" />, section: 'Learning' },
+  { label: 'Resume Generator', href: '/dashboard/resume', icon: <Briefcase className="h-4 w-4" />, section: 'Learning' },
+
+  // Activities
+  { label: 'Projects', href: '/dashboard/projects', icon: <FolderOpen className="h-4 w-4" />, section: 'Activities' },
+  { label: 'Events & Workshops', href: '/dashboard/events', icon: <CalendarDays className="h-4 w-4" />, section: 'Activities' },
+  { label: 'Department Notices', href: '/dashboard/announcements', icon: <Megaphone className="h-4 w-4" />, section: 'Activities' },
+  { label: 'Achievements', href: '/dashboard/achievements', icon: <Trophy className="h-4 w-4" />, section: 'Activities' },
+  { label: 'Faculty Directory', href: '/dashboard/faculty', icon: <Users className="h-4 w-4" />, section: 'Activities' },
+
+  // Account
+  { label: 'My Profile', href: '/dashboard/profile', icon: <User className="h-4 w-4" />, section: 'Account' },
+  { label: 'Notifications', href: '/dashboard/notifications', icon: <Bell className="h-4 w-4" />, section: 'Account' },
+  { label: 'Settings', href: '/dashboard/settings', icon: <Settings className="h-4 w-4" />, section: 'Account' },
+  { label: 'About Portal', href: '/dashboard/about', icon: <Info className="h-4 w-4" />, section: 'Account' },
 ]
 
 export const facultyNavItems: NavItem[] = [

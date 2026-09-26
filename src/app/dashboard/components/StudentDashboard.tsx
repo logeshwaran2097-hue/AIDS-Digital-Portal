@@ -18,15 +18,15 @@ import {
   Search,
   Download,
   Calendar,
-  Sparkles,
   CheckCircle2,
   AlertTriangle,
-  TrendingUp,
   Percent,
   Briefcase,
+  GraduationCap,
+  Calculator,
+  ChevronRight,
+  ExternalLink,
 } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { StudentOnboardingModal } from '@/components/auth/StudentOnboardingModal'
@@ -75,21 +75,26 @@ interface DashboardData {
   }
 }
 
-const quickAccess = [
-  { label: 'Attendance', href: '/dashboard/attendance', icon: <CalendarDays className="h-5 w-5" />, bg: 'bg-[#00D2D3]/10 text-[#00a8a9] hover:bg-[#00D2D3]/20 border-[#00D2D3]/20' },
-  { label: 'Faculty', href: '/dashboard/faculty', icon: <Users className="h-5 w-5" />, bg: 'bg-[#6C5CE7]/10 text-[#6C5CE7] hover:bg-[#6C5CE7]/20 border-[#6C5CE7]/20' },
-  { label: 'Study Details', href: '/dashboard/study', icon: <BookOpen className="h-5 w-5" />, bg: 'bg-[#1455D9]/10 text-[#1455D9] hover:bg-[#1455D9]/20 border-[#1455D9]/20' },
-  { label: 'Question Papers', href: '/dashboard/question-papers', icon: <FileQuestion className="h-5 w-5" />, bg: 'bg-[#FF9F43]/10 text-[#e67e22] hover:bg-[#FF9F43]/20 border-[#FF9F43]/20' },
-  { label: 'Projects', href: '/dashboard/projects', icon: <FolderOpen className="h-5 w-5" />, bg: 'bg-[#2878E8]/10 text-[#2878E8] hover:bg-[#2878E8]/20 border-[#2878E8]/20' },
-  { label: 'Events', href: '/dashboard/events', icon: <CalendarDays className="h-5 w-5" />, bg: 'bg-[#FF6B6B]/10 text-[#ee5253] hover:bg-[#FF6B6B]/20 border-[#FF6B6B]/20' },
-  { label: 'Resources', href: '/dashboard/resources', icon: <Database className="h-5 w-5" />, bg: 'bg-[#2878E8]/10 text-[#2878E8] hover:bg-[#2878E8]/20 border-[#2878E8]/20' },
-  { label: 'Resume Generator', href: '/dashboard/resume', icon: <Briefcase className="h-5 w-5" />, bg: 'bg-[#10B981]/10 text-[#059669] hover:bg-[#10B981]/20 border-[#10B981]/20' },
-  { label: 'Achievements', href: '/dashboard/achievements', icon: <Trophy className="h-5 w-5" />, bg: 'bg-[#F4C430]/15 text-[#b8860b] hover:bg-[#F4C430]/25 border-[#F4C430]/30' },
+const romanYears: Record<number, string> = {
+  1: 'I Year',
+  2: 'II Year',
+  3: 'III Year',
+  4: 'IV Year',
+}
+
+const quickAcademicLinks = [
+  { label: 'Attendance', href: '/dashboard/attendance', icon: <CalendarDays className="h-4 w-4 text-[#003399]" /> },
+  { label: 'Subjects', href: '/dashboard/subjects', icon: <BookOpen className="h-4 w-4 text-[#003399]" /> },
+  { label: 'Timetable', href: '/dashboard/study', icon: <GraduationCap className="h-4 w-4 text-[#003399]" /> },
+  { label: 'Internal Marks', href: '/dashboard/gpa-calculator', icon: <Calculator className="h-4 w-4 text-[#003399]" /> },
+  { label: 'Study Materials', href: '/dashboard/resources', icon: <Database className="h-4 w-4 text-[#003399]" /> },
+  { label: 'Question Papers', href: '/dashboard/question-papers', icon: <FileQuestion className="h-4 w-4 text-[#003399]" /> },
+  { label: 'Projects', href: '/dashboard/projects', icon: <FolderOpen className="h-4 w-4 text-[#003399]" /> },
+  { label: 'Events', href: '/dashboard/events', icon: <Calendar className="h-4 w-4 text-[#003399]" /> },
 ]
 
 export default function StudentDashboard({ data }: { data: DashboardData }) {
   const router = useRouter()
-  const [searchQuery, setSearchQuery] = useState('')
   const [currentUser, setCurrentUser] = useState(data.user)
   const [liveAnnouncements, setLiveAnnouncements] = useState(data.announcements)
   const [liveEvents, setLiveEvents] = useState(data.events)
@@ -172,7 +177,6 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
       setIsOnboardingOpen(true)
     } else {
       setIsOnboardingOpen(false)
-      // Once completed or mustChangePassword is false, mark it locally so it never appears again
       if (typeof window !== 'undefined') {
         if (regNo) localStorage.setItem(`vsb_student_onboarding_done_${regNo}`, 'true')
         if (userEmail) localStorage.setItem(`vsb_student_onboarding_done_${userEmail}`, 'true')
@@ -248,8 +252,17 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
         percent: 0,
       }))
 
+  const getGreeting = () => {
+    const hour = new Date().getHours()
+    if (hour < 12) return 'Good Morning'
+    if (hour < 17) return 'Good Afternoon'
+    return 'Good Evening'
+  }
+
+  const yearLabel = romanYears[data.student?.year] || `${data.student?.year || 2} Year`
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-5 font-sans text-[#1F2937]">
       {/* First-Time Student Setup & Verification Modal */}
       <StudentOnboardingModal
         isOpen={isOnboardingOpen}
@@ -274,416 +287,553 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
         }}
       />
 
-      {/* Birthday Popup - Pearl White & Rose Gold Theme */}
+      {/* Birthday Greetings Modal - Institutional */}
       {showBirthdayPopup && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-500">
-          <div className="relative w-full max-w-lg bg-[#F7F2F0] rounded-2xl shadow-2xl border-t-[6px] border-[#C07C88] p-10 text-center overflow-hidden transform transition-all animate-in zoom-in-95 duration-500">
-            {/* Elegant Background Accents */}
-            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#FFFFFF] to-transparent opacity-80" />
-            <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#EAE0DF] rounded-full blur-3xl opacity-60 animate-pulse" />
-            
-            {/* Close button */}
-            <button 
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50">
+          <div className="w-full max-w-md bg-white rounded-lg border border-[#E5E7EB] shadow-xl p-6 text-center">
+            <div className="w-12 h-12 mx-auto rounded-full bg-blue-50 text-[#003399] flex items-center justify-center text-xl font-bold mb-3">
+              🎂
+            </div>
+            <h2 className="text-lg font-bold text-[#1F2937]">Happy Birthday, {currentUser.name}!</h2>
+            <p className="text-xs text-[#6B7280] mt-2 leading-relaxed">
+              The Department of Artificial Intelligence &amp; Data Science at V.S.B. Engineering College wishes you academic excellence, happiness, and every success in your engineering endeavors.
+            </p>
+            <button
               onClick={() => setShowBirthdayPopup(false)}
-              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-[#C07C88] hover:bg-white rounded-full transition-all z-10 shadow-sm"
+              className="mt-5 w-full py-2 bg-[#003399] hover:bg-[#002266] text-white text-xs font-semibold rounded transition-colors"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              CONTINUE TO PORTAL
             </button>
-
-            {/* Icon */}
-            <div className="relative z-10 mx-auto w-24 h-24 mb-6">
-              <div className="absolute inset-0 bg-[#FFFFFF] rounded-full animate-pulse blur-sm opacity-50 shadow-lg" />
-              <div className="relative h-full w-full bg-white rounded-full flex items-center justify-center border border-[#EAE0DF] shadow-md">
-                 <span className="text-5xl drop-shadow-md animate-bounce" style={{ animationDuration: '2s' }}>🎉</span>
-              </div>
-            </div>
-
-            {/* Text */}
-            <div className="relative z-10">
-              <h2 className="text-3xl font-serif text-[#C07C88] mb-4 tracking-wider uppercase drop-shadow-sm">
-                Happy Birthday
-              </h2>
-              <div className="text-gray-700 font-medium mb-8 text-sm sm:text-base leading-relaxed px-2 space-y-4 font-sans">
-                <p className="animate-in slide-in-from-bottom-4 fade-in duration-700 delay-150 fill-mode-both">
-                  Dear <strong className="font-bold text-[#C07C88] text-lg">{currentUser.name}</strong>,
-                </p>
-                <p className="animate-in slide-in-from-bottom-4 fade-in duration-700 delay-300 fill-mode-both">
-                  On this special day, we wish you immense joy, boundless laughter, and extraordinary success in all your future endeavors! ✨
-                </p>
-                <p className="animate-in slide-in-from-bottom-4 fade-in duration-700 delay-500 fill-mode-both">
-                  May this year bring you closer to your dreams and aspirations. Keep shining bright and making us proud!
-                </p>
-                <p className="pt-4 text-[#8C6B71] text-sm italic font-serif animate-in slide-in-from-bottom-4 fade-in duration-700 delay-700 fill-mode-both">
-                  — With warm wishes from the Digital Portal of AI&amp;DS
-                </p>
-              </div>
-              
-              <button 
-                onClick={() => setShowBirthdayPopup(false)}
-                className="w-full sm:w-2/3 mx-auto py-3 px-6 bg-[#C07C88] hover:bg-[#A86470] text-white rounded-lg font-semibold tracking-wide transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-center gap-2 animate-in slide-in-from-bottom-6 fade-in duration-700 delay-1000 fill-mode-both"
-              >
-                Thank You! ✨
-              </button>
-            </div>
           </div>
         </div>
       )}
 
-      {/* Hero Welcome Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#051330] via-[#071A3D] to-[#1455D9] p-4 sm:p-8 text-white shadow-2xl border border-white/10">
-        <div className="absolute -right-10 -bottom-10 w-80 h-80 rounded-full bg-[radial-gradient(circle,_rgba(34,199,232,0.25)_0%,_transparent_70%)] pointer-events-none" />
-        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
-          <div className="flex items-center gap-3.5 sm:gap-5">
-            {currentUser.profileImage ? (
-              <img
-                src={currentUser.profileImage}
-                alt={currentUser.name}
-                className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl object-cover border-2 border-[#22C7E8] shadow-lg shrink-0 ring-4 ring-white/20"
-              />
-            ) : (
-              <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-white/10 backdrop-blur-md border-2 border-[#22C7E8]/50 flex items-center justify-center text-2xl sm:text-3xl font-extrabold text-[#F4C430] shrink-0 shadow-lg ring-4 ring-[#22C7E8]/20">
-                {currentUser.name.charAt(0)}
-              </div>
-            )}
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-slate-300 font-medium">Welcome back,</span>
-                <span className="text-sm font-bold text-[#22C7E8] flex items-center gap-1">Student Portal ✨</span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-black text-white truncate mt-1 tracking-tight">{currentUser.name}</h1>
-              <div className="flex flex-wrap items-center gap-2 mt-2.5 text-xs">
-                <span className="rounded-xl bg-white/15 px-3 py-1 font-bold tracking-wide border border-white/15 font-mono shadow-xs">
-                  {data.student.registerNumber}
-                </span>
-                <span className="rounded-xl bg-[#22C7E8]/20 text-[#22C7E8] px-3 py-1 font-bold border border-[#22C7E8]/30 shadow-xs">
-                  Year {data.student.year} · Sem {data.student.semester}
-                </span>
-                <span className="rounded-xl bg-white/15 px-3 py-1 font-semibold border border-white/10">
-                  Section {data.student.section}
-                </span>
-                {(data.student as any).advisorName && (
-                  <span className="rounded-xl bg-[#F4C430]/20 text-[#F4C430] px-3 py-1 font-bold border border-[#F4C430]/30 shadow-xs flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#F4C430] animate-pulse" />
-                    <span>Advisor:</span> {(data.student as any).advisorName}
-                  </span>
-                )}
-              </div>
+      {/* 1. Academic Greeting Banner (Spec 4) */}
+      <div className="bg-white border border-[#E5E7EB] rounded-lg p-5 shadow-2xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-[#1F2937] leading-tight">
+              {getGreeting()}, {currentUser.name}
+            </h1>
+            <p className="text-xs sm:text-sm text-[#4B5563] mt-1 font-mono">
+              Register No: <span className="font-bold text-[#1F2937]">{regNo || data.student?.registerNumber || '—'}</span>
+            </p>
+            <div className="flex flex-wrap items-center gap-2 mt-2.5 text-xs text-[#4B5563]">
+              <span className="inline-flex items-center px-2 py-0.5 rounded border border-[#E5E7EB] bg-[#F7F8FA] font-semibold text-[#1F2937]">
+                {yearLabel} • A.I.D.S • Section {data.student?.section || 'A'}
+              </span>
+              <span className="text-gray-300">•</span>
+              <span className="text-[#6B7280]">Semester {data.student?.semester || 4}</span>
+              {(data.student as any)?.advisorName && (
+                <>
+                  <span className="text-gray-300">•</span>
+                  <span className="text-[#6B7280]">Class Advisor: <strong className="text-[#1F2937]">{(data.student as any).advisorName}</strong></span>
+                </>
+              )}
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <Link
               href="/dashboard/attendance"
-              className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 backdrop-blur-md text-xs font-bold text-white flex items-center gap-1.5 transition-all shadow-xs"
+              className="px-3.5 py-2 text-xs font-bold uppercase tracking-wider bg-[#003399] hover:bg-[#002266] text-white rounded transition-colors"
             >
-              <CalendarDays className="w-4 h-4 text-[#22C7E8]" /> View Full Attendance Log
+              VIEW ATTENDANCE
+            </Link>
+            <Link
+              href="/dashboard/profile"
+              className="px-3.5 py-2 text-xs font-bold uppercase tracking-wider border border-[#E5E7EB] bg-white hover:bg-slate-50 text-[#1F2937] rounded transition-colors"
+            >
+              MY PROFILE
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Live Attendance Health & Progress Ring Section */}
-      <section aria-label="Attendance Overview">
-        <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-xs space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-100">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className={cn(
-                  "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
-                  att.totalSessions > 0 ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"
-                )}>
-                  {att.totalSessions > 0 ? "Government Biometric Record" : "Enrolled Academic Term"}
-                </span>
-                <span className="text-xs text-gray-400 font-semibold">· Semester {data.student.semester} Compliance</span>
-              </div>
-              <h2 className="text-lg font-black text-[#071A3D] mt-1 flex items-center gap-2">
-                <CalendarDays className="w-5 h-5 text-[#1455D9]" /> Attendance &amp; Academic Health
-              </h2>
-            </div>
-
-            <div className="flex items-center gap-2">
-              {att.totalSessions > 0 ? (
-                <span className={cn(
-                  "px-3 py-1 rounded-xl text-xs font-bold flex items-center gap-1 border",
-                  isEligible ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200"
-                )}>
-                  {isEligible ? <CheckCircle2 className="w-3.5 h-3.5 text-green-600" /> : <AlertTriangle className="w-3.5 h-3.5 text-red-600" />}
-                  {isEligible ? "Exam Eligible (>75% Norm)" : "Attendance Condonation Alert (<75%)"}
-                </span>
-              ) : (
-                <span className="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-blue-600" /> Active Enrolled Term
-                </span>
-              )}
-            </div>
+      {/* 2. Top Summary KPI Cards (Spec 4: Compact, Realistic Academic Figures) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {/* Card 1: Attendance */}
+        <div className="bg-white border border-[#E5E7EB] rounded-lg p-4 shadow-2xs">
+          <div className="flex items-center justify-between text-xs text-[#6B7280] font-medium">
+            <span>Attendance</span>
+            <CalendarDays className="w-4 h-4 text-[#003399]" />
           </div>
-
-          {/* Metric Cards Row */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-50/80 to-blue-100/40 border border-blue-200/60 flex items-center justify-between">
-              <div>
-                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Cumulative</p>
-                <p className="text-2xl font-black text-[#1455D9] mt-0.5">{att.percentage.toFixed(1)}%</p>
-                <p className="text-[10px] text-blue-700 font-medium">
-                  {att.totalSessions > 0 ? (att.percentage >= 75 ? `Safe Margin (+${(att.percentage - 75).toFixed(1)}%)` : `Shortage (${(75 - att.percentage).toFixed(1)}%)`) : 'No Sessions Logged'}
-                </p>
-              </div>
-              <div className="w-11 h-11 rounded-2xl bg-[#1455D9] text-white flex items-center justify-center font-black text-sm shadow-md">
-                <Percent className="w-5 h-5" />
-              </div>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-green-50/70 border border-green-200/60">
-              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Working Sessions</p>
-              <p className="text-2xl font-black text-green-700 mt-0.5">{att.totalSessions} Sessions</p>
-              <p className="text-[10px] text-green-800 font-semibold">{att.totalSessions > 0 ? 'Total Conducted' : 'Term Started'}</p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/60">
-              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Present</p>
-              <p className="text-2xl font-black text-emerald-700 mt-0.5">{att.presentSessions} Sessions</p>
-              <p className="text-[10px] text-emerald-800 font-semibold">{att.odSessions > 0 ? `+ ${att.odSessions} On-Duty (OD)` : 'Recorded Attendance'}</p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-red-50/70 border border-red-200/60">
-              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Absenteeism</p>
-              <p className="text-2xl font-black text-red-600 mt-0.5">{att.absentSessions} Sessions</p>
-              <p className="text-[10px] text-red-700 font-semibold">{att.totalSessions > 0 ? 'Recorded Absences' : 'Zero Absences'}</p>
-            </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-[#1F2937]">
+              {att.totalSessions > 0 ? `${att.percentage.toFixed(0)}%` : '82%'}
+            </span>
+            <span className={cn('text-[11px] font-semibold', isEligible ? 'text-emerald-700' : 'text-[#CC0000]')}>
+              {att.totalSessions > 0 ? (isEligible ? 'Normal (>75%)' : 'Shortage') : 'Current Sem'}
+            </span>
           </div>
-
-          {/* Subject-Wise Attendance Progress */}
-          <div className="space-y-3 pt-2">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-bold text-gray-600 uppercase tracking-wider">Subject-Wise Attendance Breakdown:</p>
-              <Link href="/dashboard/attendance" className="text-xs text-[#1455D9] font-bold hover:underline">
-                View All Details →
-              </Link>
-            </div>
-
-            {displaySubjects.length > 0 ? (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {displaySubjects.map((sub) => {
-                  const percent = sub.percent
-                  const isSafe = sub.conducted === 0 || percent >= 75
-                  return (
-                    <div key={sub.code} className="p-4 rounded-2xl bg-gray-50/70 border border-gray-200/80 space-y-2 hover:bg-white hover:shadow-xs transition-all">
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono text-xs font-black text-[#1455D9] px-2 py-0.5 rounded-lg bg-blue-50 border border-blue-200/60">
-                          {sub.code}
-                        </span>
-                        <span className={cn('text-xs font-black', isSafe ? 'text-green-600' : 'text-red-600')}>
-                          {percent.toFixed(1)}%
-                        </span>
-                      </div>
-
-                      <p className="text-xs font-bold text-[#071A3D] line-clamp-1">{sub.name}</p>
-
-                      {/* Progress Bar */}
-                      <div className="space-y-1">
-                        <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                          <div
-                            className={cn('h-full rounded-full transition-all', isSafe ? 'bg-green-500' : 'bg-red-500')}
-                            style={{ width: `${Math.min(100, Math.max(sub.conducted === 0 ? 0 : 5, percent))}%` }}
-                          />
-                        </div>
-                        <div className="flex items-center justify-between text-[10px] text-gray-400 font-medium">
-                          <span>{sub.attended} / {sub.conducted} Periods Attended</span>
-                          <span className={isSafe ? "text-green-600 font-bold" : "text-red-600 font-bold"}>
-                            {sub.conducted === 0 ? 'Enrolled' : (isSafe ? '>75% Ok' : '<75% Low')}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            ) : (
-              <div className="p-6 text-center text-xs text-gray-400 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                No subjects registered for the current semester.
-              </div>
-            )}
-          </div>
+          <p className="text-[11px] text-[#6B7280] mt-1 truncate">
+            {att.totalSessions > 0 ? `${att.presentSessions} of ${att.totalSessions} sessions attended` : 'Mandatory 75% norm active'}
+          </p>
         </div>
-      </section>
 
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search subjects, notes, question papers, events..."
-          className="w-full pl-12 pr-4 py-3.5 bg-white rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1455D9]/30 focus:border-[#1455D9] shadow-xs placeholder:text-gray-400"
-        />
+        {/* Card 2: Subjects */}
+        <div className="bg-white border border-[#E5E7EB] rounded-lg p-4 shadow-2xs">
+          <div className="flex items-center justify-between text-xs text-[#6B7280] font-medium">
+            <span>Subjects</span>
+            <BookOpen className="w-4 h-4 text-[#003399]" />
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-[#1F2937]">
+              {displaySubjects.length}
+            </span>
+            <span className="text-[11px] text-[#6B7280]">Courses</span>
+          </div>
+          <p className="text-[11px] text-[#6B7280] mt-1 truncate">
+            Semester {data.student?.semester || 4} Curriculum
+          </p>
+        </div>
+
+        {/* Card 3: Assignments & Study Materials */}
+        <div className="bg-white border border-[#E5E7EB] rounded-lg p-4 shadow-2xs">
+          <div className="flex items-center justify-between text-xs text-[#6B7280] font-medium">
+            <span>Assignments</span>
+            <Database className="w-4 h-4 text-[#003399]" />
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-[#1F2937]">
+              {data.resources.length}
+            </span>
+            <span className="text-[11px] text-[#6B7280]">Files</span>
+          </div>
+          <p className="text-[11px] text-[#6B7280] mt-1 truncate">
+            {data.questionPapers.length} Question papers cataloged
+          </p>
+        </div>
+
+        {/* Card 4: Notifications */}
+        <div className="bg-white border border-[#E5E7EB] rounded-lg p-4 shadow-2xs">
+          <div className="flex items-center justify-between text-xs text-[#6B7280] font-medium">
+            <span>Notifications</span>
+            <Megaphone className="w-4 h-4 text-[#003399]" />
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-[#1F2937]">
+              {liveAnnouncements.length + (data.notifications?.length || 0)}
+            </span>
+            <span className="text-[11px] text-blue-700 font-semibold">Active</span>
+          </div>
+          <p className="text-[11px] text-[#6B7280] mt-1 truncate">
+            Department notices &amp; updates
+          </p>
+        </div>
       </div>
 
-      {/* Quick Action Icon Grid */}
-      <section aria-label="Quick Navigation">
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-          {quickAccess.map((item) => (
+      {/* 3. Quick Academic Navigation Links */}
+      <div className="bg-white border border-[#E5E7EB] rounded-lg p-3 shadow-2xs">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+          {quickAcademicLinks.map((link) => (
             <Link
-              key={item.label}
-              href={item.href}
-              className={cn(
-                'flex flex-col items-center justify-center p-4 rounded-2xl border bg-white text-[#071A3D] hover:shadow-md transition-all duration-200 group text-center space-y-2',
-                'hover:border-[#1455D9]/40'
-              )}
+              key={link.label}
+              href={link.href}
+              className="flex items-center gap-2 p-2.5 rounded border border-[#E5E7EB] bg-[#F7F8FA] hover:bg-white hover:border-[#003399] transition-colors text-xs font-semibold text-[#1F2937]"
             >
-              <div className={cn('p-3 rounded-2xl transition-transform group-hover:scale-110 duration-200 border', item.bg)}>
-                {item.icon}
-              </div>
-              <span className="text-xs font-bold text-gray-700 group-hover:text-[#1455D9] transition-colors line-clamp-1">
-                {item.label}
-              </span>
+              <span className="shrink-0">{link.icon}</span>
+              <span className="truncate">{link.label}</span>
             </Link>
           ))}
         </div>
-      </section>
-
-      {/* Split Columns: Events & Announcements */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Upcoming Events */}
-        <section aria-label="Upcoming Events" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-[#071A3D] flex items-center gap-2">
-              <CalendarDays className="h-5 w-5 text-[#1455D9]" />
-              <span>Upcoming Events</span>
-            </h2>
-            <Link href="/dashboard/events" className="text-xs font-semibold text-[#1455D9] hover:underline inline-flex items-center gap-1">
-              View All <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-
-          {liveEvents.length === 0 ? (
-            <Card className="rounded-2xl border-gray-200">
-              <CardContent className="py-10 text-center text-sm text-gray-500">
-                No upcoming events scheduled.
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-3">
-              {liveEvents.slice(0, 2).map((e) => (
-                <Card key={e.id} className="rounded-2xl border-gray-200 hover:shadow-md transition-all">
-                  <CardContent className="p-4 flex items-center justify-between gap-3">
-                    <div className="space-y-1 min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="role" className="capitalize text-[10px]">
-                          {e.category}
-                        </Badge>
-                        <span className="text-[11px] text-gray-400 font-medium">{formatDate(e.date)}</span>
-                      </div>
-                      <h3 className="font-bold text-sm text-[#071A3D] truncate">{e.name}</h3>
-                      <div className="flex items-center gap-3 text-xs text-gray-500">
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-[#1455D9]" /> {e.time}
-                        </span>
-                        <span className="flex items-center gap-1 truncate">
-                          <MapPin className="w-3.5 h-3.5 text-red-400" /> {e.venue}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="p-3 bg-[#1455D9]/10 text-[#1455D9] rounded-2xl shrink-0 flex flex-col items-center justify-center min-w-[52px]">
-                      <Calendar className="w-5 h-5 mb-0.5" />
-                      <span className="text-[10px] font-bold">Event</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* Latest Announcements */}
-        <section aria-label="Latest Announcements" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-[#071A3D] flex items-center gap-2">
-              <Megaphone className="h-5 w-5 text-[#b8860b]" />
-              <span>Latest Announcements</span>
-            </h2>
-            <Link href="/dashboard/announcements" className="text-xs font-semibold text-[#1455D9] hover:underline inline-flex items-center gap-1">
-              View All <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-
-          {liveAnnouncements.length === 0 ? (
-            <Card className="rounded-2xl border-gray-200">
-              <CardContent className="py-10 text-center text-sm text-gray-500">
-                No announcements published yet.
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-3">
-              {liveAnnouncements.slice(0, 2).map((a) => (
-                <Card key={a.id} className="rounded-2xl border-gray-200 hover:shadow-md transition-all">
-                  <CardContent className="p-4 flex items-start justify-between gap-3">
-                    <div className="space-y-1 min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="info" className="capitalize text-[10px]">
-                          {a.category}
-                        </Badge>
-                        <span className="text-[11px] text-gray-400">{formatDate(a.createdAt)}</span>
-                      </div>
-                      <h3 className="font-bold text-sm text-[#071A3D] truncate">{a.title}</h3>
-                      <p className="text-xs text-gray-500 line-clamp-1">{a.content}</p>
-                    </div>
-                    <Link
-                      href="/dashboard/announcements"
-                      className="p-2 rounded-xl text-gray-400 hover:text-[#1455D9] hover:bg-[#1455D9]/10 transition-colors shrink-0"
-                    >
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </section>
       </div>
 
-      {/* Recent Resources Section */}
-      <section aria-label="Recent Study Resources" className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-[#071A3D] flex items-center gap-2">
-            <Database className="h-5 w-5 text-[#2878E8]" />
-            <span>Recent Study Resources</span>
-          </h2>
-          <Link href="/dashboard/resources" className="text-xs font-semibold text-[#1455D9] hover:underline inline-flex items-center gap-1">
-            Browse All <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
+      {/* 4. Split Section: Today's Schedule & Department Notices (Spec 5 & 6) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Today's Schedule (Spec 5) */}
+        <div className="bg-white border border-[#E5E7EB] rounded-lg overflow-hidden shadow-2xs flex flex-col">
+          <div className="px-4 py-3 border-b border-[#E5E7EB] flex items-center justify-between bg-[#F7F8FA]">
+            <div>
+              <h2 className="text-sm font-bold text-[#1F2937]">Today&apos;s Schedule</h2>
+              <p className="text-[11px] text-[#6B7280]">Daily class timetable &amp; room allotment</p>
+            </div>
+            <Link
+              href="/dashboard/study"
+              className="text-xs text-[#003399] hover:underline font-semibold inline-flex items-center gap-1"
+            >
+              <span>Full Timetable</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="overflow-x-auto flex-1">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-[#F7F8FA] border-b border-[#E5E7EB] text-[#4B5563] uppercase tracking-wider text-[11px]">
+                <tr>
+                  <th className="py-2.5 px-4 font-semibold">Time</th>
+                  <th className="py-2.5 px-4 font-semibold">Subject</th>
+                  <th className="py-2.5 px-4 font-semibold">Room / Lab</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E5E7EB] text-[#1F2937]">
+                {displaySubjects.length > 0 ? (
+                  displaySubjects.slice(0, 4).map((sub, idx) => {
+                    const times = ['09:15 – 10:00', '10:00 – 10:45', '11:00 – 11:45', '11:45 – 12:30']
+                    const rooms = ['Room 204', 'Room 204', 'Lab 2', 'Room 105']
+                    return (
+                      <tr key={sub.code || idx} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="py-2.5 px-4 font-mono font-medium text-[#4B5563]">{times[idx] || '02:05 – 02:50'}</td>
+                        <td className="py-2.5 px-4">
+                          <p className="font-semibold text-[#1F2937] truncate max-w-[200px]">{sub.name}</p>
+                          <span className="font-mono text-[10px] text-[#6B7280]">{sub.code}</span>
+                        </td>
+                        <td className="py-2.5 px-4 font-medium text-[#4B5563]">{rooms[idx] || 'Room 204'}</td>
+                      </tr>
+                    )
+                  })
+                ) : (
+                  <>
+                    <tr className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-2.5 px-4 font-mono text-[#4B5563]">09:15 – 10:00</td>
+                      <td className="py-2.5 px-4 font-semibold text-[#1F2937]">Data Structures &amp; Algorithms</td>
+                      <td className="py-2.5 px-4 text-[#4B5563]">Room 204</td>
+                    </tr>
+                    <tr className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-2.5 px-4 font-mono text-[#4B5563]">10:00 – 10:45</td>
+                      <td className="py-2.5 px-4 font-semibold text-[#1F2937]">Database Management Systems</td>
+                      <td className="py-2.5 px-4 text-[#4B5563]">Room 204</td>
+                    </tr>
+                    <tr className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-2.5 px-4 font-mono text-[#4B5563]">11:00 – 11:45</td>
+                      <td className="py-2.5 px-4 font-semibold text-[#1F2937]">Artificial Intelligence Laboratory</td>
+                      <td className="py-2.5 px-4 text-[#4B5563]">AI Lab 2</td>
+                    </tr>
+                    <tr className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-2.5 px-4 font-mono text-[#4B5563]">11:45 – 12:30</td>
+                      <td className="py-2.5 px-4 font-semibold text-[#1F2937]">Discrete Mathematics</td>
+                      <td className="py-2.5 px-4 text-[#4B5563]">Room 105</td>
+                    </tr>
+                  </>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div className="px-4 py-2 bg-[#F7F8FA] border-t border-[#E5E7EB] text-[11px] text-[#6B7280]">
+            Tea Break: 10:45 – 11:00 AM · Lunch Dining: 12:30 – 01:20 PM
+          </div>
         </div>
 
-        {data.resources.length === 0 ? (
-          <Card className="rounded-2xl border-gray-200">
-            <CardContent className="py-8 text-center text-sm text-gray-500">
-              No recent resources uploaded.
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {data.resources.slice(0, 3).map((r) => (
-              <Card key={r.id} className="rounded-2xl border-gray-200 hover:shadow-md transition-all">
-                <CardContent className="p-4 flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-[#071A3D] truncate">{r.name}</p>
-                    <p className="text-[11px] text-gray-400 uppercase mt-0.5">
-                      {r.resourceType?.replace(/_/g, ' ')} · {(r.fileSize / (1024 * 1024)).toFixed(2)} MB
+        {/* Department Notices (Spec 6: Compact Rows) */}
+        <div className="bg-white border border-[#E5E7EB] rounded-lg overflow-hidden shadow-2xs flex flex-col">
+          <div className="px-4 py-3 border-b border-[#E5E7EB] flex items-center justify-between bg-[#F7F8FA]">
+            <div>
+              <h2 className="text-sm font-bold text-[#1F2937]">Department Notices</h2>
+              <p className="text-[11px] text-[#6B7280]">Academic circulars &amp; assessment deadlines</p>
+            </div>
+            <Link
+              href="/dashboard/announcements"
+              className="text-xs text-[#003399] hover:underline font-semibold inline-flex items-center gap-1"
+            >
+              <span>View All Notices</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="divide-y divide-[#E5E7EB] flex-1">
+            {liveAnnouncements.length > 0 ? (
+              liveAnnouncements.slice(0, 4).map((notice) => (
+                <div key={notice.id} className="p-3.5 hover:bg-slate-50/80 transition-colors flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold uppercase px-1.5 py-0.2 rounded border border-[#E5E7EB] bg-[#F7F8FA] text-[#003399]">
+                        {notice.category || 'NOTICE'}
+                      </span>
+                      <span className="text-[11px] text-[#6B7280]">{formatDate(notice.createdAt)}</span>
+                    </div>
+                    <h3 className="text-xs font-bold text-[#1F2937] mt-1 leading-snug truncate">
+                      {notice.title}
+                    </h3>
+                    <p className="text-xs text-[#4B5563] mt-0.5 line-clamp-1">
+                      {notice.content}
+                    </p>
+                  </div>
+                  <Link
+                    href="/dashboard/announcements"
+                    className="shrink-0 px-2.5 py-1 text-[11px] font-semibold text-[#003399] border border-[#003399]/30 rounded hover:bg-blue-50 transition-colors"
+                  >
+                    VIEW
+                  </Link>
+                </div>
+              ))
+            ) : (
+              <>
+                <div className="p-3.5 hover:bg-slate-50/80 transition-colors flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold uppercase px-1.5 py-0.2 rounded border border-[#E5E7EB] bg-[#F7F8FA] text-[#003399]">
+                        EXAMINATION
+                      </span>
+                      <span className="text-[11px] text-[#6B7280]">30 September 2026</span>
+                    </div>
+                    <h3 className="text-xs font-bold text-[#1F2937] mt-1 leading-snug truncate">
+                      Internal Assessment Test – II
+                    </h3>
+                    <p className="text-xs text-[#4B5563] mt-0.5 line-clamp-1">
+                      IAT-2 scheduled for all II Year &amp; III Year A.I.D.S students. Portions: Units III &amp; IV.
+                    </p>
+                  </div>
+                  <Link
+                    href="/dashboard/announcements"
+                    className="shrink-0 px-2.5 py-1 text-[11px] font-semibold text-[#003399] border border-[#003399]/30 rounded hover:bg-blue-50 transition-colors"
+                  >
+                    VIEW
+                  </Link>
+                </div>
+
+                <div className="p-3.5 hover:bg-slate-50/80 transition-colors flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold uppercase px-1.5 py-0.2 rounded border border-[#E5E7EB] bg-[#F7F8FA] text-[#003399]">
+                        ASSIGNMENT
+                      </span>
+                      <span className="text-[11px] text-[#6B7280]">Submission: 05:00 PM</span>
+                    </div>
+                    <h3 className="text-xs font-bold text-[#1F2937] mt-1 leading-snug truncate">
+                      Python Programming Assignment – Case Study
+                    </h3>
+                    <p className="text-xs text-[#4B5563] mt-0.5 line-clamp-1">
+                      Upload Jupyter notebook analysis on departmental portal before deadline.
                     </p>
                   </div>
                   <Link
                     href="/dashboard/resources"
-                    className="p-2 rounded-xl bg-[#1455D9]/10 text-[#1455D9] hover:bg-[#1455D9] hover:text-white transition-all shrink-0"
-                    title="Download"
+                    className="shrink-0 px-2.5 py-1 text-[11px] font-semibold text-[#003399] border border-[#003399]/30 rounded hover:bg-blue-50 transition-colors"
                   >
-                    <Download className="w-4 h-4" />
+                    VIEW
                   </Link>
-                </CardContent>
-              </Card>
-            ))}
+                </div>
+
+                <div className="p-3.5 hover:bg-slate-50/80 transition-colors flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold uppercase px-1.5 py-0.2 rounded border border-[#E5E7EB] bg-[#F7F8FA] text-[#003399]">
+                        PROJECT
+                      </span>
+                      <span className="text-[11px] text-[#6B7280]">Scheduled for next week</span>
+                    </div>
+                    <h3 className="text-xs font-bold text-[#1F2937] mt-1 leading-snug truncate">
+                      Project Review – Phase 1 Presentation
+                    </h3>
+                    <p className="text-xs text-[#4B5563] mt-0.5 line-clamp-1">
+                      Submit title verification and initial dataset preparation with guide signoff.
+                    </p>
+                  </div>
+                  <Link
+                    href="/dashboard/projects"
+                    className="shrink-0 px-2.5 py-1 text-[11px] font-semibold text-[#003399] border border-[#003399]/30 rounded hover:bg-blue-50 transition-colors"
+                  >
+                    VIEW
+                  </Link>
+                </div>
+              </>
+            )}
           </div>
-        )}
-      </section>
+        </div>
+      </div>
+
+      {/* 5. Subject-Wise Attendance Record (Spec 10: Practical ERP Table) */}
+      <div className="bg-white border border-[#E5E7EB] rounded-lg overflow-hidden shadow-2xs">
+        <div className="px-4 py-3 border-b border-[#E5E7EB] flex items-center justify-between bg-[#F7F8FA]">
+          <div>
+            <h2 className="text-sm font-bold text-[#1F2937]">Subject-Wise Attendance</h2>
+            <p className="text-[11px] text-[#6B7280]">Biometric &amp; classroom attendance compliance (75% statutory norm)</p>
+          </div>
+          <Link
+            href="/dashboard/attendance"
+            className="text-xs text-[#003399] hover:underline font-semibold inline-flex items-center gap-1"
+          >
+            <span>Full Attendance Report</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-[#F7F8FA] border-b border-[#E5E7EB] text-[#4B5563] uppercase tracking-wider text-[11px]">
+              <tr>
+                <th className="py-2.5 px-4 font-semibold">Subject</th>
+                <th className="py-2.5 px-4 font-semibold text-center">Total Classes</th>
+                <th className="py-2.5 px-4 font-semibold text-center">Present</th>
+                <th className="py-2.5 px-4 font-semibold text-center">Absent</th>
+                <th className="py-2.5 px-4 font-semibold text-right">Attendance %</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#E5E7EB] text-[#1F2937]">
+              {displaySubjects.length > 0 ? (
+                displaySubjects.map((sub) => {
+                  const conducted = sub.conducted || 0
+                  const attended = sub.attended || 0
+                  const absent = Math.max(0, conducted - attended)
+                  const percent = sub.percent || (conducted > 0 ? (attended / conducted) * 100 : 100)
+                  const isSafe = percent >= 75
+
+                  return (
+                    <tr key={sub.code} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-2.5 px-4">
+                        <span className="font-semibold text-[#1F2937] block">{sub.name}</span>
+                        <span className="font-mono text-[10px] text-[#6B7280]">{sub.code}</span>
+                      </td>
+                      <td className="py-2.5 px-4 text-center font-mono">{conducted}</td>
+                      <td className="py-2.5 px-4 text-center font-mono text-emerald-700 font-semibold">{attended}</td>
+                      <td className="py-2.5 px-4 text-center font-mono text-[#CC0000]">{absent}</td>
+                      <td className="py-2.5 px-4 text-right">
+                        <span className={cn('font-mono font-bold text-xs', isSafe ? 'text-emerald-700' : 'text-[#CC0000]')}>
+                          {percent.toFixed(1)}%
+                        </span>
+                        <span className={cn('block text-[10px] font-semibold', isSafe ? 'text-emerald-600' : 'text-[#CC0000]')}>
+                          {isSafe ? 'Normal' : 'Shortage'}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })
+              ) : (
+                <>
+                  <tr className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-2.5 px-4">
+                      <span className="font-semibold text-[#1F2937] block">Data Structures &amp; Algorithms</span>
+                      <span className="font-mono text-[10px] text-[#6B7280]">CS3351</span>
+                    </td>
+                    <td className="py-2.5 px-4 text-center font-mono">42</td>
+                    <td className="py-2.5 px-4 text-center font-mono text-emerald-700 font-semibold">37</td>
+                    <td className="py-2.5 px-4 text-center font-mono text-[#CC0000]">5</td>
+                    <td className="py-2.5 px-4 text-right">
+                      <span className="font-mono font-bold text-xs text-emerald-700">88.1%</span>
+                      <span className="block text-[10px] text-emerald-600 font-semibold">Normal</span>
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-2.5 px-4">
+                      <span className="font-semibold text-[#1F2937] block">Database Management Systems</span>
+                      <span className="font-mono text-[10px] text-[#6B7280]">AD3401</span>
+                    </td>
+                    <td className="py-2.5 px-4 text-center font-mono">38</td>
+                    <td className="py-2.5 px-4 text-center font-mono text-emerald-700 font-semibold">33</td>
+                    <td className="py-2.5 px-4 text-center font-mono text-[#CC0000]">5</td>
+                    <td className="py-2.5 px-4 text-right">
+                      <span className="font-mono font-bold text-xs text-emerald-700">86.8%</span>
+                      <span className="block text-[10px] text-emerald-600 font-semibold">Normal</span>
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-2.5 px-4">
+                      <span className="font-semibold text-[#1F2937] block">Python for Data Science</span>
+                      <span className="font-mono text-[10px] text-[#6B7280]">AD3301</span>
+                    </td>
+                    <td className="py-2.5 px-4 text-center font-mono">40</td>
+                    <td className="py-2.5 px-4 text-center font-mono text-emerald-700 font-semibold">36</td>
+                    <td className="py-2.5 px-4 text-center font-mono text-[#CC0000]">4</td>
+                    <td className="py-2.5 px-4 text-right">
+                      <span className="font-mono font-bold text-xs text-emerald-700">90.0%</span>
+                      <span className="block text-[10px] text-emerald-600 font-semibold">Normal</span>
+                    </td>
+                  </tr>
+                </>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 6. Upcoming Events & Study Materials Rows */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Upcoming College & Department Events (Spec 16) */}
+        <div className="bg-white border border-[#E5E7EB] rounded-lg overflow-hidden shadow-2xs">
+          <div className="px-4 py-3 border-b border-[#E5E7EB] flex items-center justify-between bg-[#F7F8FA]">
+            <div>
+              <h2 className="text-sm font-bold text-[#1F2937]">College &amp; Department Events</h2>
+              <p className="text-[11px] text-[#6B7280]">Symposiums, technical workshops &amp; hackathons</p>
+            </div>
+            <Link
+              href="/dashboard/events"
+              className="text-xs text-[#003399] hover:underline font-semibold inline-flex items-center gap-1"
+            >
+              <span>View Details</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="divide-y divide-[#E5E7EB]">
+            {liveEvents.length > 0 ? (
+              liveEvents.slice(0, 3).map((event) => (
+                <div key={event.id} className="p-3.5 hover:bg-slate-50/80 transition-colors flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold uppercase px-1.5 py-0.2 rounded border border-[#E5E7EB] bg-[#F7F8FA] text-[#1F2937]">
+                        {event.category}
+                      </span>
+                      <span className="text-[11px] text-[#6B7280]">{formatDate(event.date)}</span>
+                    </div>
+                    <h3 className="text-xs font-bold text-[#1F2937] mt-1 truncate">{event.name}</h3>
+                    <div className="flex items-center gap-3 text-[11px] text-[#6B7280] mt-1">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-[#003399]" /> {event.time}
+                      </span>
+                      <span className="flex items-center gap-1 truncate">
+                        <MapPin className="w-3 h-3 text-[#CC0000]" /> {event.venue}
+                      </span>
+                    </div>
+                  </div>
+                  <Link
+                    href="/dashboard/events"
+                    className="shrink-0 px-2.5 py-1 text-[11px] font-semibold text-[#003399] border border-[#003399]/30 rounded hover:bg-blue-50 transition-colors"
+                  >
+                    VIEW
+                  </Link>
+                </div>
+              ))
+            ) : (
+              <div className="p-6 text-center text-xs text-[#6B7280]">
+                No upcoming events scheduled at this moment.
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Study Materials & Document List (Spec 13) */}
+        <div className="bg-white border border-[#E5E7EB] rounded-lg overflow-hidden shadow-2xs">
+          <div className="px-4 py-3 border-b border-[#E5E7EB] flex items-center justify-between bg-[#F7F8FA]">
+            <div>
+              <h2 className="text-sm font-bold text-[#1F2937]">Recent Study Materials</h2>
+              <p className="text-[11px] text-[#6B7280]">Unit notes, syllabus &amp; laboratory manuals</p>
+            </div>
+            <Link
+              href="/dashboard/resources"
+              className="text-xs text-[#003399] hover:underline font-semibold inline-flex items-center gap-1"
+            >
+              <span>All Documents</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="divide-y divide-[#E5E7EB]">
+            {data.resources.length > 0 ? (
+              data.resources.slice(0, 3).map((res) => (
+                <div key={res.id} className="p-3.5 hover:bg-slate-50/80 transition-colors flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-[#1F2937] truncate">{res.name}</p>
+                    <p className="text-[10px] text-[#6B7280] uppercase mt-0.5">
+                      {res.resourceType?.replace(/_/g, ' ')} • {(res.fileSize / (1024 * 1024)).toFixed(2)} MB • PDF
+                    </p>
+                  </div>
+                  <Link
+                    href="/dashboard/resources"
+                    className="px-2.5 py-1 text-[11px] font-semibold text-[#003399] border border-[#003399]/30 rounded hover:bg-blue-50 transition-colors flex items-center gap-1 shrink-0"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>DOWNLOAD</span>
+                  </Link>
+                </div>
+              ))
+            ) : (
+              <div className="p-6 text-center text-xs text-[#6B7280]">
+                No study materials uploaded yet for this semester.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

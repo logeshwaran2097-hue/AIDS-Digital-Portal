@@ -29,6 +29,7 @@ import {
   Users,
   School,
   Bus,
+  Settings,
 } from 'lucide-react'
 import { studentNavItems, facultyNavItems, hodNavItems, adminNavItems } from './navItems'
 import { FloatingChatbot } from '@/components/ai/FloatingChatbot'
@@ -55,6 +56,7 @@ export interface NavItem {
   label: string
   href: string
   icon: React.ReactNode
+  section?: string
 }
 
 interface PortalLayoutProps {
@@ -143,6 +145,7 @@ export function PortalLayout({
   const [avatarError, setAvatarError] = useState(false)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
   const [isDownloaderOpen, setIsDownloaderOpen] = useState(false)
   const [showVisionModal, setShowVisionModal] = useState(false)
   const [isNavigating, setIsNavigating] = useState(false)
@@ -157,6 +160,7 @@ export function PortalLayout({
   const isInitialSyncDone = useRef<boolean>(false)
 
   const notificationRef = useRef<HTMLDivElement>(null)
+  const profileDropdownRef = useRef<HTMLDivElement>(null)
   const navContainerRef = useRef<HTMLElement>(null)
   const pathname = usePathname()
   const router = useRouter()
@@ -941,20 +945,33 @@ export function PortalLayout({
       ? '/admin/profile'
       : '/dashboard/profile'
 
+  const settingsHref =
+    role === 'hod'
+      ? '/hod-dashboard/settings'
+      : role === 'faculty'
+      ? '/faculty-dashboard/settings'
+      : role === 'admin'
+      ? '/admin/settings'
+      : '/dashboard/settings'
+
 
   // Close drawer and stop navigation progress on route change
   useEffect(() => {
     setIsDrawerOpen(false)
     setIsNotificationOpen(false)
+    setIsProfileDropdownOpen(false)
     setIsNavigating(false)
     setActivePath(pathname)
   }, [pathname])
 
-  // Click outside to close notification dropdowns
+  // Click outside to close notification and profile dropdowns
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
         setIsNotificationOpen(false)
+      }
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setIsProfileDropdownOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -1056,53 +1073,45 @@ export function PortalLayout({
       {/* Slide-out Navigation Drawer / Sidebar */}
       <aside
         className={cn(
-          'fixed top-0 bottom-0 left-0 z-50 w-72 bg-gradient-to-b from-[#051330] via-[#071A3D] to-[#040D21] text-white flex flex-col transition-transform duration-300 ease-in-out border-r border-blue-500/20 shadow-2xl pb-safe',
+          'fixed top-0 bottom-0 left-0 z-50 w-72 bg-[#002266] text-white flex flex-col transition-transform duration-300 ease-in-out border-r border-[#001B4D] shadow-xl pb-safe',
           isDrawerOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
-        {/* Drawer Header with Official Emblem */}
-        <div className="p-4 border-b border-white/10 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        {/* Drawer Header with Institutional Crest */}
+        <div className="p-3.5 border-b border-white/10 flex items-center justify-between bg-[#001B4D]">
+          <div className="flex items-center gap-2.5">
             <div className="relative shrink-0">
-              <VSBAnimatedEmblem size="md" priority />
+              <VSBAnimatedEmblem size="sm" priority />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <p className="text-sm font-black text-white leading-tight tracking-wide">Digital Portal of AI&amp;DS</p>
-                <button
-                  type="button"
-                  onClick={triggerPortalUpdateCheck}
-                  title="Tap to check for real-time app updates"
-                  className="px-1.5 py-0.5 rounded-md bg-cyan-400/20 hover:bg-cyan-400/30 border border-cyan-400/40 text-cyan-300 text-[10px] font-black tracking-wider cursor-pointer active:scale-95 transition-transform"
-                >
-                  {activeVersion}
-                </button>
+                <p className="text-xs font-black text-white leading-tight tracking-wide">V.S.B. ENGINEERING COLLEGE</p>
               </div>
-              <p className="text-[11px] text-[#22C7E8] font-bold tracking-wider truncate">V.S.B. Engineering College</p>
+              <p className="text-[10px] text-[#FFD700] font-bold tracking-wider truncate">Dept. of Artificial Intelligence &amp; Data Science</p>
             </div>
           </div>
           {/* Close button on mobile */}
           <button
             onClick={() => setIsDrawerOpen(false)}
-            className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 lg:hidden transition-colors"
+            className="p-1 rounded-md text-white/70 hover:text-white hover:bg-white/10 lg:hidden transition-colors"
             aria-label="Close menu"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* User Mini Profile Card in Drawer */}
+        {/* User Academic Badge Card in Drawer */}
         <Link
           href={profileHref}
           onClick={() => handleNavClick(profileHref)}
           className={cn(
-            'p-3.5 mx-3 my-3 rounded-2xl border transition-all flex items-center gap-3 shrink-0 cursor-pointer',
+            'p-3 mx-3 my-2.5 rounded-lg border transition-all flex items-center gap-3 shrink-0 cursor-pointer',
             (activePath || pathname) === profileHref
-              ? 'bg-white/15 border-white/30 shadow-md ring-1 ring-white/20'
-              : 'bg-white/[0.06] border-white/10 hover:bg-white/[0.12] hover:border-white/20'
+              ? 'bg-[#003399] border-[#FFD700]/50 shadow-sm'
+              : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
           )}
         >
-          <div className="w-11 h-11 rounded-full overflow-hidden bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center font-bold text-base shadow-md shrink-0 ring-2 ring-white/20">
+          <div className="w-9 h-9 rounded-md overflow-hidden bg-[#003399] border border-white/20 text-white flex items-center justify-center font-bold text-sm shrink-0">
             {avatarImage && !avatarError ? (
               <img
                 src={avatarImage}
@@ -1115,17 +1124,17 @@ export function PortalLayout({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <h4 className="text-sm font-bold text-white truncate leading-tight">{userName}</h4>
-            <p className="text-[11px] text-gray-300 truncate mt-0.5">
+            <h4 className="text-xs font-bold text-white truncate leading-tight">{userName}</h4>
+            <p className="text-[10px] text-slate-300 truncate mt-0.5">
               {role === 'hod' || (userEmail && userEmail.toLowerCase().startsWith('hod'))
                 ? 'AI & DS Dept'
                 : (userEmail && !userEmail.endsWith('@student.vsb.edu.in'))
                 ? userEmail
-                : 'AI & DS Dept'}
+                : 'AI & DS Student'}
             </p>
             <span
               className={cn(
-                'inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border mt-1.5',
+                'inline-block text-[9px] font-bold px-1.5 py-0.2 rounded border mt-1',
                 effectiveRoleBadgeColor
               )}
             >
@@ -1134,14 +1143,14 @@ export function PortalLayout({
           </div>
         </Link>
 
-        {/* Navigation Link Items */}
+        {/* Navigation Link Items with Section Dividers */}
         <nav
           ref={navContainerRef}
-          className="flex-1 overflow-y-auto px-3 py-2 space-y-1"
+          className="flex-1 overflow-y-auto px-2 py-1 space-y-0.5"
           aria-label="Main navigation"
           style={{ scrollbarWidth: 'thin' }}
         >
-          {resolvedNavItems.map((item) => {
+          {resolvedNavItems.map((item, idx) => {
             const current = activePath || pathname
             const exactMatchExists = resolvedNavItems.some((i) => i.href === current)
             const isRootDashboard =
@@ -1159,77 +1168,84 @@ export function PortalLayout({
             const meta = key ? menuMetaMap[key] : null
             const displayLabel = (role === 'admin' && meta?.label) ? meta.label : item.label
             const notifCount = getMenuNotificationCount(item.href, displayLabel)
+            const prevSection = idx > 0 ? resolvedNavItems[idx - 1]?.section : undefined
+            const isNewSection = item.section && item.section !== prevSection
 
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                prefetch={true}
-                data-active={isActive ? 'true' : 'false'}
-                onMouseEnter={() => {
-                  try {
-                    router.prefetch(item.href)
-                  } catch {}
-                }}
-                onFocus={() => {
-                  try {
-                    router.prefetch(item.href)
-                  } catch {}
-                }}
-                onMouseDown={() => {
-                  try {
-                    router.prefetch(item.href)
-                  } catch {}
-                }}
-                onTouchStart={() => {
-                  try {
-                    router.prefetch(item.href)
-                  } catch {}
-                }}
-                onClick={() => handleNavClick(item.href)}
-                style={isActive ? { backgroundColor: accentColor, boxShadow: `0 4px 18px ${accentColor}70` } : {}}
-                className={cn(
-                  'flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer group',
-                  isActive
-                    ? 'text-white shadow-md ring-1 ring-white/20'
-                    : 'text-slate-300 hover:bg-white/[0.08] hover:text-white'
+              <React.Fragment key={item.href}>
+                {isNewSection && (
+                  <div className="pt-3 pb-1 px-3 text-[10px] font-extrabold uppercase tracking-widest text-[#93C5FD]/80 select-none">
+                    {item.section}
+                  </div>
                 )}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className={cn('shrink-0 text-base relative', isActive ? 'text-white' : 'text-[#22C7E8]')}>
-                    {item.icon}
-                    {notifCount > 0 && (
-                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500 ring-2 ring-[#071A3D] animate-ping" />
-                    )}
-                  </span>
-                  <span className="truncate">{displayLabel}</span>
-                </div>
-
-                <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                  {notifCount > 0 && (
-                    <span
-                      className={cn(
-                        'inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-black tracking-tight shadow-xs animate-pulse transition-all',
-                        isActive
-                          ? 'bg-white text-[#1455D9] ring-1 ring-white/60'
-                          : 'bg-red-500 text-white ring-2 ring-red-400/40'
+                <Link
+                  href={item.href}
+                  prefetch={true}
+                  data-active={isActive ? 'true' : 'false'}
+                  onMouseEnter={() => {
+                    try {
+                      router.prefetch(item.href)
+                    } catch {}
+                  }}
+                  onFocus={() => {
+                    try {
+                      router.prefetch(item.href)
+                    } catch {}
+                  }}
+                  onMouseDown={() => {
+                    try {
+                      router.prefetch(item.href)
+                    } catch {}
+                  }}
+                  onTouchStart={() => {
+                    try {
+                      router.prefetch(item.href)
+                    } catch {}
+                  }}
+                  onClick={() => handleNavClick(item.href)}
+                  className={cn(
+                    'flex items-center justify-between px-3 py-2 text-xs font-medium transition-colors cursor-pointer group',
+                    isActive
+                      ? 'bg-[#003399] text-white font-bold border-l-4 border-[#FFD700] rounded-r-md rounded-l-none'
+                      : 'text-slate-200 hover:bg-white/10 hover:text-white rounded-md'
+                  )}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className={cn('shrink-0 text-sm relative', isActive ? 'text-[#FFD700]' : 'text-slate-300 group-hover:text-white')}>
+                      {item.icon}
+                      {notifCount > 0 && (
+                        <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500 ring-1 ring-[#002266]" />
                       )}
-                      title={`${notifCount} notification${notifCount > 1 ? 's' : ''} for ${displayLabel}`}
-                    >
-                      {notifCount > 99 ? '99+' : notifCount}
                     </span>
-                  )}
+                    <span className="truncate">{displayLabel}</span>
+                  </div>
 
-                  {meta?.badgeText && (
-                    <span
-                      className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase text-white shrink-0 shadow-2xs"
-                      style={{ backgroundColor: meta.badgeColor || '#1455D9' }}
-                    >
-                      {meta.badgeText}
-                    </span>
-                  )}
-                </div>
-              </Link>
+                  <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                    {notifCount > 0 && (
+                      <span
+                        className={cn(
+                          'inline-flex items-center justify-center min-w-[18px] h-4 px-1 rounded-full text-[9px] font-black tracking-tight transition-all',
+                          isActive
+                            ? 'bg-[#FFD700] text-[#002266]'
+                            : 'bg-[#CC0000] text-white'
+                        )}
+                        title={`${notifCount} notification${notifCount > 1 ? 's' : ''} for ${displayLabel}`}
+                      >
+                        {notifCount > 99 ? '99+' : notifCount}
+                      </span>
+                    )}
+
+                    {meta?.badgeText && (
+                      <span
+                        className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase text-white shrink-0"
+                        style={{ backgroundColor: meta.badgeColor || '#003399' }}
+                      >
+                        {meta.badgeText}
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              </React.Fragment>
             )
           })}
         </nav>
@@ -1329,23 +1345,28 @@ export function PortalLayout({
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsDrawerOpen(true)}
-              className="relative p-2 rounded-xl text-[#071A3D] hover:bg-gray-100 lg:hidden transition-colors"
+              className="relative p-2 rounded-lg text-[#1F2937] hover:bg-slate-100 lg:hidden transition-colors"
               aria-label="Open Navigation Drawer"
             >
-              <Menu className="w-6 h-6" />
+              <Menu className="w-5 h-5" />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 min-w-[17px] h-[17px] px-1 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center border-2 border-white shadow-xs animate-pulse">
+                <span className="absolute top-1 right-1 min-w-[16px] h-[16px] px-1 bg-[#CC0000] text-white rounded-full text-[9px] font-black flex items-center justify-center border border-white">
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}
             </button>
 
-
-
-            <Link href={role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard'} className="flex items-center gap-2.5 lg:hidden">
+            <Link href={role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard'} className="flex items-center gap-2 lg:hidden">
               <VSBAnimatedEmblem size="sm" showSparkle={false} />
-              <span className="text-sm font-black text-[#071A3D] tracking-tight">Digital Portal of AI&amp;DS</span>
+              <span className="text-sm font-bold text-[#1F2937] tracking-tight">A.I.D.S. Student Portal</span>
             </Link>
+
+            <div className="hidden lg:flex flex-col">
+              <h2 className="text-sm font-bold text-[#1F2937] leading-tight">
+                {role === 'student' ? 'A.I.D.S. Student Portal' : role === 'faculty' ? 'A.I.D.S. Faculty Portal' : role === 'hod' ? 'A.I.D.S. Department Portal' : 'A.I.D.S. Administration Portal'}
+              </h2>
+              <p className="text-[11px] text-[#6B7280]">V.S.B. Engineering College · Department of AI &amp; DS</p>
+            </div>
           </div>
 
           {/* Desktop Right Profile & Notification Actions */}
@@ -1560,47 +1581,82 @@ export function PortalLayout({
               <span>Vision &amp; Mission</span>
             </button>
 
-            {/* Profile Avatar & Name */}
-            <Link
-              href={profileHref}
-              className="flex items-center gap-2.5 p-1.5 pr-3.5 rounded-full hover:bg-slate-100/90 transition-all border border-slate-200/80 bg-white/80 backdrop-blur-xs shadow-2xs hover:shadow-xs group"
-            >
-              <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center font-bold text-xs shadow-xs ring-2 ring-[#1455D9]/25 shrink-0">
-                {avatarImage && !avatarError ? (
-                  <img
-                    src={avatarImage}
-                    alt={userName}
-                    className="w-full h-full object-cover"
-                    onError={() => setAvatarError(true)}
-                  />
-                ) : (
-                  userName.charAt(0) || 'U'
-                )}
-              </div>
-              <div className="hidden sm:flex flex-col text-left leading-none">
-                <span className="text-xs font-bold text-[#071A3D] max-w-[130px] truncate group-hover:text-[#1455D9] transition-colors">
-                  {userName}
-                </span>
-                <span className={cn(
-                  'text-[9px] font-extrabold mt-0.5',
-                  isLabHandler ? 'text-cyan-600' : isFacultyAdvisor ? 'text-emerald-600' : 'text-slate-600'
-                )}>
-                  {effectiveRoleBadgeLabel.toUpperCase()}
-                </span>
-              </div>
-            </Link>
+            {/* Student Profile Avatar & Dropdown */}
+            <div className="relative" ref={profileDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                className="flex items-center gap-2 p-1 pl-1.5 pr-2.5 rounded-lg border border-[#E5E7EB] hover:bg-slate-50 transition-colors bg-white shadow-2xs group cursor-pointer"
+                aria-label="User menu"
+                aria-expanded={isProfileDropdownOpen}
+              >
+                <div className="w-7 h-7 rounded-md overflow-hidden bg-[#003399] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                  {avatarImage && !avatarError ? (
+                    <img
+                      src={avatarImage}
+                      alt={userName}
+                      className="w-full h-full object-cover"
+                      onError={() => setAvatarError(true)}
+                    />
+                  ) : (
+                    userName.charAt(0) || 'U'
+                  )}
+                </div>
+                <div className="hidden sm:flex flex-col text-left leading-none">
+                  <span className="text-xs font-bold text-[#1F2937] max-w-[130px] truncate">
+                    {userName}
+                  </span>
+                  <span className="text-[10px] text-[#6B7280] font-semibold mt-0.5">
+                    {effectiveRoleBadgeLabel}
+                  </span>
+                </div>
+                <ChevronDown className="w-3.5 h-3.5 text-[#6B7280] transition-transform duration-200" />
+              </button>
 
-            {/* Top Header Direct Logout Action */}
-            <button
-              type="button"
-              onClick={() => setShowLogoutConfirm(true)}
-              disabled={isLoggingOut}
-              title="Logout from portal"
-              className="p-2 sm:px-3 sm:py-1.5 rounded-xl border border-rose-200/80 bg-rose-50/80 hover:bg-rose-100/90 text-rose-600 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer hover:scale-102 shadow-2xs disabled:opacity-50"
-            >
-              <LogOut className="w-4 h-4 text-rose-500" />
-              <span className="hidden sm:inline">Logout</span>
-            </button>
+              {/* Profile Dropdown */}
+              {isProfileDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 rounded-lg bg-white border border-[#E5E7EB] shadow-lg z-50 py-1 font-sans text-xs animate-in fade-in">
+                  <div className="px-3 py-2 border-b border-[#E5E7EB]">
+                    <p className="font-bold text-[#1F2937] truncate">{userName}</p>
+                    <p className="text-[10px] text-[#6B7280] truncate">{userEmail || 'AI & DS Dept'}</p>
+                  </div>
+                  <Link
+                    href={profileHref}
+                    onClick={() => {
+                      setIsProfileDropdownOpen(false)
+                      handleNavClick(profileHref)
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 text-[#1F2937] hover:bg-slate-50 transition-colors"
+                  >
+                    <UserIcon className="w-3.5 h-3.5 text-[#003399]" />
+                    <span>My Profile</span>
+                  </Link>
+                  <Link
+                    href={settingsHref}
+                    onClick={() => {
+                      setIsProfileDropdownOpen(false)
+                      handleNavClick(settingsHref)
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 text-[#1F2937] hover:bg-slate-50 transition-colors"
+                  >
+                    <Settings className="w-3.5 h-3.5 text-[#003399]" />
+                    <span>Settings</span>
+                  </Link>
+                  <div className="my-1 border-t border-[#E5E7EB]" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsProfileDropdownOpen(false)
+                      setShowLogoutConfirm(true)
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-[#CC0000] hover:bg-red-50 transition-colors text-left font-medium cursor-pointer"
+                  >
+                    <LogOut className="w-3.5 h-3.5 text-[#CC0000]" />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>

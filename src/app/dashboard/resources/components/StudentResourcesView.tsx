@@ -219,7 +219,7 @@ export function StudentResourcesView({ resources }: { resources: ResourceItem[] 
 
 
       {/* Filter Toolbar */}
-      <div className="bg-white p-4 rounded-3xl border border-gray-200 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <div className="bg-white p-3 rounded-lg border border-[#E5E7EB] shadow-2xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'thin' }}>
           {[
             { l: 'All Materials', v: 'ALL' },
@@ -231,10 +231,10 @@ export function StudentResourcesView({ resources }: { resources: ResourceItem[] 
               key={tab.v}
               onClick={() => setSelectedType(tab.v)}
               className={cn(
-                'px-3.5 py-1.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all shrink-0 cursor-pointer',
+                'px-3 py-1 rounded text-xs font-semibold whitespace-nowrap transition-colors shrink-0 cursor-pointer',
                 selectedType === tab.v
-                  ? 'bg-[#1455D9] text-white shadow-md shadow-[#1455D9]/20 scale-105'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-[#071A3D]'
+                  ? 'bg-[#003399] text-white'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               )}
             >
               {tab.l}
@@ -249,91 +249,66 @@ export function StudentResourcesView({ resources }: { resources: ResourceItem[] 
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search textbook title, author or keywords..."
-            className="w-full pl-9 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-[#1455D9]/20"
+            className="w-full pl-9 pr-3 py-1.5 bg-white border border-[#E5E7EB] rounded text-xs focus:ring-1 focus:ring-[#003399] focus:border-[#003399]"
           />
         </div>
       </div>
 
-      {/* Resources Grid */}
+      {/* Practical Document List (Spec 13) */}
       {filtered.length === 0 ? (
         <EmptyState title="No resources found" description="Try adjusting your search query or category filter." icon="📚" />
       ) : (
-        <div className="space-y-10">
+        <div className="space-y-5">
           {Object.entries(groupedResources).map(([subjectName, items]) => (
-            <div key={subjectName}>
-              <h2 className="text-lg font-black text-[#071A3D] mb-4 flex items-center gap-2 pb-2 border-b border-gray-100">
-                <Layers className="w-5 h-5 text-[#1455D9]" />
-                {subjectName}
-              </h2>
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+            <div key={subjectName} className="bg-white border border-[#E5E7EB] rounded-lg overflow-hidden shadow-2xs">
+              <div className="px-4 py-2.5 bg-[#F7F8FA] border-b border-[#E5E7EB] flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-[#003399]" />
+                  <h2 className="text-xs sm:text-sm font-bold text-[#1F2937]">{subjectName}</h2>
+                </div>
+                <span className="text-[11px] text-[#6B7280] font-medium">{items.length} Documents</span>
+              </div>
+              <div className="divide-y divide-[#E5E7EB]">
                 {items.map((item) => {
-                  const style = TYPE_COLORS[item.resourceType] || { bg: 'bg-blue-50', text: 'text-[#1455D9]', border: 'border-blue-200' }
-                  const isPlacement = item.resourceType === 'PLACEMENT_GUIDE'
-
+                  const sizeMb = (item.fileSize / (1024 * 1024)).toFixed(1)
                   return (
-                    <Card
-                      key={item.id}
-                      className="rounded-3xl border-gray-200 hover:shadow-xl transition-all duration-300 bg-white overflow-hidden group hover:border-[#1455D9]/40 flex flex-col justify-between"
-                    >
-                      <CardContent className="p-6 space-y-4">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className={cn('px-2.5 py-0.5 rounded-full text-[10px] font-bold border', style.bg, style.text, style.border)}>
+                    <div key={item.id} className="p-3.5 hover:bg-slate-50/80 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-xs text-[#1F2937]">{item.name}</span>
+                          <span className="text-[10px] font-bold uppercase px-1.5 py-0.2 rounded border border-[#E5E7EB] bg-[#F7F8FA] text-[#003399]">
                             {item.resourceType.replace(/_/g, ' ')}
                           </span>
-                          <span className="text-xs text-gray-400 font-semibold font-mono">
-                            {(item.fileSize / (1024 * 1024)).toFixed(1)} MB · PDF
-                          </span>
                         </div>
-
-                        <div className="flex items-start gap-3.5">
-                          <div className={cn(
-                            'w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-xs',
-                            isPlacement ? 'bg-amber-100 text-amber-800' : 'bg-[#1455D9]/10 text-[#1455D9]'
-                          )}>
-                            {isPlacement ? <Sparkles className="w-6 h-6" /> : <BookOpen className="w-6 h-6" />}
-                          </div>
-
-                          <div className="min-w-0">
-                            <h3 className="font-black text-base text-[#071A3D] group-hover:text-[#1455D9] transition-colors leading-snug line-clamp-2">
-                              {item.name}
-                            </h3>
-                          </div>
-                        </div>
-
-                        <p className="text-xs text-gray-500 line-clamp-3 leading-relaxed">
-                          {item.description}
+                        {item.description && (
+                          <p className="text-[11px] text-[#6B7280] mt-0.5 line-clamp-1">{item.description}</p>
+                        )}
+                        <p className="text-[10px] text-[#9CA3AF] mt-0.5">
+                          {sizeMb} MB • PDF • Uploaded by {item.uploadedByName || 'Department Faculty'}
                         </p>
+                      </div>
 
-                        <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-                          <span className="font-medium flex items-center gap-1.5 text-gray-700 truncate max-w-[140px]">
-                            <User className="w-3.5 h-3.5 text-[#1455D9]" />
-                            <span className="truncate">{item.uploadedByName || 'Department Faculty'}</span>
-                          </span>
-
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <button
-                              type="button"
-                              onClick={() => handleQuickPreview(item)}
-                              disabled={downloadingId === item.id}
-                              className="px-2.5 py-1.5 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                              title="Preview with official V.S.B. header"
-                            >
-                              <Eye className="w-3.5 h-3.5 text-[#1455D9]" /> Preview
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDownloadWithHeader(item)}
-                              disabled={downloadingId === item.id}
-                              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#1455D9] to-[#071A3D] hover:from-[#0e44b5] hover:to-[#051430] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
-                              title="Download with official V.S.B. Department Header"
-                            >
-                              <ShieldCheck className="w-3.5 h-3.5 text-[#F4C430]" />
-                              <span>{downloadingId === item.id ? 'Attaching...' : 'Download'}</span>
-                            </button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleQuickPreview(item)}
+                          disabled={downloadingId === item.id}
+                          className="px-2.5 py-1 text-xs font-semibold border border-[#E5E7EB] rounded hover:bg-slate-50 text-[#1F2937] flex items-center gap-1 transition-colors cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-[#003399]" />
+                          <span>Preview</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadWithHeader(item)}
+                          disabled={downloadingId === item.id}
+                          className="px-3 py-1 text-xs font-semibold bg-[#003399] hover:bg-[#002266] text-white rounded flex items-center gap-1 transition-colors cursor-pointer"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>{downloadingId === item.id ? 'Attaching...' : 'DOWNLOAD'}</span>
+                        </button>
+                      </div>
+                    </div>
                   )
                 })}
               </div>

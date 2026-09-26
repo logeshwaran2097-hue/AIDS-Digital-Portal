@@ -503,107 +503,149 @@ Provide concise, highly actionable, industry-relevant guidance (recommended tool
   }
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-5xl mx-auto">
-      {/* Hero Identity Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white p-6 sm:p-8 shadow-xl">
-        <div className="absolute right-0 bottom-0 w-80 h-full bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-[#22C7E8]/20 via-transparent to-transparent pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="flex items-center gap-5">
-            <div className="relative group shrink-0">
-              {profile.profileImage && !imageError && !profile.profileImage.startsWith('blob:') ? (
-                <img
-                  src={profile.profileImage}
-                  alt={profile.name}
-                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl object-cover shadow-xl border-4 border-white/20 shrink-0 bg-white"
-                  onError={() => setImageError(true)}
-                />
-              ) : (
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white font-black text-3xl sm:text-4xl flex items-center justify-center shadow-xl border-4 border-white/20 shrink-0">
-                  {profile.name.charAt(0) || 'L'}
-                </div>
-              )}
-              <div className="absolute -bottom-1 -right-1 flex items-center gap-1">
-                {profile.profileImage && (
-                  <button
-                    type="button"
-                    onClick={handleRemovePhoto}
-                    className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-2xl shadow-lg cursor-pointer transition-all border-2 border-[#071A3D] hover:scale-110 flex items-center justify-center"
-                    title="Remove Profile Photo"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                )}
-                <label
-                  className="bg-[#22C7E8] hover:bg-white text-[#071A3D] p-2 rounded-2xl shadow-lg cursor-pointer transition-all border-2 border-[#071A3D] group-hover:scale-110 flex items-center justify-center"
-                  title="Upload / Change Photo"
-                >
-                  <Camera className="w-3.5 h-3.5" />
-                  <input
-                    type="file"
-                    accept="image/png, image/jpeg, image/jpg"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0]
-                      if (f) handlePhotoUpload(f)
-                    }}
-                    className="hidden"
-                  />
-                </label>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
-                  Official Student Record
-                </span>
-                <span className="text-xs text-green-300 font-semibold flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> {profile.enrollmentStatus}
-                </span>
-              </div>
-
-              <h1 className="text-2xl sm:text-3xl font-black mt-1">{profile.name}</h1>
-              <p className="text-xs sm:text-sm text-gray-300 font-mono mt-0.5">
-                Reg. No: <span className="text-[#22C7E8] font-bold">{profile.registerNumber}</span> · {profile.degreeProgram}
-              </p>
-            </div>
+    <div className="space-y-5 animate-fade-in max-w-5xl mx-auto font-sans">
+      {/* Official Academic Profile Record Header (Spec 9) */}
+      <div className="bg-white border border-[#E5E7EB] rounded-lg p-5 sm:p-6 shadow-2xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#E5E7EB] gap-2">
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#003399] px-2 py-0.5 rounded bg-blue-50 border border-blue-200">
+              Institutional Academic Record
+            </span>
+            <h1 className="text-xl sm:text-2xl font-bold text-[#1F2937] mt-1.5">Student Profile</h1>
+            <p className="text-xs text-[#6B7280]">V.S.B. Engineering College · Department of Artificial Intelligence &amp; Data Science</p>
           </div>
-
-          <div className="flex items-center flex-wrap gap-2 self-stretch md:self-auto justify-end">
+          <div className="flex items-center gap-2">
             <button
               onClick={handleDownloadCard}
               type="button"
-              className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-bold flex items-center gap-1.5 transition-all shadow-md shrink-0 cursor-pointer hover:scale-102"
+              className="px-3.5 py-2 rounded text-xs font-semibold bg-[#003399] hover:bg-[#002266] text-white flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <Download className="w-4 h-4" /> Download Student ID Card (PDF)
+              <Download className="w-4 h-4" /> DOWNLOAD RECORD (PDF)
+            </button>
+            <button
+              onClick={() => setIsEditOpen(true)}
+              type="button"
+              className="px-3.5 py-2 rounded text-xs font-semibold border border-[#E5E7EB] bg-white hover:bg-slate-50 text-[#1F2937] flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <Edit3 className="w-4 h-4" /> EDIT DETAILS
             </button>
           </div>
         </div>
 
-        {/* KPI Ribbon */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-white/15">
-          <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
-            <p className="text-[10px] text-gray-300 uppercase font-bold">Academic CGPA</p>
-            <p className="text-xl font-black text-[#F4C430] mt-0.5">{profile.cgpa}</p>
-            <p className="text-[10px] text-gray-300">{profile.cgpaClass}</p>
+        {/* Primary Academic Details Grid */}
+        <div className="flex flex-col md:flex-row items-start gap-6 pt-5">
+          {/* Student Photo */}
+          <div className="relative shrink-0">
+            {profile.profileImage && !imageError && !profile.profileImage.startsWith('blob:') ? (
+              <img
+                src={profile.profileImage}
+                alt={profile.name}
+                className="w-24 h-28 sm:w-28 sm:h-32 rounded border border-[#E5E7EB] object-cover shadow-2xs bg-slate-50"
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <div className="w-24 h-28 sm:w-28 sm:h-32 rounded border border-[#E5E7EB] bg-slate-100 text-[#003399] font-bold text-3xl flex items-center justify-center">
+                {profile.name.charAt(0) || 'S'}
+              </div>
+            )}
+            <div className="mt-2 flex items-center justify-center gap-1">
+              <label
+                className="text-[11px] font-semibold text-[#003399] hover:underline cursor-pointer flex items-center gap-1"
+                title="Change Photo"
+              >
+                <Camera className="w-3 h-3" /> Change
+                <input
+                  type="file"
+                  accept="image/png, image/jpeg, image/jpg"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0]
+                    if (f) handlePhotoUpload(f)
+                  }}
+                  className="hidden"
+                />
+              </label>
+              {profile.profileImage && (
+                <button
+                  type="button"
+                  onClick={handleRemovePhoto}
+                  className="text-[11px] font-semibold text-[#CC0000] hover:underline cursor-pointer ml-2"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
-            <p className="text-[10px] text-gray-300 uppercase font-bold">Attendance Record</p>
-            <p className="text-xl font-black text-green-400 mt-0.5">{profile.attendance}</p>
-            <p className="text-[10px] text-green-300">{profile.attendanceRemark}</p>
+          {/* Academic Key-Value Record */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 text-xs flex-1">
+            <div className="border-b border-[#F3F4F6] pb-1.5">
+              <span className="text-[#6B7280] block text-[11px]">Name:</span>
+              <span className="font-bold text-[#1F2937] text-sm">{profile.name}</span>
+            </div>
+
+            <div className="border-b border-[#F3F4F6] pb-1.5">
+              <span className="text-[#6B7280] block text-[11px]">Register Number:</span>
+              <span className="font-bold font-mono text-[#003399] text-sm">{profile.registerNumber}</span>
+            </div>
+
+            <div className="border-b border-[#F3F4F6] pb-1.5">
+              <span className="text-[#6B7280] block text-[11px]">Department:</span>
+              <span className="font-semibold text-[#1F2937]">{profile.department || 'Artificial Intelligence & Data Science'}</span>
+            </div>
+
+            <div className="border-b border-[#F3F4F6] pb-1.5">
+              <span className="text-[#6B7280] block text-[11px]">Year &amp; Semester:</span>
+              <span className="font-semibold text-[#1F2937]">
+                {profile.year === 1 ? 'I Year' : profile.year === 2 ? 'II Year' : profile.year === 3 ? 'III Year' : 'IV Year'} • Semester {profile.semester}
+              </span>
+            </div>
+
+            <div className="border-b border-[#F3F4F6] pb-1.5">
+              <span className="text-[#6B7280] block text-[11px]">Section:</span>
+              <span className="font-semibold text-[#1F2937]">Section {profile.section || 'A'}</span>
+            </div>
+
+            <div className="border-b border-[#F3F4F6] pb-1.5">
+              <span className="text-[#6B7280] block text-[11px]">Academic Year:</span>
+              <span className="font-semibold text-[#1F2937]">{profile.batch || '2026–2027'}</span>
+            </div>
+
+            <div className="border-b border-[#F3F4F6] pb-1.5">
+              <span className="text-[#6B7280] block text-[11px]">Institution / College:</span>
+              <span className="font-semibold text-[#1F2937]">V.S.B. Engineering College (Autonomous)</span>
+            </div>
+
+            <div className="border-b border-[#F3F4F6] pb-1.5">
+              <span className="text-[#6B7280] block text-[11px]">Faculty Advisor:</span>
+              <span className="font-semibold text-[#1F2937]">{profile.advisor || 'Assigned by Department'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Academic Performance Strip */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-4 border-t border-[#E5E7EB]">
+          <div className="bg-[#F7F8FA] p-3 rounded border border-[#E5E7EB]">
+            <p className="text-[10px] text-[#6B7280] uppercase font-bold">Cumulative GPA</p>
+            <p className="text-xl font-bold text-[#003399] mt-0.5">{profile.cgpa}</p>
+            <p className="text-[10px] text-[#6B7280]">{profile.cgpaClass}</p>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
-            <p className="text-[10px] text-gray-300 uppercase font-bold">Department Standing</p>
-            <p className="text-xl font-black text-[#22C7E8] mt-0.5">{profile.rank}</p>
-            <p className="text-[10px] text-gray-300">{profile.rankRemark}</p>
+          <div className="bg-[#F7F8FA] p-3 rounded border border-[#E5E7EB]">
+            <p className="text-[10px] text-[#6B7280] uppercase font-bold">Attendance Record</p>
+            <p className="text-xl font-bold text-emerald-700 mt-0.5">{profile.attendance}</p>
+            <p className="text-[10px] text-emerald-800">{profile.attendanceRemark}</p>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
-            <p className="text-[10px] text-gray-300 uppercase font-bold">Arrear Status</p>
-            <p className="text-xl font-black text-emerald-300 mt-0.5">{profile.arrears}</p>
-            <p className="text-[10px] text-gray-300">{profile.arrearRemark}</p>
+          <div className="bg-[#F7F8FA] p-3 rounded border border-[#E5E7EB]">
+            <p className="text-[10px] text-[#6B7280] uppercase font-bold">Department Rank</p>
+            <p className="text-xl font-bold text-[#1F2937] mt-0.5">{profile.rank}</p>
+            <p className="text-[10px] text-[#6B7280]">{profile.rankRemark}</p>
+          </div>
+
+          <div className="bg-[#F7F8FA] p-3 rounded border border-[#E5E7EB]">
+            <p className="text-[10px] text-[#6B7280] uppercase font-bold">Standing Arrears</p>
+            <p className="text-xl font-bold text-[#1F2937] mt-0.5">{profile.arrears}</p>
+            <p className="text-[10px] text-[#6B7280]">{profile.arrearRemark}</p>
           </div>
         </div>
       </div>
