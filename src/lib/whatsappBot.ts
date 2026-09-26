@@ -175,3 +175,97 @@ export async function sendWhatsAppButtons(
   }
 }
 
+/**
+ * Send an Image (e.g. Bar Chart, Infographic) directly to WhatsApp
+ */
+export async function sendWhatsAppImage(to: string, imageUrl: string, caption?: string): Promise<boolean> {
+  const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID || FALLBACK_PHONE_ID
+  const token = process.env.WHATSAPP_ACCESS_TOKEN || FALLBACK_ACCESS_TOKEN
+
+  if (!phoneId || !token) {
+    console.warn('[WhatsApp Bot] Missing WHATSAPP_PHONE_NUMBER_ID or WHATSAPP_ACCESS_TOKEN.')
+    return false
+  }
+
+  const cleanRecipient = to.replace(/\D/g, '')
+
+  try {
+    const res = await fetch(`${GRAPH_API_BASE}/${phoneId}/messages`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: cleanRecipient,
+        type: 'image',
+        image: {
+          link: imageUrl,
+          caption: caption ? caption.slice(0, 1024) : undefined,
+        },
+      }),
+    })
+
+    const data = await res.json()
+    if (!res.ok) {
+      console.warn('[WhatsApp Bot] Image dispatch failed:', data)
+      // Fallback: send text caption with image link so user still gets it
+      if (caption) {
+        return sendWhatsAppText(cleanRecipient, `${caption}\n\n📊 *View Chart:* ${imageUrl}`)
+      }
+      return false
+    }
+
+    return true
+  } catch (err) {
+    console.error('[WhatsApp Bot] Exception during image dispatch:', err)
+    return false
+  }
+}
+
+/**
+ * Send a Document (e.g. CSV or PDF report) directly to WhatsApp
+ */
+export async function sendWhatsAppDocument(
+  to: string,
+  documentUrl: string,
+  filename: string,
+  caption?: string
+): Promise<boolean> {
+  const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID || FALLBACK_PHONE_ID
+  const token = process.env.WHATSAPP_ACCESS_TOKEN || FALLBACK_ACCESS_TOKEN
+
+  if (!phoneId || !token) return false
+
+  const cleanRecipient = to.replace(/\D/g, '')
+
+  try {
+    const res = await fetch(`${GRAPH_API_BASE}/${phoneId}/messages`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: cleanRecipient,
+        type: 'document',
+        document: {
+          link: documentUrl,
+          filename: filename,
+          caption: caption ? caption.slice(0, 1024) : undefined,
+        },
+      }),
+    })
+
+    return res.ok
+  } catch (err) {
+    console.error('[WhatsApp Bot] Exception during document dispatch:', err)
+    return false
+  }
+}
+
+
