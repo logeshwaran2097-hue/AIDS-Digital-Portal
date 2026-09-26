@@ -879,6 +879,13 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
             <Download className="w-4 h-4 text-[#F4C430]" /> Download Student List (PDF)
           </button>
           <button
+            onClick={() => setIsBulkImportOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-2 transition-all shadow-md cursor-pointer hover:scale-105"
+            title="Bulk import students via CSV, Excel, or copy-paste table"
+          >
+            <UploadCloud className="w-4 h-4 text-white" /> Bulk Import
+          </button>
+          <button
             onClick={() => {
               const defaultYear = yearFilter !== 'ALL' ? Number(yearFilter) : 1
               const defaultSem = semFilter !== 'ALL' ? Number(semFilter) : ((defaultYear - 1) * 2 + 1)
@@ -1518,12 +1525,20 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           <p className="text-xs text-gray-500 max-w-md mx-auto mb-6">
             There are currently no student records matching the selected filters. Click below to register a new student candidate directly into the database.
           </p>
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="px-6 py-3 rounded-2xl bg-[#1455D9] hover:bg-[#0f44b0] text-white text-xs font-black inline-flex items-center gap-2 shadow-lg transition-all cursor-pointer hover:scale-105"
-          >
-            <Plus className="w-4 h-4" /> + Register Student Candidate
-          </button>
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="px-6 py-3 rounded-2xl bg-[#1455D9] hover:bg-[#0f44b0] text-white text-xs font-black inline-flex items-center gap-2 shadow-lg transition-all cursor-pointer hover:scale-105"
+            >
+              <Plus className="w-4 h-4" /> + Register Student Candidate
+            </button>
+            <button
+              onClick={() => setIsBulkImportOpen(true)}
+              className="px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black inline-flex items-center gap-2 shadow-lg transition-all cursor-pointer hover:scale-105"
+            >
+              <UploadCloud className="w-4 h-4" /> Bulk Import Roster
+            </button>
+          </div>
         </div>
       ) : filteredStudents.length === 0 ? (
         <div className="bg-white rounded-3xl border border-gray-200 p-10 text-center text-gray-400">
@@ -3364,6 +3379,16 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           </div>
         </div>
       )}
+
+      {/* MODAL: BULK STUDENT IMPORT */}
+      <BulkImportModal
+        isOpen={isBulkImportOpen}
+        onClose={() => setIsBulkImportOpen(false)}
+        onSuccess={() => {
+          fetchStudents()
+          toast.success('Student roster updated successfully!')
+        }}
+      />
     </div>
   )
 }
