@@ -31,6 +31,7 @@ export function AIChatbot() {
     const [showQuickPrompts, setShowQuickPrompts] = useState(true)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const inputRef = useRef<HTMLInputElement>(null)
+    const clientCache = useRef<Map<string, { answer: string; suggestions?: string[] }>>(new Map())
 
     // Welcome message
     useEffect(() => {
@@ -61,6 +62,22 @@ export function AIChatbot() {
         }
         setMessages(prev => [...prev, userMsg])
         setInput('')
+
+        const cacheKey = query.toLowerCase()
+        const cached = clientCache.current.get(cacheKey)
+        if (cached) {
+            const botMsg: ChatMessage = {
+                id: `bot-${Date.now()}`,
+                text: cached.answer,
+                sender: 'bot',
+                time: getTime(),
+                suggestions: cached.suggestions || [],
+            }
+            setMessages(prev => [...prev, botMsg])
+            inputRef.current?.focus()
+            return
+        }
+
         setIsTyping(true)
 
         try {
@@ -74,13 +91,16 @@ export function AIChatbot() {
             const answer = data.success && (data.answer || data.response?.answer)
                 ? (data.answer || data.response.answer)
                 : "I apologize, I couldn't process that. Please try rephrasing your question."
+            const suggestions = data.suggestions || data.response?.suggestions || []
+
+            clientCache.current.set(cacheKey, { answer, suggestions })
 
             const botMsg: ChatMessage = {
                 id: `bot-${Date.now()}`,
                 text: answer,
                 sender: 'bot',
                 time: getTime(),
-                suggestions: data.suggestions || data.response?.suggestions || [],
+                suggestions,
             }
             setMessages(prev => [...prev, botMsg])
         } catch {

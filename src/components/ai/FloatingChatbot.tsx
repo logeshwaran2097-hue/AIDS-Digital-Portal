@@ -77,6 +77,7 @@ export function FloatingChatbot() {
     const [unreadCount, setUnreadCount] = useState(1)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const inputRef = useRef<HTMLInputElement>(null)
+    const clientCache = useRef<Map<string, { answer: string; suggestions?: string[] }>>(new Map())
 
     // Initialize welcome message
     useEffect(() => {
@@ -126,24 +127,41 @@ export function FloatingChatbot() {
 
             setMessages((prev) => [...prev, userMsg])
             setInput('')
+
+            const cacheKey = query.toLowerCase()
+            const cached = clientCache.current.get(cacheKey)
+            if (cached) {
+                const botMsg: ChatMessage = {
+                    id: `bot-${Date.now()}`,
+                    text: cached.answer,
+                    sender: 'bot',
+                    time: getTime(),
+                    suggestions: cached.suggestions || [],
+                }
+                setMessages((prev) => [...prev, botMsg])
+                inputRef.current?.focus()
+                return
+            }
+
             setIsTyping(true)
 
             try {
-                const res = await fetch(`/api/ai?q=${encodeURIComponent(query)}`, { cache: 'no-store' })
+                const res = await fetch(`/api/ai?q=${encodeURIComponent(query)}`)
                 const data = await res.json()
 
-                // Natural pause
-                await new Promise((r) => setTimeout(r, 350 + Math.random() * 250))
+                const answer = data.success && data.response?.answer
+                    ? data.response.answer
+                    : (data.answer || "I'm not sure about that. Could you rephrase your question?")
+                const suggestions = data.response?.suggestions || data.suggestions || []
+
+                clientCache.current.set(cacheKey, { answer, suggestions })
 
                 const botMsg: ChatMessage = {
                     id: `bot-${Date.now()}`,
-                    text:
-                        data.success && data.response?.answer
-                            ? data.response.answer
-                            : (data.answer || "I'm not sure about that. Could you rephrase your question?"),
+                    text: answer,
                     sender: 'bot',
                     time: getTime(),
-                    suggestions: data.response?.suggestions || data.suggestions || [],
+                    suggestions,
                 }
                 setMessages((prev) => [...prev, botMsg])
             } catch {

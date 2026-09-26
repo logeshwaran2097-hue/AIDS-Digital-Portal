@@ -46,7 +46,16 @@ export async function POST(request: Request) {
     }
     const body = validation.data
     const fallbackDefault = process.env.DEFAULT_STUDENT_TEMP_PASSWORD || 'Student@123'
-    const { students, defaultPassword = fallbackDefault } = body
+    const {
+      students,
+      defaultPassword = fallbackDefault,
+      year: topYear,
+      semester: topSemester,
+      batch: topBatch,
+      section: topSection,
+      department: topDepartment,
+      residencyStatus: topResidencyStatus,
+    } = body as any
 
     // Pre-calculate hash for default password to make 1000 imports fast
     const defaultPasswordHash = await bcrypt.hash(defaultPassword, 10)
@@ -95,11 +104,12 @@ export async function POST(request: Request) {
               passwordHash = customHashCache.get(passKey)!
             }
 
-            const parsedYear = Number(st.year) || 1
-            const parsedSem = Number(st.semester) || (parsedYear * 2 - 1)
-            const section = st.section ? String(st.section).trim().toUpperCase() : 'A'
-            const department = st.department || 'Artificial Intelligence & Data Science'
-            const batch = st.batch ? String(st.batch).trim() : `${2026 - parsedYear + 1}-${2030 - parsedYear + 1}`
+            const parsedYear = Number(st.year ?? topYear) || 1
+            const parsedSem = Number(st.semester ?? topSemester) || (parsedYear * 2 - 1)
+            const section = (st.section || topSection) ? String(st.section || topSection).trim().toUpperCase() : 'A'
+            const department = st.department || topDepartment || 'Artificial Intelligence & Data Science'
+            const batch = (st.batch || topBatch) ? String(st.batch || topBatch).trim() : `${2026 - parsedYear + 1}-${2030 - parsedYear + 1}`
+            const residencyStatus = (st.residencyStatus || topResidencyStatus) ? String(st.residencyStatus || topResidencyStatus).trim() : 'Day Scholar'
 
             const dob = parseSafeDateOfBirth(st.dateOfBirth, new Date('2004-01-01'))!
 
@@ -193,6 +203,8 @@ export async function POST(request: Request) {
                     semester: parsedSem,
                     batch,
                     section,
+                    bloodGroup: st.bloodGroup ? String(st.bloodGroup).trim() : (existingStudentByUserId as any).bloodGroup || 'O+',
+                    residencyStatus,
                     advisorName: st.advisorName ? String(st.advisorName).trim() : (existingStudentByUserId as any).advisorName,
                     parentPhone: st.parentPhone ? String(st.parentPhone).trim() : (existingStudentByUserId as any).parentPhone,
                   } as any,
@@ -211,7 +223,7 @@ export async function POST(request: Request) {
                     advisorName: st.advisorName ? String(st.advisorName).trim() : null,
                     parentPhone: st.parentPhone ? String(st.parentPhone).trim() : null,
                     bloodGroup: st.bloodGroup ? String(st.bloodGroup).trim() : 'O+',
-                    residencyStatus: st.residencyStatus ? String(st.residencyStatus).trim() : 'Day Scholar',
+                    residencyStatus,
                     cgpa: st.cgpa !== undefined && st.cgpa !== '' && !isNaN(parseFloat(String(st.cgpa))) ? parseFloat(String(st.cgpa)) : 8.0,
                     attendance: st.attendance !== undefined && st.attendance !== '' ? String(st.attendance) : '90%',
                   } as any,

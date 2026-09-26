@@ -889,6 +889,12 @@ export const bulkStudentImportSchema = z
   .object({
     students: z.array(bulkStudentItemSchema).min(1, 'Please provide an array of student records'),
     defaultPassword: z.string().min(4).max(100).optional(),
+    year: z.union([z.number(), z.string()]).optional(),
+    semester: z.union([z.number(), z.string()]).optional(),
+    batch: z.string().max(50).optional().nullable(),
+    section: z.string().max(10).optional(),
+    department: z.string().max(150).optional(),
+    residencyStatus: z.string().max(50).optional().nullable(),
   })
-  .strict()
+  .passthrough()
 

@@ -34,6 +34,9 @@ function isDuplicateMessage(messageId: string): boolean {
   return false
 }
 
+// In-Memory Session Cache: Track last active student viewed by sender (for contextual actions like "view ods", "photo")
+const lastActiveStudentBySender = new Map<string, string>()
+
 // In-Memory High-Speed Student Directory Cache (0.02ms Lookups)
 interface CachedStudent {
   id: string
@@ -399,8 +402,14 @@ export async function POST(request: NextRequest) {
         if (msgType === 'text' && msg.text?.body) {
           rawInput = msg.text.body.trim().toLowerCase()
         } else if (msgType === 'interactive' && msg.interactive?.button_reply) {
-          buttonPayload = msg.interactive.button_reply.id
-          rawInput = buttonPayload.toLowerCase()
+          buttonPayload = msg.interactive.button_reply.id || ''
+          rawInput = (msg.interactive.button_reply.title || buttonPayload).trim().toLowerCase()
+        } else if (msgType === 'interactive' && msg.interactive?.list_reply) {
+          buttonPayload = msg.interactive.list_reply.id || ''
+          rawInput = (msg.interactive.list_reply.title || buttonPayload).trim().toLowerCase()
+        } else if (msgType === 'button' && msg.button) {
+          buttonPayload = msg.button.payload || ''
+          rawInput = (msg.button.text || buttonPayload).trim().toLowerCase()
         }
 
         // Fire read receipt (blue checkmarks) non-blocking in background
@@ -496,8 +505,20 @@ async function handleInboundQuery(sender: string, input: string, buttonId: strin
   // =========================================================================
   // 2. ACTION: VIEW STUDENT SPECIFIC OD HISTORY
   // =========================================================================
-  if (buttonId.startsWith('action:student_ods:')) {
-    const regNo = buttonId.replace('action:student_ods:', '')
+  const isStudentODsAction =
+    buttonId.startsWith('action:student_ods:') ||
+    input === '📝 view ods' ||
+    input === 'view ods' ||
+    input === 'view student ods' ||
+    input === 'student ods' ||
+    input === 'ods'
+
+  if (isStudentODsAction) {
+    let regNo = buttonId.startsWith('action:student_ods:')
+      ? buttonId.replace('action:student_ods:', '').trim()
+      : input.match(/\d{3,12}/)?.[0] || lastActiveStudentBySender.get(cleanSender) || '922525243105'
+
+    lastActiveStudentBySender.set(cleanSender, regNo)
     try {
       const db = await getPrisma()
       const ods = await db.oDProof.findMany({
@@ -549,8 +570,18 @@ async function handleInboundQuery(sender: string, input: string, buttonId: strin
   // =========================================================================
   // ACTION: VIEW STUDENT PROFILE PHOTO
   // =========================================================================
-  if (buttonId.startsWith('action:student_photo:')) {
-    const regNo = buttonId.replace('action:student_photo:', '').trim()
+  const isStudentPhotoAction =
+    buttonId.startsWith('action:student_photo:') ||
+    input === '📷 student photo' ||
+    input === 'student photo' ||
+    input === 'photo'
+
+  if (isStudentPhotoAction) {
+    let regNo = buttonId.startsWith('action:student_photo:')
+      ? buttonId.replace('action:student_photo:', '').trim()
+      : input.match(/\d{3,12}/)?.[0] || lastActiveStudentBySender.get(cleanSender) || '922525243105'
+
+    lastActiveStudentBySender.set(cleanSender, regNo)
     const directory = await getCachedStudentDirectory()
     const found = directory.find((s) => s.registerNumber === regNo)
     const studentName = found?.user?.name || 'Student'
@@ -884,6 +915,8 @@ async function handleInboundQuery(sender: string, input: string, buttonId: strin
         `• *Internal Marks Avg:* *${internalMarksAvg} / 100*`,
         `• *Academic Standing:* ${academicStanding}`,
       ].join('\n')
+
+      lastActiveStudentBySender.set(cleanSender, regNo)
 
       await sendWhatsAppButtons(
         cleanSender,
@@ -1292,45 +1325,75 @@ async function handleInboundQuery(sender: string, input: string, buttonId: strin
   }
 
   // =========================================================================
-  // 7. NATURAL LANGUAGE AI BOT ASSISTANT (Gemini Flash Fast Lane)
+  // 7. NATURAL LANGUAGE AI BOT ASSISTANT (Instant Knowledge & Gemini 2.0 Flash)
   // =========================================================================
   const geminiApiKey = process.env.GEMINI_API_KEY
-  const isQuestion = input.includes('?') || input.includes('who') || input.includes('what') || input.includes('how') || input.includes('rules') || input.includes('exam')
+  const isQuestion = input.includes('?') || input.includes('who') || input.includes('what') || input.includes('how') || input.includes('rules') || input.includes('exam') || input.includes('attendance') || input.includes('timing')
 
-  if (geminiApiKey && isQuestion && input.length > 5) {
-    try {
-      const { GoogleGenerativeAI } = await import('@google/generative-ai')
-      const genAI = new GoogleGenerativeAI(geminiApiKey)
-      const model = genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
-        systemInstruction: `You are the executive AI assistant for the Head of Department (HOD Dr. Manivannan K) of Artificial Intelligence & Data Science at V.S.B. Engineering College (Autonomous Anna University R-2021).
+  if (isQuestion && input.length > 3) {
+    const qLower = input.toLowerCase()
+
+    // 7A. Instant Department Policy Fast-Lane (< 10ms)
+    let instantReply = ''
+    if (/\b(attendance|condonation|shortage|minimum)\b/i.test(qLower)) {
+      instantReply = `📋 *Department Attendance Policy:*\n• *Minimum Attendance:* 75% for Anna University & Autonomous Exam Eligibility\n• *Condonation (65%-74%):* Allowed with valid medical proof & HOD sanction\n• Marked across 8 daily periods (FN 4 + AN 4)`
+    } else if (/\b(bell|timing|timings|period|schedule|break|lunch)\b/i.test(qLower)) {
+      instantReply = `⏰ *8-Period Daily Bell Timings:*\n• *Period 1-2:* 09:15 AM - 10:45 AM\n• ☕ *Break:* 10:45 AM - 11:00 AM\n• *Period 3-4:* 11:00 AM - 12:30 PM\n• 🍱 *Lunch:* 12:30 PM - 01:20 PM\n• *Period 5-6:* 01:20 PM - 02:50 PM\n• 🍵 *Tea Break:* 02:50 PM - 03:05 PM\n• *Period 7-8:* 03:05 PM - 04:30 PM`
+    } else if (/\b(hod|manivannan|head of department)\b/i.test(qLower)) {
+      instantReply = `👑 *Head of Department (AI & DS):*\n• *HOD:* Dr. Manivannan K, M.E., Ph.D.\n• *Department:* Artificial Intelligence & Data Science\n• *Location:* Department HOD Cabin, Admin Block`
+    } else if (/\b(calendar|working days?|iat|exam)\b/i.test(qLower)) {
+      instantReply = `📅 *Academic Calendar (Regulation 2021):*\n• *Active Term:* Even Semester 2026 (90 Total Working Days)\n• *IAT-1:* Feb 2026 · *IAT-2:* Apr 2026 · *End-Sem:* May 2026`
+    }
+
+    if (instantReply) {
+      await sendWhatsAppButtons(
+        cleanSender,
+        instantReply,
+        [
+          { id: 'menu:attendance', title: '📊 Attendance' },
+          { id: 'menu:od', title: '📝 Pending ODs' },
+          { id: 'menu:help', title: '⚙️ Main Menu' },
+        ],
+        'AI Executive Intelligence'
+      )
+      return
+    }
+
+    if (geminiApiKey) {
+      try {
+        const { GoogleGenerativeAI } = await import('@google/generative-ai')
+        const genAI = new GoogleGenerativeAI(geminiApiKey)
+        const model = genAI.getGenerativeModel({
+          model: 'gemini-2.0-flash',
+          systemInstruction: `You are the executive AI assistant for the Head of Department (HOD Dr. Manivannan K) of Artificial Intelligence & Data Science at V.S.B. Engineering College (Autonomous Anna University R-2021).
 Give extremely crisp, direct, professional answers in 2-3 sentences. No fluff. Use WhatsApp bolding.`,
-      })
+        })
 
-      const result = await Promise.race([
-        model.generateContent({
-          contents: [{ role: 'user', parts: [{ text: input }] }],
-          generationConfig: { maxOutputTokens: 150, temperature: 0.2 },
-        }),
-        new Promise<null>((_, reject) => setTimeout(() => reject(new Error('timeout')), 2500)),
-      ])
+        const result = await Promise.race([
+          model.generateContent({
+            contents: [{ role: 'user', parts: [{ text: input }] }],
+            generationConfig: { maxOutputTokens: 120, temperature: 0.2 },
+          }),
+          new Promise<null>((_, reject) => setTimeout(() => reject(new Error('timeout')), 2200)),
+        ])
 
-      const aiText = (result as any)?.response?.text()?.trim()
-      if (aiText) {
-        await sendWhatsAppButtons(
-          cleanSender,
-          aiText,
-          [
-            { id: 'menu:attendance', title: '📊 Attendance' },
-            { id: 'menu:od', title: '📝 Pending ODs' },
-            { id: 'menu:help', title: '⚙️ Main Menu' },
-          ],
-          'AI Executive Intelligence'
-        )
-        return
+        const aiText = (result as any)?.response?.text()?.trim()
+        if (aiText) {
+          await sendWhatsAppButtons(
+            cleanSender,
+            aiText,
+            [
+              { id: 'menu:attendance', title: '📊 Attendance' },
+              { id: 'menu:od', title: '📝 Pending ODs' },
+              { id: 'menu:help', title: '⚙️ Main Menu' },
+            ],
+            'AI Executive Intelligence'
+          )
+          return
+        }
+      } catch {
+        // Fallback silently to menu on AI timeout
       }
-    } catch {
-      // Fallback silently to menu on AI timeout
     }
   }
 

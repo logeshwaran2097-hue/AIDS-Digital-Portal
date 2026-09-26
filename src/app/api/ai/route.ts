@@ -10,6 +10,7 @@ import { validateBody, aiQuerySchema } from '@/lib/validations/apiValidation'
 
 // Universal Real-Time Database Query Engine
 import { STUDY_DATABASE, SubjectUnitData, UnitData } from '@/data/studyDatabase'
+import { ALL_CURRICULUM_COURSES } from '@/lib/curriculumData'
 
 // =============================================================================
 // ANNA UNIVERSITY R-2021 ACADEMIC INTELLIGENCE ENGINE (100% AUTHENTIC 15 UNITS)
@@ -310,7 +311,7 @@ async function executeOdLeaveReasonAgent(
     try {
       const genAI = new GoogleGenerativeAI(activeApiKey)
       const model = genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.0-flash',
         systemInstruction: `You are the official Academic Administrative Agent for V.S.B. Engineering College (Department of Artificial Intelligence & Data Science).
 Draft exactly 2 formal, polite, and persuasive sentences suitable as the official reason for a college student's application.
 Strict Rules:
@@ -328,11 +329,19 @@ Host: ${organizer}
 Base reason draft: ${baseStatement}
 Return only 2 formal sentences.`
 
-      const result = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: agentPrompt }] }],
-        generationConfig: { maxOutputTokens: 250, temperature: 0.5 },
-      })
-      const text = result.response.text()?.trim()
+      const timeoutPromise = new Promise<null>((_, reject) =>
+        setTimeout(() => reject(new Error('OD drafting timeout')), 2500)
+      )
+
+      const result = await Promise.race([
+        model.generateContent({
+          contents: [{ role: 'user', parts: [{ text: agentPrompt }] }],
+          generationConfig: { maxOutputTokens: 120, temperature: 0.4 },
+        }),
+        timeoutPromise,
+      ])
+
+      const text = (result as any)?.response?.text()?.trim()
       if (
         text &&
         text.length > 20 &&
@@ -422,7 +431,7 @@ async function executeSecurityAuditLogAgent(
     try {
       const genAI = new GoogleGenerativeAI(activeApiKey)
       const model = genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.0-flash',
         systemInstruction: `You are the Chief Cybersecurity & Systems Reliability Engineer for the V.S.B. AI & DS Institutional Digital Portal.
 Your task is to analyze system activity audit records, security exceptions, and failed operations.
 Provide a clear, high-signal, expert diagnostic report in markdown format:
@@ -432,11 +441,19 @@ Provide a clear, high-signal, expert diagnostic report in markdown format:
 Keep the tone professional, precise, and concise (under 200 words). Do not output generic bot greetings.`,
       })
 
-      const result = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: rawQ }] }],
-        generationConfig: { maxOutputTokens: 600, temperature: 0.3 },
-      })
-      const text = result.response.text()?.trim()
+      const timeoutPromise = new Promise<null>((_, reject) =>
+        setTimeout(() => reject(new Error('Security analysis timeout')), 2500)
+      )
+
+      const result = await Promise.race([
+        model.generateContent({
+          contents: [{ role: 'user', parts: [{ text: rawQ }] }],
+          generationConfig: { maxOutputTokens: 350, temperature: 0.3 },
+        }),
+        timeoutPromise,
+      ])
+
+      const text = (result as any)?.response?.text()?.trim()
       if (text && text.length > 40 && !text.includes('Welcome to the V.S.B. AI & DS Portal Assistant')) {
         return {
           answer: text,
@@ -772,6 +789,210 @@ async function getDynamicKnowledgeBase(query: string, session?: any): Promise<{ 
     return handleSecurityAuditLogAnalysis(rawQ)
   }
 
+  // ---------------------------------------------------------------------------
+  // 0D. DAILY SCHEDULE, TIMETABLE & BELL TIMINGS (8 PERIODS) - INSTANT LOOKUP
+  // ---------------------------------------------------------------------------
+  const isScheduleQuery = /\b(bell timings?|class timings?|period timings?|daily schedule|timetable|lunch break|tea break|college hours|working hours|daily periods?)\b/i.test(q)
+  if (isScheduleQuery && !q.includes('exam') && !q.includes('question') && !q.includes('unit') && !q.includes('mark') && !q.includes('syllabus')) {
+    return {
+      answer: `⏰ **Official Institutional Bell Timings & 8-Period Daily Schedule:**
+
+**Morning Academic Session:**
+• **Period 1:** 09:15 AM - 10:00 AM (45 mins · Morning Theory)
+• **Period 2:** 10:00 AM - 10:45 AM (45 mins · Morning Theory)
+• ☕ **First Refreshment Break:** 10:45 AM - 11:00 AM (15 mins)
+• **Period 3:** 11:00 AM - 11:45 AM (45 mins · Mid-Morning Core)
+• **Period 4:** 11:45 AM - 12:30 PM (45 mins · Mid-Morning Core)
+
+🍱 **Lunch Dining Break:** 12:30 PM - 01:20 PM (50 mins)
+
+**Afternoon Academic Session:**
+• **Period 5:** 01:20 PM - 02:05 PM (45 mins · Afternoon Theory / Lab)
+• **Period 6:** 02:05 PM - 02:50 PM (45 mins · Afternoon Theory / Lab)
+• 🍵 **Evening Tea Break:** 02:50 PM - 03:05 PM (15 mins)
+• **Period 7:** 03:05 PM - 03:50 PM (45 mins · Soft Skills / Training)
+• **Period 8:** 03:50 PM - 04:30 PM (40 mins · Aptitude / Mentorship)
+
+🔬 **Laboratory Blocks:**
+• **Forenoon Lab (FN):** 09:15 AM - 12:30 PM (Periods 1 to 4)
+• **Afternoon Lab (AN):** 01:20 PM - 04:30 PM (Periods 5 to 8)`,
+      suggestions: ['Labs for 2nd year?', 'Labs for 3rd year?', 'Attendance criteria?'],
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 0E. ATTENDANCE REGULATIONS & POLICIES - INSTANT LOOKUP
+  // ---------------------------------------------------------------------------
+  if (
+    /\b(attendance|attending|absent|present|condonation|minimum attendance|attendance criteria|attendance rules?|shortage)\b/i.test(q)
+  ) {
+    return {
+      answer: `📋 **Institutional Attendance Regulations & Condonation Guidelines:**
+
+• **Mandatory Minimum Attendance:** 75% for Anna University & Autonomous Exam Eligibility
+• **Condonation Range:** 65% - 74% (Permitted only with valid medical certificate & HOD approval)
+• **Disqualification (< 65%):** Redo semester / withheld from university end-sem examinations
+• **Daily Periods:** Attendance marked across 8 periods daily (FN 4 periods + AN 4 periods)
+• **Critical Shortage Alerts:** Auto-dispatched via In-App Bell and SMS when overall attendance drops below 75%
+• **On-Duty (OD) Regularization:** Symposium, hackathon, and sports OD requests must be submitted within 2 working days via student portal.`,
+      suggestions: ['Daily bell timings?', 'Student dashboard?', 'Academic calendar?'],
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 0F. ACADEMIC CALENDAR & WORKING DAYS - INSTANT LOOKUP
+  // ---------------------------------------------------------------------------
+  if (
+    /\b(calendar|working day|working days|academic calendar|term dates|iat dates|exam dates?|assessments?)\b/i.test(q)
+  ) {
+    return {
+      answer: `📅 **Academic Calendar & Working Days (Regulation 2021 Autonomous):**
+
+• **Academic Regulation:** Regulation 2021 (Autonomous)
+• **Active Term:** Even Semester (January - May 2026)
+• **Total Prescribed Working Days:** 90 Days Total
+• **Monthly Schedule:** January (18 Days), February (20 Days), March (22 Days), April (20 Days), May (10 Days)
+• **Internal Assessment Schedule:**
+  - **IAT-1:** Third week of February 2026
+  - **IAT-2:** Second week of April 2026
+  - **Model Practical Examinations:** Fourth week of April 2026
+• **University End-Semester Examinations:** May 2026`,
+      suggestions: ['Attendance criteria?', 'Daily bell timings?', 'Curricular subjects catalog'],
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 0G. PLACEMENT STATISTICS & RECRUITER DOSSIER - INSTANT LOOKUP
+  // ---------------------------------------------------------------------------
+  if (
+    /\b(placement|placements|placement rate|highest package|average package|lpa|recruiters|campus drive|interview|job offers?)\b/i.test(q)
+  ) {
+    return {
+      answer: `📊 **Department of AI & DS — Placement Statistics & Recruiter Dossier:**
+
+• **Overall Placement Rate:** 96.4% Placement Consistency (Autonomous Batch Benchmark)
+• **Highest CTC:** ₹14.5 LPA (Top Tier Product & R&D Offers)
+• **Median / Average CTC:** ₹5.8 LPA / ₹6.2 LPA
+• **Marquee Corporate Recruiters:**
+  - **Tier-1 Tech:** Zoho Corporation, Kaar Technologies, TCS (Digital & Ninja), Cognizant (GenC Elevate)
+  - **Global Consultancies:** Virtusa (Neural Hack), Infosys (Specialist Programmer), Hexaware, Wipro Turbo
+• **Department Placement Bootcamps:**
+  - Full-stack AI/ML portfolio incubation (GitHub project reviews & live demos)
+  - Rigorous DSA, System Design, LeetCode, and HackerRank problem solving
+  - Technical HR mock interviews conducted by alumni working at top tech firms`,
+      suggestions: ['Curricular subjects catalog', 'Research areas available', 'Faculty directorate'],
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 0H. RESEARCH AREAS & CENTERS OF EXCELLENCE - INSTANT LOOKUP
+  // ---------------------------------------------------------------------------
+  if (
+    /\b(research|research areas?|center of excellence|coe|publications?|patent|innovation lab|patents)\b/i.test(q)
+  ) {
+    return {
+      answer: `🔬 **Department of AI & DS — Specialized Research Domains & Centers of Excellence:**
+
+• **1. Generative AI & Large Language Models (LLMs):** Retrieval-Augmented Generation (RAG), domain fine-tuning, autonomous agentic architectures.
+• **2. Computer Vision & Medical Imaging:** Convolutional architectures, YOLOv8/v9 object detection, clinical MRI/CT diagnostic segmentation.
+• **3. Edge AI & Embedded Intelligence:** TensorRT, ONNX runtime, Jetson Nano edge deployment for IoT telemetry.
+• **4. Predictive Analytics & Big Data:** Scalable distributed data processing, automated fraud detection, algorithmic forecasting.
+• **5. Natural Language Processing (NLP):** Indic language processing, sentiment analysis, speech-to-text acoustic modeling.
+
+💡 *Students can collaborate on faculty-guided research papers and patent filings under **Capstone Projects**.*`,
+      suggestions: ['What subjects are offered?', 'Placement statistics', 'Faculty directorate'],
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 0I. CURRICULAR SUBJECTS CATALOG - INSTANT LOOKUP
+  // ---------------------------------------------------------------------------
+  if (
+    /\b(curricular subjects?|what subjects|subjects offered|courses offered|all subjects|subject list|course catalog|curriculum catalog)\b/i.test(q)
+  ) {
+    const sem3Courses = ALL_CURRICULUM_COURSES.filter(c => c.sem === 3)
+    const sem4Courses = ALL_CURRICULUM_COURSES.filter(c => c.sem === 4)
+    const sem3List = sem3Courses.map(c => `• **${c.code}** — ${c.name} (${c.courseType}, ${c.credits} Credits)`).join('\n')
+    const sem4List = sem4Courses.map(c => `• **${c.code}** — ${c.name} (${c.courseType}, ${c.credits} Credits)`).join('\n')
+
+    return {
+      answer: `📚 **Department of AI & DS — Curricular Course Catalog (Anna University R-2021):**
+
+**Semester 3 Core Courses:**
+${sem3List}
+
+**Semester 4 Core Courses:**
+${sem4List}
+
+💡 *Access complete unit-by-unit syllabus and study materials under the **Study Resources** section.*`,
+      suggestions: ['Labs and facilities', 'Attendance regulations', 'Placement statistics'],
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 0J. QUESTION PAPER TYPES & EXAMINATION BLUEPRINT - INSTANT LOOKUP
+  // ---------------------------------------------------------------------------
+  if (
+    /\b(question paper types?|question paper bank|exam pattern|marks distribution|question paper format|exam blueprint)\b/i.test(q)
+  ) {
+    return {
+      answer: `📝 **Anna University R-2021 & Autonomous Examination Structure:**
+
+• **Internal Assessment Tests (IAT-1 & IAT-2):**
+  - **Duration:** 90 Minutes · **Maximum Marks:** 50 Marks (converted to 20 Marks Internal Weightage)
+  - **Part A:** 5 Questions × 2 Marks = 10 Marks (Bloom's K1/K2)
+  - **Part B:** 2 Questions × 13 Marks = 26 Marks (Either/Or format, Bloom's K3/K4)
+  - **Part C:** 1 Question × 14 Marks = 14 Marks (Application / Analytical design, Bloom's K5/K6)
+
+• **End-Semester University Examinations:**
+  - **Duration:** 3 Hours · **Maximum Marks:** 100 Marks
+  - **Part A (20 Marks):** 10 Questions × 2 Marks (Mandatory, Bloom's K1/K2)
+  - **Part B (65 Marks):** 5 Questions × 13 Marks (Either/Or format, Bloom's K3/K4)
+  - **Part C (15 Marks):** 1 Question × 15 Marks (Bloom's K5/K6 - Design / Case Study)`,
+      suggestions: ['Academic calendar?', 'Curricular subjects catalog', 'Study resources?'],
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 0K. INSTITUTIONAL IDENTITY & ACCREDITATION - INSTANT LOOKUP
+  // ---------------------------------------------------------------------------
+  if (
+    /\b(institutional identity|accreditation|college address|location|contact|phone|where is college|vsb engineering college)\b/i.test(q) ||
+    (q.includes('college') && (q.includes('address') || q.includes('location') || q.includes('about') || q.includes('info')))
+  ) {
+    return {
+      answer: `🏛️ **V.S.B. Engineering College (Autonomous)**
+
+• **Department:** Department of Artificial Intelligence & Data Science (AI & DS)
+• **Affiliation:** Anna University, Chennai | Approved by AICTE, New Delhi
+• **Accreditation:** NAAC 'A' Grade & NBA Tier-1 Accredited
+• **Campus Location:** NH-67, Covai Road, Karur - 639 111, Tamil Nadu, India
+• **Official Website:** https://aids-digital-portal-logeshwaran.vercel.app
+• **Administrative Contact:** admin@vsb.edu.in | +91 4324 290144`,
+      suggestions: ['Who are the administrators?', 'Academic calendar?', 'Daily bell timings?'],
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 0L. PORTAL GOVERNANCE & ADMINISTRATORS - INSTANT LOOKUP
+  // ---------------------------------------------------------------------------
+  if (
+    /\b(governance|administrator|administrators|admin role|rbac|security policy|who governs|portal administration)\b/i.test(q)
+  ) {
+    return {
+      answer: `🛡️ **V.S.B. AI & DS Institutional Portal Governance & RBAC:**
+
+• **Institutional Leadership:** Department Head (Dr. Manivannan K - HOD AI & DS)
+• **Role-Based Access Control (RBAC):**
+  - **Super Administrator:** Complete system orchestration, database replication, master audit log monitoring
+  - **HOD:** Attendance analytics, faculty assignments, OD approval sanctions, department broadcasts
+  - **Faculty / Class Advisors:** Daily 8-period attendance marking, student OD verification, internal marks
+  - **Students:** Real-time digital pass, attendance percentage tracking, OD applications, study materials
+• **Security Architecture:** SHA-256 dual cryptographic tokens, tamper-evident audit trails, CSRF & dual rate limiting.`,
+      suggestions: ['Faculty directorate?', 'HOD leadership?', 'Academic calendar?'],
+    }
+  }
+
 
   try {
     // -------------------------------------------------------------------------
@@ -1068,42 +1289,11 @@ async function getDynamicKnowledgeBase(query: string, session?: any): Promise<{ 
     }
 
     // -------------------------------------------------------------------------
-    // 10. DAILY SCHEDULE, TIMETABLE & BELL TIMINGS (8 PERIODS)
+    // 10. GENERAL / FUZZY DATABASE SEARCH (Fallback for broad entity discovery)
     // -------------------------------------------------------------------------
-    const isScheduleQuery = /\b(bell timings?|class timings?|period timings?|daily schedule|timetable|lunch break|tea break|college hours|working hours|daily periods?)\b/i.test(q)
-    if (isScheduleQuery && !q.includes('exam') && !q.includes('question') && !q.includes('unit') && !q.includes('mark') && !q.includes('syllabus')) {
-      return {
-        answer: `⏰ **Official Institutional Bell Timings & 8-Period Daily Schedule:**
-
-**Morning Academic Session:**
-• **Period 1:** 09:15 AM - 10:00 AM (45 mins · Morning Theory)
-• **Period 2:** 10:00 AM - 10:45 AM (45 mins · Morning Theory)
-• ☕ **First Refreshment Break:** 10:45 AM - 11:00 AM (15 mins)
-• **Period 3:** 11:00 AM - 11:45 AM (45 mins · Mid-Morning Core)
-• **Period 4:** 11:45 AM - 12:30 PM (45 mins · Mid-Morning Core)
-
-🍱 **Lunch Dining Break:** 12:30 PM - 01:20 PM (50 mins)
-
-**Afternoon Academic Session:**
-• **Period 5:** 01:20 PM - 02:05 PM (45 mins · Afternoon Theory / Lab)
-• **Period 6:** 02:05 PM - 02:50 PM (45 mins · Afternoon Theory / Lab)
-• 🍵 **Evening Tea Break:** 02:50 PM - 03:05 PM (15 mins)
-• **Period 7:** 03:05 PM - 03:50 PM (45 mins · Soft Skills / Training)
-• **Period 8:** 03:50 PM - 04:30 PM (40 mins · Aptitude / Mentorship)
-
-🔬 **Laboratory Blocks:**
-• **Forenoon Lab (FN):** 09:15 AM - 12:30 PM (Periods 1 to 4)
-• **Afternoon Lab (AN):** 01:20 PM - 04:30 PM (Periods 5 to 8)`,
-        suggestions: ['Labs for 2nd year?', 'Labs for 3rd year?', 'Attendance criteria?'],
-      }
-    }
-
-    // -------------------------------------------------------------------------
-    // 11. GENERAL / FUZZY DATABASE SEARCH
-    // -------------------------------------------------------------------------
-    const keywords = q.split(/\s+/).filter((w) => w.length > 2)
-    if (keywords.length > 0) {
-      const searchTerms = keywords.join(' ')
+    const keywords = q.split(/\s+/).filter((w) => w.length > 2 && !['what', 'tell', 'about', 'find', 'show', 'list', 'the', 'and', 'for', 'are', 'does', 'how'].includes(w))
+    if (keywords.length > 0 && q.length > 3 && !/^(hi|hello|hey|help|welcome|thanks|thank you|ok|okay)\b/i.test(q)) {
+      const searchTerms = keywords.slice(0, 3).join(' ')
 
       const [matchedUsers, matchedAnnouncements, matchedEvents, matchedProjects] = await Promise.all([
         prisma.user.findMany({
@@ -1113,7 +1303,7 @@ async function getDynamicKnowledgeBase(query: string, session?: any): Promise<{ 
               { email: { contains: searchTerms } },
             ],
           },
-          take: 5,
+          take: 3,
         }).catch(() => []),
         prisma.announcement.findMany({
           where: {
@@ -1122,7 +1312,7 @@ async function getDynamicKnowledgeBase(query: string, session?: any): Promise<{ 
               { content: { contains: searchTerms } },
             ],
           },
-          take: 3,
+          take: 2,
         }).catch(() => []),
         prisma.event.findMany({
           where: {
@@ -1131,7 +1321,7 @@ async function getDynamicKnowledgeBase(query: string, session?: any): Promise<{ 
               { description: { contains: searchTerms } },
             ],
           },
-          take: 3,
+          take: 2,
         }).catch(() => []),
         prisma.project.findMany({
           where: {
@@ -1140,7 +1330,7 @@ async function getDynamicKnowledgeBase(query: string, session?: any): Promise<{ 
               { domain: { contains: searchTerms } },
             ],
           },
-          take: 3,
+          take: 2,
         }).catch(() => []),
       ])
 
@@ -1164,40 +1354,6 @@ async function getDynamicKnowledgeBase(query: string, session?: any): Promise<{ 
           answer: `🔍 **Live Database Search Results for "${rawQ}":**\n\n${searchResults.join('\n\n')}`,
           suggestions: ['Labs for 2nd year?', 'Faculty directorate?', 'Academic calendar?'],
         }
-      }
-    }
-
-    // -------------------------------------------------------------------------
-    // 12. ATTENDANCE REGULATIONS & POLICIES
-    // -------------------------------------------------------------------------
-    if (
-      /\b(attendance|attending|absent|present|condonation|minimum attendance)\b/i.test(q) ||
-      /\b(on-duty|on duty)\b/i.test(q) ||
-      /\b(leave|leaves|od request|apply od)\b/i.test(q)
-    ) {
-      return {
-        answer: `📋 **Institutional Attendance Regulations:**\n\n• **Mandatory Minimum Attendance:** 75% for Anna University & Autonomous Exam Eligibility\n• **Condonation Range:** 65% - 74% (Permitted only with valid medical proof & HOD approval)\n• **Daily Periods:** Attendance marked across 8 periods daily (FN & AN)\n• **Critical Shortage Alert:** Dispatched via In-App Bell and SMS when attendance drops below 75%\n• **On-Duty (OD):** Symposium and project OD requests can be submitted via student portal.`,
-        suggestions: ['Daily bell timings?', 'Student dashboard?', 'Academic calendar?'],
-      }
-    }
-
-    // -------------------------------------------------------------------------
-    // 13. WORKING DAYS / ACADEMIC CALENDAR
-    // -------------------------------------------------------------------------
-    if (q.includes('calendar') || q.includes('working day') || q.includes('regulation') || q.includes('term')) {
-      return {
-        answer: `📅 **Academic Calendar & Working Days:**\n\n• **Academic Regulation:** Regulation 2021 (Autonomous)\n• **Active Term:** Even Semester (January - May 2026)\n• **Total Prescribed Working Days:** 90 Days Total\n• **Monthly Breakdown:** January (18 Days), February (20 Days), March (22 Days), April (20 Days), May (10 Days)\n• **Internal Assessments:** IAT-1 in February 2026, IAT-2 in April 2026\n• **University End-Semester Examinations:** May 2026`,
-        suggestions: ['Attendance criteria?', 'Daily bell timings?', 'Labs for 2nd year?'],
-      }
-    }
-
-    // -------------------------------------------------------------------------
-    // 14. INSTITUTIONAL IDENTITY / ADDRESS / CONTACT
-    // -------------------------------------------------------------------------
-    if (q.includes('college') || q.includes('address') || q.includes('contact') || q.includes('phone') || q.includes('location') || q.includes('vsb')) {
-      return {
-        answer: `🏛️ **V.S.B. Engineering College (Autonomous)**\n\n• **Department:** Department of Artificial Intelligence & Data Science (AI & DS)\n• **Affiliation:** Anna University, Chennai | Approved by AICTE\n• **Accreditation:** NAAC 'A' Grade & NBA Tier-1 Accredited\n• **Location:** NH-67, Covai Road, Karur - 639 111, Tamil Nadu, India\n• **Administrative Contact:** admin@vsb.edu.in | +91 4324 290144`,
-        suggestions: ['Who are the administrators?', 'Academic calendar?', 'Daily bell timings?'],
       }
     }
   } catch (err) {
@@ -1226,6 +1382,45 @@ How can I help you today?`,
   }
 }
 
+// Fast In-Memory Response Cache (15 min TTL, max 500 entries)
+interface CachedAiResponse {
+  answer: string
+  suggestions: string[]
+  source: string
+  model?: string
+  expiresAt: number
+}
+
+const AI_CACHE_TTL_MS = 15 * 60 * 1000
+const aiResponseCache = new Map<string, CachedAiResponse>()
+
+function getCachedResponse(rawKey: string): CachedAiResponse | null {
+  const key = rawKey.trim().toLowerCase()
+  const cached = aiResponseCache.get(key)
+  if (!cached) return null
+  if (Date.now() > cached.expiresAt) {
+    aiResponseCache.delete(key)
+    return null
+  }
+  return cached
+}
+
+function setCachedResponse(
+  rawKey: string,
+  data: { answer: string; suggestions: string[]; source: string; model?: string }
+) {
+  const key = rawKey.trim().toLowerCase()
+  if (!key) return
+  if (aiResponseCache.size > 500) {
+    const firstKeys = Array.from(aiResponseCache.keys()).slice(0, 100)
+    for (const k of firstKeys) aiResponseCache.delete(k)
+  }
+  aiResponseCache.set(key, {
+    ...data,
+    expiresAt: Date.now() + AI_CACHE_TTL_MS,
+  })
+}
+
 // Store chat histories in memory
 const chatHistories = new Map<string, Array<{ role: string; parts: Array<{ text: string }> }>>()
 
@@ -1248,6 +1443,18 @@ export async function POST(request: Request) {
     const { message, sessionId } = validation.data
     const query = message.trim()
 
+    // 0. Instant Cache Lookup (< 1ms)
+    const cached = getCachedResponse(query)
+    if (cached) {
+      return NextResponse.json({
+        success: true,
+        answer: cached.answer,
+        suggestions: cached.suggestions,
+        source: `${cached.source} (instant-cache)`,
+        model: cached.model,
+      })
+    }
+
     const clientKey = validation.data.apiKey || request.headers.get('x-gemini-key')
     const activeApiKey = clientKey || process.env.GEMINI_API_KEY
 
@@ -1258,9 +1465,12 @@ export async function POST(request: Request) {
       }
       try {
         const testGenAI = new GoogleGenerativeAI(activeApiKey)
-        const testModel = testGenAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
-        await testModel.generateContent('Hi')
-        return NextResponse.json({ success: true, message: 'Google Gemini API connection verified!' })
+        const testModel = testGenAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+        const timeoutPing = new Promise<null>((_, reject) =>
+          setTimeout(() => reject(new Error('Verification ping timed out')), 3000)
+        )
+        await Promise.race([testModel.generateContent('Hi'), timeoutPing])
+        return NextResponse.json({ success: true, message: 'Google Gemini 2.0 Flash verified live!' })
       } catch (err: any) {
         return NextResponse.json({ success: false, message: err.message || 'Invalid Gemini API key.' })
       }
@@ -1278,6 +1488,11 @@ export async function POST(request: Request) {
 
     if (isOdAgent) {
       const agentResult = await executeOdLeaveReasonAgent(query, validation.data.context, activeApiKey)
+      setCachedResponse(query, {
+        answer: agentResult.answer,
+        suggestions: agentResult.suggestions,
+        source: activeApiKey ? 'gemini-agent' : 'autonomous-agent',
+      })
       return NextResponse.json({
         success: true,
         answer: agentResult.answer,
@@ -1286,6 +1501,7 @@ export async function POST(request: Request) {
         source: activeApiKey ? 'gemini-agent' : 'autonomous-agent',
       })
     }
+
     // =========================================================================
     // DEDICATED AUTONOMOUS AGENT: SECURITY AUDIT & ERROR LOG DIAGNOSTIC AGENT
     // =========================================================================
@@ -1298,6 +1514,11 @@ export async function POST(request: Request) {
 
     if (isLogAnalysisAgent) {
       const agentResult = await executeSecurityAuditLogAgent(query, validation.data.context, activeApiKey)
+      setCachedResponse(query, {
+        answer: agentResult.answer,
+        suggestions: agentResult.suggestions,
+        source: agentResult.source,
+      })
       return NextResponse.json({
         success: true,
         answer: agentResult.answer,
@@ -1307,17 +1528,42 @@ export async function POST(request: Request) {
       })
     }
 
+    // Determine query nature:
+    const isQuestionGen = /chief examiner|format:\s*part|generate an authentic university exam question|question generator/i.test(query)
+    const isOdDrafting = sessionId === 'od-statement-agent' || /on-duty|leave application|permission application|draft.*statement|academic application assistant|formal.*statement|reason for an on-duty/i.test(query)
+    const isMentor = query.includes('Year IV Academic & Career Advisor')
+    const isGenerativePrompt =
+      isOdDrafting ||
+      isQuestionGen ||
+      isMentor ||
+      /\b(explain|derive|pseudocode|algorithm for|write code|code in|solve|calculate|difference between|compare|why does|how does)\b/i.test(query)
+
+    // Fast-Lane: If NOT an open-ended generative prompt, check immediate department knowledge first!
+    if (!isGenerativePrompt) {
+      const instantKnowledge = await getDynamicKnowledgeBase(query, session)
+      if (!instantKnowledge.answer.includes('Welcome to the **V.S.B. AI & DS Portal Assistant**!')) {
+        setCachedResponse(query, {
+          answer: instantKnowledge.answer,
+          suggestions: instantKnowledge.suggestions,
+          source: 'institutional-knowledge-fastlane',
+        })
+        return NextResponse.json({
+          success: true,
+          ...instantKnowledge,
+          source: 'institutional-knowledge-fastlane',
+        })
+      }
+    }
+
     // Try live Google Gemini API if key is present
     if (activeApiKey && activeApiKey !== 'your-gemini-api-key') {
       try {
         const genAI = new GoogleGenerativeAI(activeApiKey)
-        const modelNames = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-pro']
+        // High-speed, modern model priority
+        const modelNames = ['gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-flash']
         let generatedText = ''
         let modelUsed = ''
 
-        const isQuestionGen = /chief examiner|format:\s*part|generate an authentic university exam question|question generator/i.test(query)
-        const isOdDrafting = sessionId === 'od-statement-agent' || /on-duty|leave application|permission application|draft.*statement|academic application assistant|formal.*statement|reason for an on-duty/i.test(query)
-        const isMentor = query.includes('Year IV Academic & Career Advisor')
         const dbKnowledge = await getDynamicKnowledgeBase(query, session)
 
         const systemInstructions = isQuestionGen
@@ -1360,20 +1606,29 @@ Answer the student or faculty query with high academic rigor, clear headings, de
               systemInstruction: systemInstructions,
             })
 
-            const maxTokens = isOdDrafting ? 100 : isQuestionGen ? 1500 : 750
-            const result = await m.generateContent({
-              contents: [{ role: 'user', parts: [{ text: query }] }],
-              generationConfig: {
-                maxOutputTokens: maxTokens,
-                temperature: 0.6,
-              },
-            })
+            const maxTokens = isOdDrafting ? 100 : isQuestionGen ? 1000 : 350
+            const timeoutPromise = new Promise<null>((_, reject) =>
+              setTimeout(() => reject(new Error(`Timeout on model ${mName}`)), 3200)
+            )
 
-            generatedText = result.response.text()
-            modelUsed = mName
-            break
+            const result = await Promise.race([
+              m.generateContent({
+                contents: [{ role: 'user', parts: [{ text: query }] }],
+                generationConfig: {
+                  maxOutputTokens: maxTokens,
+                  temperature: 0.5,
+                },
+              }),
+              timeoutPromise,
+            ])
+
+            generatedText = (result as any)?.response?.text() || ''
+            if (generatedText && generatedText.trim().length > 15) {
+              modelUsed = mName
+              break
+            }
           } catch (modelErr: any) {
-            console.warn(`Model ${mName} failed, trying next fallback...`, modelErr?.message)
+            console.warn(`Model ${mName} fallback triggered:`, modelErr?.message)
           }
         }
 
@@ -1385,6 +1640,14 @@ Answer the student or faculty query with high academic rigor, clear headings, de
               .replace(/[*#_~`]+/g, '')
               .trim()
           }
+
+          setCachedResponse(query, {
+            answer: cleanAnswer,
+            suggestions: dbKnowledge.suggestions,
+            source: 'gemini-live',
+            model: modelUsed,
+          })
+
           return NextResponse.json({
             success: true,
             answer: cleanAnswer,
@@ -1394,15 +1657,19 @@ Answer the student or faculty query with high academic rigor, clear headings, de
           })
         }
       } catch (geminiError: any) {
-        console.warn('Live Gemini failed, activating Autonomous Generative Engine:', geminiError?.message)
+        console.warn('Live Gemini fallback to Autonomous Generative Engine:', geminiError?.message)
       }
     }
 
     // High-fidelity Autonomous Generative Engine (Anna University R-2021)
-    const isQuestionGenQuery = /chief examiner|format:\s*part|generate an authentic university exam question|question generator/i.test(query)
-    if (isQuestionGenQuery) {
+    if (isQuestionGen) {
       const academicResp = handleAcademicCurriculumQuery(query)
       if (academicResp) {
+        setCachedResponse(query, {
+          answer: academicResp.answer,
+          suggestions: academicResp.suggestions,
+          source: 'academic-curriculum-engine',
+        })
         return NextResponse.json({
           success: true,
           ...academicResp,
@@ -1412,6 +1679,12 @@ Answer the student or faculty query with high academic rigor, clear headings, de
     }
 
     const result = await getDynamicKnowledgeBase(query, session)
+    setCachedResponse(query, {
+      answer: result.answer,
+      suggestions: result.suggestions,
+      source: 'gemini-autonomous-engine',
+    })
+
     return NextResponse.json({
       success: true,
       ...result,
@@ -1437,9 +1710,35 @@ export async function GET(request: Request) {
   try {
     const session = await getSession()
     const { searchParams } = new URL(request.url)
-    const query = searchParams.get('q') || searchParams.get('query') || ''
+    const query = (searchParams.get('q') || searchParams.get('query') || '').trim()
+
+    // 0. Instant Cache Lookup (< 1ms)
+    if (query) {
+      const cached = getCachedResponse(query)
+      if (cached) {
+        return NextResponse.json({
+          success: true,
+          query,
+          answer: cached.answer,
+          suggestions: cached.suggestions,
+          response: {
+            answer: cached.answer,
+            suggestions: cached.suggestions,
+          },
+          source: `${cached.source} (instant-cache)`,
+        })
+      }
+    }
 
     const result = await getDynamicKnowledgeBase(query, session)
+    if (query) {
+      setCachedResponse(query, {
+        answer: result.answer,
+        suggestions: result.suggestions,
+        source: 'database-live',
+      })
+    }
+
     return NextResponse.json({
       success: true,
       query,
