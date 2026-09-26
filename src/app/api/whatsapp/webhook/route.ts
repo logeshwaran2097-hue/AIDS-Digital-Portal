@@ -293,6 +293,65 @@ function generateAttendanceBarChartUrl(): string {
   )}`
 }
 
+function generateAnalyticalDiagramUrl(): string {
+  const chartConfig = {
+    type: 'doughnut',
+    data: {
+      labels: [
+        'Eligible (≥75% Attendance)',
+        'Condonation Buffer (65%–74.9%)',
+        'Critical Shortage (<65%)',
+      ],
+      datasets: [
+        {
+          data: [187, 4, 2],
+          backgroundColor: [
+            'rgba(16, 185, 129, 0.9)',
+            'rgba(245, 158, 11, 0.9)',
+            'rgba(239, 68, 68, 0.9)',
+          ],
+          borderColor: ['#059669', '#d97706', '#dc2626'],
+          borderWidth: 2,
+        },
+      ],
+    },
+    options: {
+      title: {
+        display: true,
+        text: 'V.S.B. AI & DS — Statutory Eligibility Donut Diagram',
+        fontColor: '#071a3d',
+        fontSize: 16,
+        fontStyle: 'bold',
+      },
+      legend: {
+        position: 'bottom',
+        labels: {
+          fontColor: '#1e293b',
+          fontSize: 12,
+          padding: 16,
+        },
+      },
+      plugins: {
+        doughnutlabel: {
+          labels: [
+            { text: '96.9%', font: { size: 30, weight: 'bold' }, color: '#071a3d' },
+            { text: 'Cohort Average', font: { size: 12, weight: 'bold' }, color: '#64748b' },
+            { text: '193 Students', font: { size: 11 }, color: '#2563eb' },
+          ],
+        },
+        datalabels: {
+          color: '#ffffff',
+          font: { weight: 'bold', size: 12 },
+        },
+      },
+    },
+  }
+
+  return `https://quickchart.io/chart?bkg=white&w=700&h=480&devicePixelRatio=2&c=${encodeURIComponent(
+    JSON.stringify(chartConfig)
+  )}`
+}
+
 /**
  * 1. GET Webhook Verification Handshake
  * Meta sends a GET request to verify the webhook URL and token.
@@ -821,11 +880,108 @@ async function handleInboundQuery(sender: string, input: string, buttonId: strin
   }
 
   // =========================================================================
-  // 5. ATTENDANCE & SECTION-WISE INTELLIGENCE (Bar Graph, CSV Download, Section Drilldown)
-  // Supports: "attendance", "attendenc", "bar graph", "graph", "chart", "download", "csv", "sec a", "sec b", etc.
+  // 5. ATTENDANCE & SECTION-WISE INTELLIGENCE (Diagram, Bar Graph, CSV Download)
+  // Supports: "diagram", "analytical diagram", "donut", "bar graph", "graph", "download", "csv", "sec b", etc.
   // =========================================================================
 
-  // A. Bar Graph Image Request
+  // A. Analytical Diagram Image Request (Statutory Eligibility Donut Diagram)
+  const isDiagramRequest =
+    buttonId === 'action:attendance_diagram' ||
+    input.includes('analytical') ||
+    input.includes('analytics') ||
+    input.includes('diagram') ||
+    input.includes('donut') ||
+    input.includes('pie')
+
+  if (isDiagramRequest) {
+    try {
+      const diagramUrl = generateAnalyticalDiagramUrl()
+      const todayFormatted = new Date().toLocaleDateString('en-IN', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      })
+
+      const captionText = [
+        `📊 *V.S.B. AI & DS — STATUTORY ATTENDANCE ANALYTICAL DIAGRAM*`,
+        `📅 *Academic Year:* 2025–2026 (Autonomous R-2021)`,
+        `🏛️ *Department:* Artificial Intelligence & Data Science`,
+        ``,
+        `• 🟢 *Eligible (≥75% Attendance):* 187 Students (96.9%)`,
+        `• 🟡 *Condonation Buffer (65%–74.9%):* 4 Students (2.1%)`,
+        `• 🔴 *Critical Shortage (<65%):* 2 Students (1.0%)`,
+        ``,
+        `📈 *Cohort Average Attendance:* *96.9%* (193 Evaluated)`,
+        ``,
+        `📥 *Download Analytical Diagram File:*`,
+        `https://aids-digital-portal-logeshwaran.vercel.app/api/attendance/diagram`,
+      ].join('\n')
+
+      await sendWhatsAppImage(cleanSender, diagramUrl, captionText)
+
+      await sendWhatsAppButtons(
+        cleanSender,
+        `💡 *Diagram Actions Available:*\n• Tap *Download Diagram* to save high-res image\n• Tap *Bar Graph Image* for section comparison\n• Tap *Download CSV* for full student marksheet`,
+        [
+          { id: 'action:download_diagram', title: '📥 Download Diagram' },
+          { id: 'action:attendance_graph', title: '📈 Bar Graph Image' },
+          { id: 'action:attendance_download', title: '📥 Download CSV' },
+        ],
+        'Analytical Diagram Actions'
+      )
+      return
+    } catch (err) {
+      console.error('[WhatsApp Bot] Analytical diagram dispatch error:', err)
+      await sendWhatsAppText(cleanSender, '⚠️ Unable to generate analytical diagram at this moment.')
+      return
+    }
+  }
+
+  // B. Download Analytical Diagram File
+  const isDownloadDiagramRequest =
+    buttonId === 'action:download_diagram' ||
+    input === 'download diagram' ||
+    input === 'save diagram' ||
+    input === 'export diagram'
+
+  if (isDownloadDiagramRequest) {
+    const downloadUrl = 'https://aids-digital-portal-logeshwaran.vercel.app/api/attendance/diagram'
+    const msg = [
+      `📥 *OFFICIAL ANALYTICAL DIAGRAM DOWNLOAD*`,
+      `📅 *Date:* ${new Date().toLocaleDateString('en-IN', { dateStyle: 'medium' })}`,
+      `🏛️ *Department:* Artificial Intelligence & Data Science`,
+      ``,
+      `• *Format:* High-Resolution PNG Graphic`,
+      `• *Content:* Cohort Statutory Attendance Composition & Eligibility Donut Diagram`,
+      ``,
+      `🔗 *Tap to Download File:*`,
+      downloadUrl,
+      ``,
+      `_Compatible with reports, circulars, and executive presentations._`,
+    ].join('\n')
+
+    sendWhatsAppDocument(
+      cleanSender,
+      downloadUrl,
+      `VSB_AIDS_Analytical_Diagram_${new Date().toISOString().split('T')[0]}.png`,
+      '📊 AI & DS Attendance Analytical Diagram'
+    ).catch(() => false)
+
+    await sendWhatsAppButtons(
+      cleanSender,
+      msg,
+      [
+        { id: 'action:attendance_diagram', title: '📊 View Diagram' },
+        { id: 'action:attendance_graph', title: '📈 Bar Graph Image' },
+        { id: 'menu:help', title: '⚙️ Main Menu' },
+      ],
+      'Diagram Download'
+    )
+    return
+  }
+
+  // C. Bar Graph Image Request
   const isGraphRequest =
     buttonId === 'action:attendance_graph' ||
     input.includes('bar graph') ||
@@ -1021,17 +1177,18 @@ async function handleInboundQuery(sender: string, input: string, buttonId: strin
         `• *Present Today:* 187 (${((187 / 193) * 100).toFixed(1)}%)`,
         `• *Absent Today:* 6 Students`,
         ``,
-        `📥 *Download Official CSV Report:*`,
-        `https://aids-digital-portal-logeshwaran.vercel.app/api/attendance/export`,
+        `📥 *Download Links:*`,
+        `• *Diagram (PNG):* https://aids-digital-portal-logeshwaran.vercel.app/api/attendance/diagram`,
+        `• *Roster (CSV):* https://aids-digital-portal-logeshwaran.vercel.app/api/attendance/export`,
       ].join('\n')
 
       await sendWhatsAppButtons(
         cleanSender,
         attendanceReport,
         [
+          { id: 'action:attendance_diagram', title: '📊 Analytics Diagram' },
           { id: 'action:attendance_graph', title: '📈 Bar Graph Image' },
           { id: 'action:attendance_download', title: '📥 Download CSV' },
-          { id: 'action:attendance_sec:B', title: '👥 Sec B Details' },
         ],
         'Year II Attendance Report'
       )
@@ -1163,6 +1320,7 @@ Give extremely crisp, direct, professional answers in 2-3 sentences. No fluff. U
     `• *Search Any Faculty* (e.g. \`Rajendiran\`, \`Manivannan\`, or \`Karthikeyan\`) → Faculty Dossier`,
     `• *Attendance* → Year & Section-wise breakdown`,
     `• *Bar Graph* → Downloadable attendance chart image`,
+    `• *Analytical Diagram* → Statutory eligibility donut chart`,
     `• *Download* → Export complete attendance CSV`,
     `• *OD* → Sanction student OD requests`,
   ].join('\n')

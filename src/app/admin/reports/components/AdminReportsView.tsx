@@ -589,6 +589,13 @@ export function AdminReportsView({
           >
             <BarChart3 className="w-4 h-4 text-[#071A3D]" /> Download Bar Graph PDF
           </button>
+          <a
+            href="/api/attendance/diagram?type=donut"
+            download="VSB_AIDS_Analytical_Donut_Diagram.png"
+            className="px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-102"
+          >
+            <PieChart className="w-4 h-4" /> Download Diagram
+          </a>
         </div>
       </div>
 
@@ -999,12 +1006,22 @@ export function AdminReportsView({
               </button>
             </div>
 
-            <button
-              onClick={handleDownloadBarGraphPDF}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#1455D9] to-[#071A3D] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer hover:scale-102 transition-all"
-            >
-              <Download className="w-3.5 h-3.5 text-[#F4C430]" /> Export Bar Graph PDF
-            </button>
+            {activeTab === 'diagrams' ? (
+              <a
+                href="/api/attendance/diagram?type=donut"
+                download="VSB_AIDS_Analytical_Donut_Diagram.png"
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-[#1455D9] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer hover:scale-102 transition-all"
+              >
+                <Download className="w-3.5 h-3.5 text-[#F4C430]" /> Download Analytical Diagram
+              </a>
+            ) : (
+              <button
+                onClick={handleDownloadBarGraphPDF}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#1455D9] to-[#071A3D] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer hover:scale-102 transition-all"
+              >
+                <Download className="w-3.5 h-3.5 text-[#F4C430]" /> Export Bar Graph PDF
+              </button>
+            )}
           </div>
 
           {/* TAB 1: VISUAL BAR GRAPHS (ABSENTS FIRST) */}
