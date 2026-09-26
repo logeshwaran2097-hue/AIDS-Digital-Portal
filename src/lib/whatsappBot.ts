@@ -99,7 +99,8 @@ export async function sendWhatsAppButtons(
   bodyText: string,
   buttons: WhatsAppButtonOption[],
   headerText?: string,
-  footerText?: string
+  footerText?: string,
+  headerImageUrl?: string
 ): Promise<boolean> {
   const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID || FALLBACK_PHONE_ID
   const token = process.env.WHATSAPP_ACCESS_TOKEN || FALLBACK_ACCESS_TOKEN
@@ -112,7 +113,7 @@ export async function sendWhatsAppButtons(
   const cleanRecipient = to.replace(/\D/g, '')
 
   // Meta interactive button body limit is strictly 1024 characters.
-  // If the body is too long or there are no buttons, bypass interactive mode directly to avoid a 1.5s failed roundtrip.
+  // If the body is too long or there are no buttons, bypass interactive mode directly to avoid a failed roundtrip.
   if (!buttons || buttons.length === 0 || bodyText.length > 1000) {
     const combined = `${headerText ? headerText + '\n\n' : ''}${bodyText}${footerText ? '\n\n' + footerText : ''}`
     return sendWhatsAppText(cleanRecipient, combined)
@@ -138,7 +139,12 @@ export async function sendWhatsAppButtons(
     },
   }
 
-  if (headerText) {
+  if (headerImageUrl) {
+    payload.interactive.header = {
+      type: 'image',
+      image: { link: headerImageUrl },
+    }
+  } else if (headerText) {
     payload.interactive.header = {
       type: 'text',
       text: headerText.slice(0, 60), // WhatsApp strict max 60 chars
