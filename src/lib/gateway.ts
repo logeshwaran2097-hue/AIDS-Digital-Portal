@@ -77,16 +77,21 @@ export async function getGatewayConfig(): Promise<GatewayConfig> {
   const sidEnv = process.env.TWILIO_ACCOUNT_SID || ''
   const tokenEnv = process.env.TWILIO_AUTH_TOKEN || ''
 
+  const DEFAULT_FAST2SMS_KEY = 'XSyBcPD25Z6hbnUftEkTVr90xzuMWawoKQRILOHdCY8elm43ipVt9cDqsCbhOo805HdKuLeAES7QGyP4'
+  const DEFAULT_META_PHONE_ID = '1353917354472660'
+  const DEFAULT_META_TOKEN = 'EAAPuVsoV7TsBSqb0oSp0nR2Hb6ylKu4wJKNZB26T3bRU4d3ZA16lsVNoLqqFbjsxjQSsZA9Ch8wxuXADwLeIrX9GJm2aQLJ3NeuvDXU32uAzsV4jV3xZAHnfYX2Yb0grvU6GQZBSgO2C36guXoMvL5g4dWFJl0ZB9sjz8sM8LqG92s9I8J0qhTDG9JvbBgWgJLJQZDZD'
+
   // smsApiKey may contain "AC:token" — reuse for whatsapp twilio as well
   const rawApiKey =
-    portal.smsApiKey ||
+    (portal.smsApiKey && String(portal.smsApiKey).trim()) ||
     process.env.FAST2SMS_API_KEY ||
-    ''
+    DEFAULT_FAST2SMS_KEY
 
   const fast2smsWaKey =
-    portal.fast2smsWhatsappApiKey ||
+    (portal.fast2smsWhatsappApiKey && String(portal.fast2smsWhatsappApiKey).trim()) ||
     process.env.FAST2SMS_WHATSAPP_API_KEY ||
-    rawApiKey
+    rawApiKey ||
+    DEFAULT_FAST2SMS_KEY
 
   const { sid: parsedSid, token: parsedToken } = parseTwilioCreds(rawApiKey, sidEnv, tokenEnv)
 
@@ -96,11 +101,11 @@ export async function getGatewayConfig(): Promise<GatewayConfig> {
     smsSenderId: portal.smsSenderId || process.env.TWILIO_PHONE_NUMBER || 'VSBEDU',
     whatsappEnabled: portal.whatsappEnabled !== false,
     whatsappProvider: (portal.whatsappProvider as WhatsappProvider) || 'fast2sms',
-    whatsappPhoneNumberId: portal.whatsappPhoneNumberId || process.env.WHATSAPP_PHONE_NUMBER_ID || '',
-    whatsappAccessToken: portal.whatsappAccessToken || process.env.WHATSAPP_ACCESS_TOKEN || '',
+    whatsappPhoneNumberId: (portal.whatsappPhoneNumberId && String(portal.whatsappPhoneNumberId).trim()) || process.env.WHATSAPP_PHONE_NUMBER_ID || DEFAULT_META_PHONE_ID,
+    whatsappAccessToken: (portal.whatsappAccessToken && String(portal.whatsappAccessToken).trim()) || process.env.WHATSAPP_ACCESS_TOKEN || DEFAULT_META_TOKEN,
     fast2smsWhatsappApiKey: fast2smsWaKey,
-    fast2smsPhoneNumberId: portal.fast2smsPhoneNumberId || process.env.FAST2SMS_WHATSAPP_PHONE_NUMBER_ID || '1325593377300934',
-    fast2smsMessageId: portal.fast2smsMessageId || process.env.FAST2SMS_WHATSAPP_MESSAGE_ID || '31679',
+    fast2smsPhoneNumberId: (portal.fast2smsPhoneNumberId && String(portal.fast2smsPhoneNumberId).trim()) || process.env.FAST2SMS_WHATSAPP_PHONE_NUMBER_ID || '1325593377300934',
+    fast2smsMessageId: (portal.fast2smsMessageId && String(portal.fast2smsMessageId).trim()) || process.env.FAST2SMS_WHATSAPP_MESSAGE_ID || '31679',
     twilioAccountSid: parsedSid || sidEnv,
     twilioAuthToken: parsedToken || tokenEnv,
     twilioPhoneNumber: process.env.TWILIO_PHONE_NUMBER || portal.smsSenderId || '',
@@ -190,7 +195,10 @@ async function sendMetaWhatsapp(toDigits91: string, body: string, cfg: GatewayCo
 }
 
 async function sendFast2Sms(toLast10: string, body: string, cfg: GatewayConfig): Promise<SendResult> {
-  const token = cfg.smsApiKey?.trim() || process.env.FAST2SMS_API_KEY || ''
+  const token =
+    cfg.smsApiKey?.trim() ||
+    process.env.FAST2SMS_API_KEY ||
+    'XSyBcPD25Z6hbnUftEkTVr90xzuMWawoKQRILOHdCY8elm43ipVt9cDqsCbhOo805HdKuLeAES7QGyP4'
   if (!token) return { success: false, provider: 'Fast2SMS', channel: 'sms', error: 'Fast2SMS API key missing' }
   try {
     const res = await fetch('https://www.fast2sms.com/dev/bulkV2', {
@@ -335,7 +343,7 @@ async function sendFast2SmsWhatsapp(
     cfg.smsApiKey?.trim() ||
     process.env.FAST2SMS_WHATSAPP_API_KEY ||
     process.env.FAST2SMS_API_KEY ||
-    ''
+    'XSyBcPD25Z6hbnUftEkTVr90xzuMWawoKQRILOHdCY8elm43ipVt9cDqsCbhOo805HdKuLeAES7QGyP4'
 
   if (!token) {
     return { success: false, provider: 'Fast2SMS WhatsApp', channel: 'whatsapp', error: 'Fast2SMS WhatsApp API key missing' }
@@ -467,7 +475,29 @@ export async function sendWhatsapp(
   if (config.whatsappProvider === 'fast2sms') {
     const last10 = cleanDigits(toRaw).slice(-10)
     if (last10.length < 10) return { success: false, provider: 'Fast2SMS WhatsApp', channel: 'whatsapp', error: 'Invalid phone number' }
-    return sendFast2SmsWhatsapp(last10, bodyOrParams, config)
+    const fastRes = await sendFast2SmsWhatsapp(last10, bodyOrParams, config)
+    if (fastRes.success) return fastRes
+
+    // Dual-Gateway Resilience: If Fast2SMS failed, attempt Meta WhatsApp Cloud API fallback
+    if (config.whatsappAccessToken && config.whatsappPhoneNumberId) {
+      console.warn('[WhatsApp Gateway] Fast2SMS failed, attempting Meta fallback:', fastRes.error)
+      const digits = toWhatsappDigits(toRaw)
+      if (digits) {
+        const fallbackBody =
+          typeof bodyOrParams === 'string'
+            ? bodyOrParams
+            : (bodyOrParams.fullMessage ||
+                buildBilingualStatusMessage({
+                  studentName: bodyOrParams.studentName || 'Student',
+                  date: bodyOrParams.date || new Date().toLocaleDateString('en-GB'),
+                  status: bodyOrParams.status || bodyOrParams.reason || 'Absent',
+                  remarks: bodyOrParams.remarks,
+                }))
+        const metaRes = await sendMetaWhatsapp(digits, fallbackBody, config)
+        if (metaRes.success) return metaRes
+      }
+    }
+    return fastRes
   }
 
   const bodyStr =
