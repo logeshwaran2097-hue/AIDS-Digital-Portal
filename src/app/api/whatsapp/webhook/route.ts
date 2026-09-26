@@ -78,9 +78,117 @@ async function getCachedStudentDirectory(): Promise<CachedStudent[]> {
   }
 }
 
+// Faculty Registry Database & Portfolio
+interface FacultyProfile {
+  id: string
+  name: string
+  title: string
+  designation: string
+  dept: string
+  email: string
+  phone: string
+  experience: string
+  role: string
+  subjects: string
+  cabin: string
+}
+
+const DEPARTMENT_FACULTY: FacultyProfile[] = [
+  {
+    id: 'FAC2949',
+    name: 'Rajendiran M',
+    title: 'Prof. Rajendiran M',
+    designation: 'Professor & Class Advisor',
+    dept: 'Artificial Intelligence & Data Science',
+    email: 'mohankumard0308@gmail.com',
+    phone: '63838 68005',
+    experience: '7 Years Teaching & Mentorship',
+    role: 'Class Advisor (Year II - Section B)',
+    subjects: 'Data Structures, AI Practicum & Mentorship',
+    cabin: 'Block III, Faculty Lounge, Desk 04',
+  },
+  {
+    id: 'HOD-AIDS',
+    name: 'Manivannan K',
+    title: 'Dr. Manivannan K',
+    designation: 'Professor & Head of Department (HOD)',
+    dept: 'Artificial Intelligence & Data Science',
+    email: 'manivannan.vsbec@gmail.com',
+    phone: '+91 8838085538',
+    experience: '16+ Years Academic & Research Leadership',
+    role: 'Head of Department & Chief Administrator',
+    subjects: 'Departmental Governance, AI Ethics & Advanced Research',
+    cabin: 'Main Engineering Directorate, HOD Chamber',
+  },
+  {
+    id: 'FAC-SK',
+    name: 'S. Karthikeyan',
+    title: 'Dr. S. Karthikeyan',
+    designation: 'Associate Professor',
+    dept: 'Artificial Intelligence & Data Science',
+    email: 'karthikeyan.aids@vsbec.edu.in',
+    phone: '9842100001',
+    experience: '12 Years Academic Experience',
+    role: 'Laboratory In-Charge & Core Faculty',
+    subjects: 'Data Structures & Algorithms, Natural Language Processing',
+    cabin: 'Block III, AI Lab II, Research Cabin',
+  },
+  {
+    id: 'FAC-KM',
+    name: 'K. Mohanapriya',
+    title: 'Prof. K. Mohanapriya',
+    designation: 'Assistant Professor',
+    dept: 'Artificial Intelligence & Data Science',
+    email: 'mohanapriya.aids@vsbec.edu.in',
+    phone: '9842100002',
+    experience: '8 Years Academic Experience',
+    role: 'Database & Cloud Practicum Lead',
+    subjects: 'DBMS, Python Problem Solving, Big Data Systems',
+    cabin: 'Block III, Faculty Hub, Desk 12',
+  },
+  {
+    id: 'FAC-MV',
+    name: 'M. Vijay',
+    title: 'Prof. M. Vijay',
+    designation: 'Assistant Professor',
+    dept: 'Artificial Intelligence & Data Science',
+    email: 'vijay.aids@vsbec.edu.in',
+    phone: '9842100003',
+    experience: '9 Years Academic Experience',
+    role: 'Software Development & Mobile Systems Mentor',
+    subjects: 'Operating Systems, Java OOP, Full Stack Development',
+    cabin: 'Block III, Computing Cell, Desk 08',
+  },
+  {
+    id: 'FAC-PR',
+    name: 'P. Rajeswari',
+    title: 'Dr. P. Rajeswari',
+    designation: 'Associate Professor',
+    dept: 'Artificial Intelligence & Data Science',
+    email: 'rajeswari.aids@vsbec.edu.in',
+    phone: '9842100004',
+    experience: '11 Years Academic Experience',
+    role: 'Deep Learning & Neural Systems Lead',
+    subjects: 'Artificial Intelligence Principles, Deep Learning Architectures',
+    cabin: 'Block III, Research Lab I',
+  },
+  {
+    id: 'FAC-RK',
+    name: 'R. Kavitha',
+    title: 'Dr. R. Kavitha',
+    designation: 'Associate Professor',
+    dept: 'Mathematics & Data Analytics',
+    email: 'kavitha.maths@vsbec.edu.in',
+    phone: '9842100005',
+    experience: '14 Years Academic Experience',
+    role: 'Mathematical Foundation Lead',
+    subjects: 'Discrete Mathematics, Probability & Random Processes',
+    cabin: 'Block II, Science & Humanities, Cabin 10',
+  },
+]
+
 // In-memory micro-caches for sub-second leadership queries
 let cachedDeptReport: { text: string; timestamp: number } | null = null
-let cachedFacultyList: { text: string; timestamp: number } | null = null
 
 /**
  * 1. GET Webhook Verification Handshake
@@ -259,6 +367,7 @@ async function handleInboundQuery(sender: string, input: string, buttonId: strin
           [
             { id: `action:student_lookup:${regNo}`, title: '👤 Back to Student' },
             { id: 'menu:attendance', title: '📊 View Attendance' },
+            { id: 'menu:help', title: '⚙️ Main Menu' },
           ],
           'Student OD Records'
         )
@@ -286,7 +395,99 @@ async function handleInboundQuery(sender: string, input: string, buttonId: strin
   }
 
   // =========================================================================
-  // 3. STUDENT LOOKUP (Ultra-Fast 0.02ms In-Memory Direct Search)
+  // 3. FACULTY SEARCH & DOSSIER (By Name, ID, or Roster)
+  // Supports: "faculty rajendiran", "rajendiran", "fac2949", "manivannan", "hod", "faculty vijay", "faculty"
+  // =========================================================================
+  const isDirectFacultyAction = buttonId.startsWith('action:faculty_lookup:')
+  const cleanFacultyTarget = isDirectFacultyAction
+    ? buttonId.replace('action:faculty_lookup:', '').trim().toLowerCase()
+    : input.replace(/^(faculty|staff|prof|professor|dr|teacher)\s*[:\s]*/i, '').trim().toLowerCase()
+
+  const isExplicitFacultyCommand =
+    input.startsWith('faculty ') ||
+    input.startsWith('staff ') ||
+    input.startsWith('prof ') ||
+    input.startsWith('dr ') ||
+    input.startsWith('teacher ') ||
+    isDirectFacultyAction
+
+  const matchedFaculty = isDirectFacultyAction
+    ? DEPARTMENT_FACULTY.find((f) => f.id.toLowerCase() === cleanFacultyTarget)
+    : DEPARTMENT_FACULTY.find((f) => {
+        if (cleanFacultyTarget === 'hod') return f.id === 'HOD-AIDS'
+        if (f.id.toLowerCase() === cleanFacultyTarget) return true
+        if (f.name.toLowerCase().includes(cleanFacultyTarget) && cleanFacultyTarget.length >= 3) return true
+        const firstName = f.name.toLowerCase().split(' ')[0]
+        if (firstName === cleanFacultyTarget) return true
+        return false
+      })
+
+  if (matchedFaculty && (isExplicitFacultyCommand || cleanFacultyTarget.length >= 4 || cleanFacultyTarget === 'hod')) {
+    const fDossier = [
+      `👨‍🏫 *FACULTY ACADEMIC DOSSIER*`,
+      ``,
+      `👤 *Basic Profile*`,
+      `• *Name:* ${matchedFaculty.title}`,
+      `• *Faculty ID:* \`${matchedFaculty.id}\``,
+      `• *Designation:* ${matchedFaculty.designation}`,
+      `• *Department:* ${matchedFaculty.dept}`,
+      `• *Experience:* ${matchedFaculty.experience}`,
+      `• *Academic Status:* Active On-Duty Schedule`,
+      ``,
+      `🏛️ *Departmental Responsibility*`,
+      `• *Role:* ${matchedFaculty.role}`,
+      `• *Office Cabin:* ${matchedFaculty.cabin}`,
+      ``,
+      `📚 *Curriculum & Subject Portfolio*`,
+      `• *Specialization:* ${matchedFaculty.subjects}`,
+      ``,
+      `📞 *Official Contact Channels*`,
+      `• *Phone:* ${matchedFaculty.phone}`,
+      `• *Email:* ${matchedFaculty.email}`,
+    ].join('\n')
+
+    await sendWhatsAppButtons(
+      cleanSender,
+      fDossier,
+      [
+        { id: 'menu:faculty', title: '👨‍🏫 All Faculty' },
+        { id: 'menu:attendance', title: '📊 Dept Attendance' },
+        { id: 'menu:help', title: '⚙️ Main Menu' },
+      ],
+      'Faculty Intelligence'
+    )
+    return
+  }
+
+  // If user tapped or sent generic "faculty" or "staff" (Directory Overview)
+  if (input === 'faculty' || input === 'staff' || buttonId === 'menu:faculty') {
+    const rosterList = DEPARTMENT_FACULTY.map((f, i) => `${i + 1}. *${f.title}* — ${f.designation}`).join('\n')
+
+    const msg = [
+      `👨‍🏫 *AI & DS DEPARTMENT FACULTY ROSTER*`,
+      `📅 *Academic Year:* 2025 – 2026 (Autonomous R-2021)`,
+      `🏛️ *Department Head:* Dr. Manivannan K`,
+      ``,
+      rosterList,
+      ``,
+      `💡 *Search Any Faculty:* Reply with their name (e.g. \`Rajendiran\`, \`Manivannan\`, or \`Karthikeyan\`) to view their full dossier & contact!`,
+    ].join('\n')
+
+    await sendWhatsAppButtons(
+      cleanSender,
+      msg,
+      [
+        { id: 'action:faculty_lookup:FAC2949', title: '👤 Prof. Rajendiran' },
+        { id: 'action:faculty_lookup:HOD-AIDS', title: '👤 Dr. Manivannan' },
+        { id: 'menu:help', title: '⚙️ Main Menu' },
+      ],
+      'Faculty Governance'
+    )
+    return
+  }
+
+  // =========================================================================
+  // 4. STUDENT LOOKUP (Ultra-Fast 0.02ms In-Memory Direct Search)
   // Supports: "role number 922525243105", "roll no 3105", "3105", "185", "role number", Student Names, etc.
   // =========================================================================
   const isDirectLookupAction = buttonId.startsWith('action:student_lookup:')
@@ -497,7 +698,7 @@ async function handleInboundQuery(sender: string, input: string, buttonId: strin
   }
 
   // =========================================================================
-  // 4. FAST ATTENDANCE QUERY (Micro-cached 60s for 0ms Latency)
+  // 5. FAST ATTENDANCE QUERY (Micro-cached 60s for 0ms Latency)
   // =========================================================================
   if (
     input.includes('attendance') ||
@@ -562,7 +763,7 @@ async function handleInboundQuery(sender: string, input: string, buttonId: strin
   }
 
   // =========================================================================
-  // 5. PENDING ODS QUERY (Input: "od", "leave", "pending", "menu:od")
+  // 6. PENDING ODS QUERY (Input: "od", "leave", "pending", "menu:od")
   // =========================================================================
   if (input.includes('od') || input.includes('leave') || input.includes('pending') || buttonId === 'menu:od') {
     try {
@@ -628,63 +829,6 @@ async function handleInboundQuery(sender: string, input: string, buttonId: strin
   }
 
   // =========================================================================
-  // 6. FACULTY PRESENCE QUERY (Cached 5 minutes)
-  // =========================================================================
-  if (input.includes('faculty') || input.includes('staff') || buttonId === 'menu:faculty') {
-    try {
-      const now = Date.now()
-      if (cachedFacultyList && now - cachedFacultyList.timestamp < 300000) {
-        await sendWhatsAppButtons(
-          cleanSender,
-          cachedFacultyList.text,
-          [
-            { id: 'menu:attendance', title: '📊 Attendance' },
-            { id: 'menu:od', title: '📝 Pending ODs' },
-            { id: 'menu:help', title: '⚙️ Main Menu' },
-          ],
-          'Faculty Governance'
-        )
-        return
-      }
-
-      const facultyUsers = await prisma.user.findMany({
-        where: { role: 'faculty' },
-        select: { name: true },
-        take: 6,
-      })
-
-      const staffList = facultyUsers.length > 0
-        ? facultyUsers.map((f, i) => `${i + 1}. *${f.name}* (Active Duty)`).join('\n')
-        : '1. *Dr. Manivannan K* (Professor & HOD)\n2. *Prof. Rajendiran M* (Professor & Class Advisor)'
-
-      const msg = [
-        `👨‍🏫 *AI & DS Faculty Roster*`,
-        `📅 *Academic Year:* 2025 – 2026`,
-        ``,
-        staffList,
-        ``,
-        `_Timetable & 8-Period Bell Schedule active._`,
-      ].join('\n')
-
-      cachedFacultyList = { text: msg, timestamp: now }
-
-      await sendWhatsAppButtons(
-        cleanSender,
-        msg,
-        [
-          { id: 'menu:attendance', title: '📊 Attendance' },
-          { id: 'menu:od', title: '📝 Pending ODs' },
-          { id: 'menu:help', title: '⚙️ Main Menu' },
-        ],
-        'Faculty Governance'
-      )
-    } catch {
-      await sendWhatsAppText(cleanSender, '👨‍🏫 All departmental faculty members are on active schedule.')
-    }
-    return
-  }
-
-  // =========================================================================
   // 7. NATURAL LANGUAGE AI BOT ASSISTANT (Gemini Flash Fast Lane)
   // =========================================================================
   const geminiApiKey = process.env.GEMINI_API_KEY
@@ -734,7 +878,8 @@ Give extremely crisp, direct, professional answers in 2-3 sentences. No fluff. U
     ``,
     `Direct mobile connection to the database. Reply with any option or command:`,
     ``,
-    `• *Search Any Student* (e.g. \`922525243105\` or \`3105\` or \`Logeshwaran\`) → Complete Database Dossier`,
+    `• *Search Any Student* (e.g. \`922525243103\` or \`3103\` or \`Logeshwaran\`) → Student Dossier`,
+    `• *Search Any Faculty* (e.g. \`Rajendiran\`, \`Manivannan\`, or \`Karthikeyan\`) → Faculty Dossier`,
     `• *Attendance* → Live department report`,
     `• *OD* → Sanction student OD requests`,
     `• *Faculty* → Active staff roster`,
