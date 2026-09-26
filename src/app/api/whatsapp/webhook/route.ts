@@ -547,6 +547,40 @@ async function handleInboundQuery(sender: string, input: string, buttonId: strin
   }
 
   // =========================================================================
+  // ACTION: VIEW STUDENT PROFILE PHOTO
+  // =========================================================================
+  if (buttonId.startsWith('action:student_photo:')) {
+    const regNo = buttonId.replace('action:student_photo:', '').trim()
+    const directory = await getCachedStudentDirectory()
+    const found = directory.find((s) => s.registerNumber === regNo)
+    const studentName = found?.user?.name || 'Student'
+    const photoUrl = `https://aids-digital-portal-logeshwaran.vercel.app/api/students/photo?regNo=${regNo}`
+
+    const caption = [
+      `📷 *STUDENT PROFILE PHOTOGRAPH*`,
+      ``,
+      `• *Student:* ${studentName}`,
+      `• *Reg No:* \`${regNo}\``,
+      `• *Class:* Year ${found?.year || 2} · Sem ${found?.semester || 3} (Sec ${found?.section || 'A'})`,
+      `• *Institution:* V.S.B. Engineering College (Autonomous)`,
+    ].join('\n')
+
+    await sendWhatsAppButtons(
+      cleanSender,
+      caption,
+      [
+        { id: `action:student_lookup:${regNo}`, title: '👤 Full Dossier' },
+        { id: `action:student_ods:${regNo}`, title: '📝 View ODs' },
+        { id: 'menu:help', title: '⚙️ Main Menu' },
+      ],
+      undefined,
+      'Institutional Student Identity',
+      photoUrl
+    )
+    return
+  }
+
+  // =========================================================================
   // 3. FACULTY SEARCH & DOSSIER (By Name, ID, or Roster)
   // Supports: "faculty rajendiran", "rajendiran", "fac2949", "manivannan", "hod", "faculty vijay", "faculty"
   // =========================================================================
@@ -855,9 +889,9 @@ async function handleInboundQuery(sender: string, input: string, buttonId: strin
         cleanSender,
         dossierText,
         [
+          { id: `action:student_photo:${regNo}`, title: '📷 Student Photo' },
           { id: `action:student_ods:${regNo}`, title: '📝 View Student ODs' },
           { id: 'menu:attendance', title: '📊 Dept Attendance' },
-          { id: 'menu:help', title: '⚙️ Main Menu' },
         ],
         'V.S.B. Student Intelligence'
       )

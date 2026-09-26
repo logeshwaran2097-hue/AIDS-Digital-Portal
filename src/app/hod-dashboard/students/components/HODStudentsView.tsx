@@ -54,6 +54,7 @@ export interface DBStudent {
   totalDays?: number
   presentDays?: number
   absentDays?: number
+  profileImage?: string | null
 }
 
 export interface ClassMeta {
@@ -83,6 +84,7 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
   const [attendanceFilter, setAttendanceFilter] = useState<'ALL' | 'good' | 'shortage'>('ALL')
   const [activeStudentModal, setActiveStudentModal] = useState<DBStudent | null>(null)
   const [copiedReg, setCopiedReg] = useState<string | null>(null)
+  const [enlargedPhoto, setEnlargedPhoto] = useState<{ url: string; name: string; regNo: string } | null>(null)
   const [viewMode, setViewMode] = useState<'table' | 'cards' | 'attendance'>('table')
   const [activeAttendanceClass, setActiveAttendanceClass] = useState<string>('II AIDS A')
 
@@ -828,9 +830,22 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
                                 {/* Student Name */}
                                 <td className="py-4 px-6 whitespace-nowrap">
                                   <div className="flex items-center gap-2.5">
-                                    <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#071A3D] to-[#1455D9] text-white flex items-center justify-center font-bold text-[11px] shrink-0 border border-slate-700">
-                                      {s.name.charAt(0)}
-                                    </div>
+                                    {s.profileImage ? (
+                                      <img
+                                        src={s.profileImage}
+                                        alt={s.name}
+                                        className="w-8 h-8 rounded-full object-cover border border-blue-400/40 shrink-0 shadow-sm hover:scale-110 transition-transform cursor-pointer"
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          setEnlargedPhoto({ url: s.profileImage!, name: s.name, regNo: s.registerNumber })
+                                        }}
+                                        title="Click to view full photo"
+                                      />
+                                    ) : (
+                                      <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#071A3D] to-[#1455D9] text-white flex items-center justify-center font-bold text-xs shrink-0 border border-slate-700">
+                                        {s.name.charAt(0)}
+                                      </div>
+                                    )}
                                     <div>
                                       <p className="font-semibold text-slate-100">{s.name}</p>
                                       <p className="text-[10px] text-slate-400 font-mono">{s.email}</p>
@@ -936,9 +951,22 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
                               </td>
                               <td className="py-3.5 px-4">
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#071A3D] to-[#1455D9] text-white flex items-center justify-center font-bold text-[11px] shrink-0 shadow-xs">
-                                    {s.name.charAt(0)}
-                                  </div>
+                                  {s.profileImage ? (
+                                    <img
+                                      src={s.profileImage}
+                                      alt={s.name}
+                                      className="w-8 h-8 rounded-full object-cover border border-blue-200 shrink-0 shadow-xs hover:scale-110 transition-transform cursor-pointer"
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        setEnlargedPhoto({ url: s.profileImage!, name: s.name, regNo: s.registerNumber })
+                                      }}
+                                      title="Click to view full photo"
+                                    />
+                                  ) : (
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#071A3D] to-[#1455D9] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                                      {s.name.charAt(0)}
+                                    </div>
+                                  )}
                                   <div>
                                     <div className="flex items-center gap-1.5">
                                       <span className="font-bold text-[#071A3D]">{s.name}</span>
@@ -1060,9 +1088,17 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
                           <div>
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex items-center gap-2.5">
-                                <div className="w-9 h-9 rounded-xl bg-[#071A3D] text-white flex items-center justify-center font-black text-xs">
-                                  {s.name.charAt(0)}
-                                </div>
+                                {s.profileImage ? (
+                                  <img
+                                    src={s.profileImage}
+                                    alt={s.name}
+                                    className="w-10 h-10 rounded-xl object-cover border border-blue-200 shrink-0 shadow-sm hover:scale-105 transition-transform"
+                                  />
+                                ) : (
+                                  <div className="w-10 h-10 rounded-xl bg-[#071A3D] text-white flex items-center justify-center font-black text-xs">
+                                    {s.name.charAt(0)}
+                                  </div>
+                                )}
                                 <div>
                                   <p className="font-bold text-sm text-[#071A3D] truncate max-w-[130px]">{s.name}</p>
                                   <p className="font-mono text-[11px] font-bold text-[#1455D9]">{s.registerNumber}</p>
@@ -1137,9 +1173,32 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
                 <X className="w-4 h-4" />
               </button>
               <div className="flex items-center gap-3.5 pr-8">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-white/20 to-white/5 border border-white/20 backdrop-blur-md text-white flex items-center justify-center font-black text-2xl shadow-lg ring-2 ring-white/10 shrink-0">
-                  {activeStudentModal.name.charAt(0)}
-                </div>
+                {activeStudentModal.profileImage ? (
+                  <div
+                    className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/40 backdrop-blur-md shadow-xl ring-2 ring-white/20 shrink-0 relative group cursor-pointer"
+                    onClick={() =>
+                      setEnlargedPhoto({
+                        url: activeStudentModal.profileImage!,
+                        name: activeStudentModal.name,
+                        regNo: activeStudentModal.registerNumber,
+                      })
+                    }
+                    title="Click to zoom student photo"
+                  >
+                    <img
+                      src={activeStudentModal.profileImage}
+                      alt={activeStudentModal.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                      <Eye className="w-5 h-5 text-white drop-shadow" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-white/20 to-white/5 border border-white/20 backdrop-blur-md text-white flex items-center justify-center font-black text-2xl shadow-lg ring-2 ring-white/10 shrink-0">
+                    {activeStudentModal.name.charAt(0)}
+                  </div>
+                )}
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-lg sm:text-xl font-black text-white tracking-tight truncate max-w-[360px]">
@@ -1165,6 +1224,21 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
                         <Copy className="w-3.5 h-3.5" />
                       )}
                     </button>
+                    {activeStudentModal.profileImage && (
+                      <button
+                        onClick={() =>
+                          setEnlargedPhoto({
+                            url: activeStudentModal.profileImage!,
+                            name: activeStudentModal.name,
+                            regNo: activeStudentModal.registerNumber,
+                          })
+                        }
+                        className="ml-2 text-[10px] font-bold text-blue-200 bg-white/10 hover:bg-white/20 px-2 py-0.5 rounded-md flex items-center gap-1 transition"
+                      >
+                        <Eye className="w-3 h-3" />
+                        <span>View Photo</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1172,6 +1246,42 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
 
             {/* Modal Body */}
             <div className="p-6 space-y-4 text-xs">
+              {/* Student Passport Photograph Card */}
+              {activeStudentModal.profileImage ? (
+                <div className="p-3.5 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50/70 to-indigo-50/50 flex items-center justify-between gap-3 shadow-xs">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={activeStudentModal.profileImage}
+                      alt={activeStudentModal.name}
+                      className="w-12 h-12 rounded-xl object-cover border border-blue-200 shadow-sm shrink-0 cursor-pointer hover:scale-105 transition-transform"
+                      onClick={() =>
+                        setEnlargedPhoto({
+                          url: activeStudentModal.profileImage!,
+                          name: activeStudentModal.name,
+                          regNo: activeStudentModal.registerNumber,
+                        })
+                      }
+                    />
+                    <div>
+                      <p className="font-bold text-[#071A3D] text-xs">Official Passport Photograph</p>
+                      <p className="text-[11px] text-gray-500">Verified institutional student identity record</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() =>
+                      setEnlargedPhoto({
+                        url: activeStudentModal.profileImage!,
+                        name: activeStudentModal.name,
+                        regNo: activeStudentModal.registerNumber,
+                      })
+                    }
+                    className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] flex items-center gap-1.5 transition shadow-xs"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>Enlarge</span>
+                  </button>
+                </div>
+              ) : null}
               {/* Class & Section Highlight */}
               {(() => {
                 const hasAttendanceRecords = (activeStudentModal.totalDays ?? 0) > 0
@@ -1386,6 +1496,45 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
               >
                 Close
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* High-Resolution Profile Photo Lightbox Modal */}
+      {enlargedPhoto && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150"
+          onClick={() => setEnlargedPhoto(null)}
+        >
+          <div
+            className="relative bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setEnlargedPhoto(null)}
+              className="absolute right-3.5 top-3.5 p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition"
+              aria-label="Close photo preview"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <h3 className="font-black text-[#071A3D] text-base mt-1">
+              {enlargedPhoto.name}
+            </h3>
+            <p className="text-xs font-mono font-bold text-blue-600 mb-4">
+              {enlargedPhoto.regNo}
+            </p>
+            <div className="w-64 h-64 mx-auto rounded-2xl overflow-hidden border-2 border-blue-500/30 shadow-lg bg-slate-100">
+              <img
+                src={enlargedPhoto.url}
+                alt={enlargedPhoto.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <span className="text-[11px] font-semibold text-slate-500">
+                Official Student Identity Photograph
+              </span>
             </div>
           </div>
         </div>

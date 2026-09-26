@@ -25,7 +25,7 @@ export default async function HODStudentsPage() {
   const db = prisma as any
   const [students, studentUsers, faculties, facultyUsers, sessions, allRecords] = await Promise.all([
     prisma.student.findMany({ orderBy: { registerNumber: 'asc' } }).catch(() => []),
-    prisma.user.findMany({ where: { role: 'student' }, select: { id: true, name: true, email: true, phone: true } }).catch(() => []),
+    prisma.user.findMany({ where: { role: 'student' }, select: { id: true, name: true, email: true, phone: true, profileImage: true } }).catch(() => []),
     prisma.faculty.findMany({ where: { advisorYear: { not: null }, advisorSec: { not: null } } }).catch(() => []),
     prisma.user.findMany({ where: { role: 'faculty' }, select: { id: true, name: true, email: true } }).catch(() => []),
     db.attendanceSession
@@ -81,6 +81,7 @@ export default async function HODStudentsPage() {
       registerNumber: s.registerNumber,
       name: u?.name || s.registerNumber,
       email: u?.email || `${s.registerNumber.toLowerCase()}@vsb.ac.in`,
+      profileImage: u?.profileImage || null,
       year: s.year,
       semester: s.semester,
       section: (s.section || 'A').toUpperCase(),
