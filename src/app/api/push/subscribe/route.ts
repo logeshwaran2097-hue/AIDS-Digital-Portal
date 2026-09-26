@@ -32,10 +32,10 @@ export async function POST(request: Request) {
     const body = validation.data
     const { endpoint, keys } = body
 
-    const userRole = session.role || 'student'
-    const userRegNo = (session.registerNumber || '').toUpperCase()
-    const userId = session.userId
-    const userAgent = request.headers.get('user-agent') || null
+    const userRole = session.role || body.role || 'student'
+    const userRegNo = (session.registerNumber || body.regNo || '').toUpperCase()
+    const userId = session.userId || body.userId
+    const userAgent = request.headers.get('user-agent') || body.userAgent || null
 
     const subscription = await (prisma as any).pushSubscription.upsert({
       where: { endpoint },

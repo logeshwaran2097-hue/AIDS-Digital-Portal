@@ -625,9 +625,13 @@ export const pushSubscriptionSchema = z
         p256dh: z.string().min(1),
         auth: z.string().min(1),
       })
-      .strict(),
+      .passthrough(),
+    role: z.string().optional().nullable(),
+    regNo: z.string().optional().nullable(),
+    userId: z.string().optional().nullable(),
+    userAgent: z.string().optional().nullable(),
   })
-  .strict()
+  .passthrough()
 
 export const pushTestSchema = z
   .object({
@@ -636,7 +640,7 @@ export const pushTestSchema = z
     title: z.string().max(150).optional(),
     message: z.string().max(500).optional(),
   })
-  .strict()
+  .passthrough()
 
 export const aiQuerySchema = z
   .object({
