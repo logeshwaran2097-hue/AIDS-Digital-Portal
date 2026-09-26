@@ -288,41 +288,104 @@ async function handleInboundQuery(sender: string, input: string, buttonId: strin
 
   // =========================================================================
   // 3. STUDENT LOOKUP (Ultra-Fast 0.02ms In-Memory Direct Search)
-  // Supports: Full 12-digit number (e.g. 922525243105), Suffix (e.g. 3105), or Student Name (e.g. Logeshwaran)
+  // Supports: "role number 922525243105", "roll no 3105", "3105", "185", "role number", Student Names, etc.
   // =========================================================================
   const isDirectLookupAction = buttonId.startsWith('action:student_lookup:')
-  const cleanQuery = isDirectLookupAction
-    ? buttonId.replace('action:student_lookup:', '').trim().toLowerCase()
-    : input.replace(/^(reg|student|search|find|roll|get)\s*/i, '').trim().toLowerCase()
 
-  const isNumericSearch = /^[0-9]{3,12}$/.test(cleanQuery)
-  const isNameSearch = cleanQuery.length >= 3 && !input.startsWith('action:') && !input.startsWith('menu:') && !['hi', 'hello', 'hey', 'help', 'menu', 'attendance', 'absent', 'att', 'od', 'faculty', 'staff'].includes(cleanQuery)
+  // Check if user specifically typed "role number" or "roll no" without digits
+  const isRollPromptOnly =
+    /^(role|roll|reg|register)\s*(no|number|num|details|info)?$/i.test(input.trim()) ||
+    input.trim() === 'role' ||
+    input.trim() === 'roll' ||
+    input.trim() === 'reg'
 
-  if (isDirectLookupAction || isNumericSearch || isNameSearch) {
+  if (isRollPromptOnly) {
+    const directory = await getCachedStudentDirectory()
+    const suggestions = directory.slice(0, 3)
+    const suggestionText = suggestions
+      .map((s) => `• \`${s.registerNumber}\` — *${s.user?.name || 'Student'}* (Roll: \`${s.registerNumber.slice(-4)}\`)`)
+      .join('\n')
+
+    await sendWhatsAppButtons(
+      cleanSender,
+      `🎓 *Student Roll / Register Number Lookup*\n\nPlease reply with the student's Register Number, Roll Number, or Name:\n\n💡 *Quick Examples:*\n${suggestionText}\n\n_Tip: You can send just the last 3 or 4 digits (e.g. \`3105\`, \`3185\`) or student name!_`,
+      [
+        { id: `action:student_lookup:${suggestions[0]?.registerNumber || '922525243105'}`, title: `👤 ${suggestions[0]?.user?.name?.slice(0, 15) || 'Sample'}` },
+        { id: `action:student_lookup:${suggestions[1]?.registerNumber || '922525243065'}`, title: `👤 ${suggestions[1]?.user?.name?.slice(0, 15) || 'Sample'}` },
+        { id: 'menu:attendance', title: '📊 View Attendance' },
+      ],
+      'Student Search'
+    )
+    return
+  }
+
+  // 1. Extract any digit sequence (3 to 12 digits, e.g. from "role number 922525243105", "roll no 3105", "185", etc.)
+  const extractedDigits = isDirectLookupAction
+    ? buttonId.replace('action:student_lookup:', '').trim()
+    : input.match(/\d{3,12}/)?.[0]
+
+  // 2. Extract clean name (stripping "role number", "search", "find", etc.)
+  const cleanNameQuery = input
+    .replace(/^(role|roll|reg|register|student|search|find|show|get)\s*(no|number|num|details|info)?[:\s]*/i, '')
+    .trim()
+    .toLowerCase()
+
+  const isNameSearch =
+    !extractedDigits &&
+    cleanNameQuery.length >= 3 &&
+    !input.startsWith('action:') &&
+    !input.startsWith('menu:') &&
+    !['hi', 'hello', 'hey', 'help', 'menu', 'attendance', 'absent', 'att', 'od', 'faculty', 'staff'].includes(cleanNameQuery)
+
+  if (extractedDigits || isNameSearch) {
     try {
       const directory = await getCachedStudentDirectory()
 
-      // Instant 0.02ms Search Match
-      let found = directory.find((s) => s.registerNumber === cleanQuery)
+      // Multi-tier intelligent matching (< 0.05ms)
+      let found: CachedStudent | undefined
 
-      if (!found && isNumericSearch) {
-        found = directory.find((s) => s.registerNumber.endsWith(cleanQuery))
+      if (extractedDigits) {
+        // Tier 1: Exact 12-digit match
+        found = directory.find((s) => s.registerNumber === extractedDigits)
+
+        // Tier 2: Suffix match (e.g. "3105", "3185", "3067")
+        if (!found) {
+          found = directory.find((s) => s.registerNumber.endsWith(extractedDigits))
+        }
+
+        // Tier 3: Match last 4 digits (e.g. if 11-digit typo like 92252524185 or prefix)
+        if (!found && extractedDigits.length >= 4) {
+          const last4 = extractedDigits.slice(-4)
+          found = directory.find((s) => s.registerNumber.endsWith(last4))
+        }
+
+        // Tier 4: Match last 3 digits (e.g. "185" matches "922525243185")
+        if (!found && extractedDigits.length >= 3) {
+          const last3 = extractedDigits.slice(-3)
+          found = directory.find((s) => s.registerNumber.endsWith(last3))
+        }
+
+        // Tier 5: Substring contains
+        if (!found) {
+          found = directory.find((s) => s.registerNumber.includes(extractedDigits))
+        }
       }
 
+      // Tier 6: Student Name match
       if (!found && isNameSearch) {
-        found = directory.find((s) => s.user?.name.toLowerCase().includes(cleanQuery))
+        found = directory.find((s) => s.user?.name.toLowerCase().includes(cleanNameQuery))
       }
 
       // If still not found, show suggestions with REAL database student records
       if (!found) {
         const suggestions = directory.slice(0, 3)
         const suggestionText = suggestions
-          .map((s) => `• \`${s.registerNumber}\` — *${s.user?.name || 'Student'}* (${s.registerNumber.slice(-4)})`)
+          .map((s) => `• \`${s.registerNumber}\` — *${s.user?.name || 'Student'}* (Roll: \`${s.registerNumber.slice(-4)}\`)`)
           .join('\n')
 
         await sendWhatsAppButtons(
           cleanSender,
-          `🔍 *Student Not Found*\n\nNo student matched "${cleanQuery}".\n\n💡 *Try Searching With Real Records:*\n${suggestionText}\n\n_You can reply with a Register Number, last 4 digits, or Student Name._`,
+          `🔍 *Student Not Found*\n\nNo student matched "${extractedDigits || cleanNameQuery}".\n\n💡 *Try Searching With Real Records:*\n${suggestionText}\n\n_Tip: Send any Register Number (e.g. \`922525243105\`), Roll Number (\`3105\`), or Name (\`Logeshwaran\`)._`,
           [
             { id: `action:student_lookup:${suggestions[0]?.registerNumber || '922525243105'}`, title: `👤 ${suggestions[0]?.user?.name?.slice(0, 15) || 'Sample'}` },
             { id: 'menu:attendance', title: '📊 View Attendance' },
