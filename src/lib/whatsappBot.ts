@@ -31,6 +31,7 @@ export async function sendWhatsAppText(to: string, message: string): Promise<boo
   try {
     const res = await fetch(`${GRAPH_API_BASE}/${phoneId}/messages`, {
       method: 'POST',
+      keepalive: true,
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -74,6 +75,7 @@ export async function markWhatsAppMessageRead(messageId: string): Promise<boolea
   try {
     const res = await fetch(`${GRAPH_API_BASE}/${phoneId}/messages`, {
       method: 'POST',
+      keepalive: true,
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -160,6 +162,7 @@ export async function sendWhatsAppButtons(
   try {
     const res = await fetch(`${GRAPH_API_BASE}/${phoneId}/messages`, {
       method: 'POST',
+      keepalive: true,
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -198,6 +201,7 @@ export async function sendWhatsAppImage(to: string, imageUrl: string, caption?: 
   try {
     const res = await fetch(`${GRAPH_API_BASE}/${phoneId}/messages`, {
       method: 'POST',
+      keepalive: true,
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -250,6 +254,7 @@ export async function sendWhatsAppDocument(
   try {
     const res = await fetch(`${GRAPH_API_BASE}/${phoneId}/messages`, {
       method: 'POST',
+      keepalive: true,
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',

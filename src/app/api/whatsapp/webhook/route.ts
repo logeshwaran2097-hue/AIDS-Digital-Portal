@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
 import {
   sendWhatsAppText,
   sendWhatsAppButtons,
@@ -7,7 +6,12 @@ import {
   sendWhatsAppImage,
   sendWhatsAppDocument,
 } from '@/lib/whatsappBot'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+
+// Lazy loaded on demand to guarantee zero cold-start latency for all WhatsApp interactions
+async function getPrisma() {
+  const mod = await import('@/lib/prisma')
+  return mod.default
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -58,35 +62,11 @@ interface CachedStudent {
 
 import precompiledStudents from '@/data/studentDirectory.json'
 
-let studentDirectoryCache: CachedStudent[] = (precompiledStudents as any) || []
-let studentDirectoryTimestamp = Date.now()
+const studentDirectoryCache: CachedStudent[] = (precompiledStudents as any) || []
 
 async function getCachedStudentDirectory(): Promise<CachedStudent[]> {
   // Ultra-fast in-memory return (0.00ms latency, zero cold-start delay)
-  if (studentDirectoryCache && studentDirectoryCache.length > 0) {
-    const now = Date.now()
-    // Background async refresh after 10 mins without stalling queries
-    if (now - studentDirectoryTimestamp > 600000) {
-      studentDirectoryTimestamp = now
-      prisma.student
-        .findMany()
-        .then(async (students) => {
-          const users = await prisma.user.findMany({
-            where: { role: 'student' },
-            select: { id: true, name: true, phone: true, email: true },
-          })
-          const userMap = new Map(users.map((u) => [u.id, u]))
-          studentDirectoryCache = students.map((s) => ({
-            ...s,
-            user: userMap.get(s.userId) || null,
-          }))
-        })
-        .catch(() => {})
-    }
-    return studentDirectoryCache
-  }
-
-  return (precompiledStudents as any) || []
+  return studentDirectoryCache
 }
 
 // Faculty Registry Database & Portfolio
@@ -467,7 +447,8 @@ async function handleInboundQuery(sender: string, input: string, buttonId: strin
   if (buttonId.startsWith('action:approve_od:')) {
     const odId = buttonId.replace('action:approve_od:', '')
     try {
-      const updated = await prisma.oDProof.update({
+      const db = await getPrisma()
+      const updated = await db.oDProof.update({
         where: { id: odId },
         data: {
           status: 'verified',
@@ -491,7 +472,8 @@ async function handleInboundQuery(sender: string, input: string, buttonId: strin
   if (buttonId.startsWith('action:reject_od:')) {
     const odId = buttonId.replace('action:reject_od:', '')
     try {
-      const updated = await prisma.oDProof.update({
+      const db = await getPrisma()
+      const updated = await db.oDProof.update({
         where: { id: odId },
         data: {
           status: 'resubmit_requested',
@@ -517,7 +499,8 @@ async function handleInboundQuery(sender: string, input: string, buttonId: strin
   if (buttonId.startsWith('action:student_ods:')) {
     const regNo = buttonId.replace('action:student_ods:', '')
     try {
-      const ods = await prisma.oDProof.findMany({
+      const db = await getPrisma()
+      const ods = await db.oDProof.findMany({
         where: { registerNumber: regNo },
         orderBy: { createdAt: 'desc' },
         take: 3,
@@ -1212,7 +1195,8 @@ async function handleInboundQuery(sender: string, input: string, buttonId: strin
   // =========================================================================
   if (input.includes('od') || input.includes('leave') || input.includes('pending') || buttonId === 'menu:od') {
     try {
-      const pendingODs = await prisma.oDProof.findMany({
+      const db = await getPrisma()
+      const pendingODs = await db.oDProof.findMany({
         where: { status: 'under_review' },
         orderBy: { createdAt: 'desc' },
         take: 1,
@@ -1281,6 +1265,7 @@ async function handleInboundQuery(sender: string, input: string, buttonId: strin
 
   if (geminiApiKey && isQuestion && input.length > 5) {
     try {
+      const { GoogleGenerativeAI } = await import('@google/generative-ai')
       const genAI = new GoogleGenerativeAI(geminiApiKey)
       const model = genAI.getGenerativeModel({
         model: 'gemini-1.5-flash',
