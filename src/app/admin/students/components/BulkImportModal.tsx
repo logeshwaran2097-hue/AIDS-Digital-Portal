@@ -91,7 +91,11 @@ const AVAILABLE_DEPARTMENTS = [
   'Information Technology',
 ]
 
-const AVAILABLE_RESIDENCIES = ['Day Scholar', 'Hosteller']
+const AVAILABLE_RESIDENCIES = [
+  { value: '', label: 'Unassigned (Fill on Login)' },
+  { value: 'Day Scholar', label: 'Day Scholar' },
+  { value: 'Hosteller', label: 'Hosteller' },
+]
 
 export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalProps) {
   // Navigation & Upload mode
@@ -106,7 +110,7 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
   const [selectedBatch, setSelectedBatch] = useState<string>(YEAR_TO_DEFAULT_BATCH[1] || '2026-2030')
   const [selectedSemester, setSelectedSemester] = useState<number>(1)
   const [selectedSection, setSelectedSection] = useState<string>('A')
-  const [selectedResidency, setSelectedResidency] = useState<string>('Day Scholar')
+  const [selectedResidency, setSelectedResidency] = useState<string>('')
   const [selectedDepartment, setSelectedDepartment] = useState<string>('Artificial Intelligence & Data Science')
   const [defaultPassword, setDefaultPassword] = useState<string>('Student@123')
 
@@ -581,8 +585,8 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
                   className="w-full p-2.5 bg-gray-50 hover:bg-white focus:bg-white rounded-xl border border-gray-300 text-xs font-bold text-[#071A3D] focus:border-[#1455D9] focus:ring-1 focus:ring-[#1455D9] outline-none transition-all cursor-pointer"
                 >
                   {AVAILABLE_RESIDENCIES.map((res) => (
-                    <option key={res} value={res}>
-                      {res}
+                    <option key={res.value} value={res.value}>
+                      {res.label}
                     </option>
                   ))}
                 </select>
@@ -820,7 +824,7 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
                         </td>
                         <td className="p-2.5 font-mono text-gray-600">{st.batch}</td>
                         <td className="p-2.5 font-bold text-[#071A3D]">Sec {st.section}</td>
-                        <td className="p-2.5 text-gray-600">{st.residencyStatus}</td>
+                        <td className="p-2.5 text-gray-600">{st.residencyStatus || '—'}</td>
                         <td className="p-2.5">
                           {st.isValid ? (
                             <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full inline-flex items-center gap-1 font-bold text-[11px]">

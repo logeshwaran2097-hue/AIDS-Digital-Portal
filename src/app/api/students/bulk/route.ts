@@ -109,7 +109,7 @@ export async function POST(request: Request) {
             const section = (st.section || topSection) ? String(st.section || topSection).trim().toUpperCase() : 'A'
             const department = st.department || topDepartment || 'Artificial Intelligence & Data Science'
             const batch = (st.batch || topBatch) ? String(st.batch || topBatch).trim() : `${2026 - parsedYear + 1}-${2030 - parsedYear + 1}`
-            const residencyStatus = (st.residencyStatus || topResidencyStatus) ? String(st.residencyStatus || topResidencyStatus).trim() : 'Day Scholar'
+            const residencyStatus = (st.residencyStatus || topResidencyStatus) ? String(st.residencyStatus || topResidencyStatus).trim() : null
 
             const dob = parseSafeDateOfBirth(st.dateOfBirth, new Date('2004-01-01'))!
 

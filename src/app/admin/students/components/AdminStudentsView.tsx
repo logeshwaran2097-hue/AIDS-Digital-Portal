@@ -87,7 +87,7 @@ export interface StudentRecord {
 function parseBirthDate(dobStr: string | null | undefined): { month: number; day: number; year?: number } | null {
   if (!dobStr) return null
   const str = String(dobStr).trim()
-  if (!str) return null
+  if (!str || str.startsWith('2004-01-01')) return null
 
   // Format YYYY-MM-DD
   const ymdMatch = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/)
@@ -1810,7 +1810,13 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                             <span className="text-gray-400 text-[10px]">—</span>
                           )}
                           <p className="text-[10px] text-gray-400 font-mono mt-1">
-                            {s.dateOfBirth || 'DOB: —'} {s.bloodGroup ? `· ${s.bloodGroup}` : ''}
+                            {s.dateOfBirth && s.dateOfBirth !== '2004-01-01' ? (
+                              <>{s.dateOfBirth}{s.bloodGroup ? ` · ${s.bloodGroup}` : ''}</>
+                            ) : s.bloodGroup ? (
+                              <>{s.bloodGroup}</>
+                            ) : (
+                              <span className="text-gray-300">—</span>
+                            )}
                           </p>
                         </div>
                       </td>
@@ -3110,7 +3116,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     <span>{selectedStudent.parentPhone} (Parent)</span>
                   </div>
                 )}
-                {selectedStudent.dateOfBirth && (
+                {selectedStudent.dateOfBirth && !selectedStudent.dateOfBirth.startsWith('2004-01-01') && (
                   <div className="flex items-center gap-2 text-gray-600">
                     <Calendar className="w-4 h-4 text-[#1455D9]" />
                     <span>Date of Birth: {selectedStudent.dateOfBirth}</span>
