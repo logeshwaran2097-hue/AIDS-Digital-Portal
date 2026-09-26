@@ -137,11 +137,6 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ status: 'duplicate_skipped' }, { status: 200 })
         }
 
-        // Fire instant blue double-ticks (read receipt) in background
-        if (messageId) {
-          markWhatsAppMessageRead(messageId).catch(() => {})
-        }
-
         const msgType = msg.type
         let rawInput = ''
         let buttonPayload = ''
@@ -153,8 +148,11 @@ export async function POST(request: NextRequest) {
           rawInput = buttonPayload.toLowerCase()
         }
 
-        // Process message with optimized database queries
-        await handleInboundQuery(sender, rawInput, buttonPayload)
+        // Concurrently dispatch read receipt (blue checkmarks) and process query
+        await Promise.all([
+          messageId ? markWhatsAppMessageRead(messageId).catch(() => false) : Promise.resolve(false),
+          handleInboundQuery(sender, rawInput, buttonPayload),
+        ])
       }
     }
 
@@ -276,6 +274,7 @@ async function handleInboundQuery(sender: string, input: string, buttonId: strin
         `📝 *OD History for Reg No:* \`${regNo}\`\n\n${odList}`,
         [
           { id: `action:student_lookup:${regNo}`, title: '👤 Back to Student' },
+          { id: 'menu:attendance', title: '📊 View Attendance' },
           { id: 'menu:help', title: '⚙️ Main Menu' },
         ],
         'Student OD Records'
@@ -590,6 +589,7 @@ async function handleInboundQuery(sender: string, input: string, buttonId: strin
           [
             { id: 'menu:attendance', title: '📊 View Attendance' },
             { id: 'menu:faculty', title: '👨‍🏫 Faculty Status' },
+            { id: 'menu:help', title: '⚙️ Main Menu' },
           ],
           'HOD Executive Approvals'
         )
@@ -616,7 +616,7 @@ async function handleInboundQuery(sender: string, input: string, buttonId: strin
         [
           { id: `action:approve_od:${first.id}`, title: '✅ Approve OD' },
           { id: `action:reject_od:${first.id}`, title: '❌ Reject OD' },
-          { id: 'menu:attendance', title: '📊 Back to Menu' },
+          { id: 'menu:help', title: '⚙️ Main Menu' },
         ],
         'HOD One-Tap Sanction'
       )
