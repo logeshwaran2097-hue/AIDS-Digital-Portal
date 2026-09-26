@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   BookOpen,
   FileQuestion,
@@ -87,6 +88,7 @@ const quickAccess = [
 ]
 
 export default function StudentDashboard({ data }: { data: DashboardData }) {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [currentUser, setCurrentUser] = useState(data.user)
   const [liveAnnouncements, setLiveAnnouncements] = useState(data.announcements)
@@ -201,11 +203,9 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
     if (updatedUser) {
       setCurrentUser((prev) => ({ ...prev, ...updatedUser, mustChangePassword: false }))
     }
-    setTimeout(() => {
-      if (typeof window !== 'undefined') {
-        window.location.replace('/dashboard')
-      }
-    }, 400)
+    try {
+      router.refresh()
+    } catch {}
   }
 
   const handleOnboardingClose = () => {

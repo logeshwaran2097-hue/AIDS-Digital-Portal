@@ -531,9 +531,7 @@ export function StudentOnboardingModal({
           }
         }
         toast.success('Account fully verified & Password saved!')
-        setTimeout(() => {
-          onComplete(data.user || {})
-        }, 600)
+        onComplete(data.user || {})
       } else {
         const errorMsg = data.message || 'Invalid or expired OTP. Please try again.'
         setStep3Error(errorMsg)
@@ -1680,7 +1678,7 @@ export function StudentOnboardingModal({
                 )}
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                <span>Authorize &amp; Enter Student Portal</span>
+                <span>{loading ? 'Authorizing & Entering...' : 'Authorize & Enter Student Portal'}</span>
               </button>
             </div>
           </form>

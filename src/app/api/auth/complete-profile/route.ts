@@ -539,11 +539,15 @@ export async function POST(request: NextRequest) {
       invalidateCache(updatedUser.id)
       invalidateCache(`student_portal_data_${updatedUser.id}`)
       if (targetUserId) invalidateCache(`student_portal_data_${targetUserId}`)
-      revalidatePath('/dashboard')
-      revalidatePath('/dashboard/profile')
-      revalidatePath('/faculty-dashboard')
-      revalidatePath('/hod-dashboard')
-      revalidatePath('/admin/students')
+      ;(async () => {
+        try {
+          revalidatePath('/dashboard')
+          revalidatePath('/dashboard/profile')
+          revalidatePath('/faculty-dashboard')
+          revalidatePath('/hod-dashboard')
+          revalidatePath('/admin/students')
+        } catch {}
+      })()
     } catch {}
 
     return response

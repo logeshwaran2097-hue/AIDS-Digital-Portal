@@ -117,22 +117,28 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Invalidate admin cache so admin sees newly entered contact details immediately
-      revalidatePath('/admin/students')
-      revalidatePath('/admin/dashboard')
-      revalidatePath('/dashboard')
-      revalidatePath('/dashboard/profile')
+      // Invalidate in-memory caches instantly
+      invalidateCache('student_data')
+      invalidateCache('students')
+      invalidateCache(`student_portal_data_${session.userId}`)
 
-      // Audit log
-      await prisma.auditLog.create({
-        data: {
-          userName: updatedUser?.name || session.name || 'Student',
-          action: 'onboarding_details_confirmed',
-          module: 'student_portal',
-          details: `Student ${session.registerNumber || name} confirmed their contact details and entered the portal.`,
-          status: 'success',
-        },
-      }).catch(() => {})
+      // Non-blocking background revalidations & audit log
+      ;(async () => {
+        try {
+          await prisma.auditLog.create({
+            data: {
+              userName: updatedUser?.name || session.name || 'Student',
+              action: 'onboarding_details_confirmed',
+              module: 'student_portal',
+              details: `Student ${session.registerNumber || name} confirmed their contact details and entered the portal.`,
+              status: 'success',
+            },
+          }).catch(() => {})
+          revalidatePath('/admin/students')
+          revalidatePath('/dashboard')
+          revalidatePath('/dashboard/profile')
+        } catch {}
+      })()
 
       // Re-issue token so mustChangePassword is false
       const newToken = await createToken({
@@ -356,25 +362,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'Student account record not found.' }, { status: 404 })
     }
 
-    // Invalidate caches
+    // Invalidate in-memory caches instantly
     invalidateCache('student_data')
     invalidateCache('students')
     invalidateCache(`student_portal_data_${session.userId}`)
-    revalidatePath('/admin/students')
-    revalidatePath('/admin/dashboard')
-    revalidatePath('/dashboard')
-    revalidatePath('/dashboard/profile')
 
-    // Audit Log
-    await prisma.auditLog.create({
-      data: {
-        userName: updatedUser.name,
-        action: 'onboarding_complete',
-        module: 'student_portal',
-        details: `Student ${session.registerNumber || updatedUser.name} completed first-time email verification and password setup.`,
-        status: 'success',
-      },
-    }).catch(() => {})
+    // Non-blocking background revalidations & audit log
+    ;(async () => {
+      try {
+        await prisma.auditLog.create({
+          data: {
+            userName: updatedUser.name,
+            action: 'onboarding_complete',
+            module: 'student_portal',
+            details: `Student ${session.registerNumber || updatedUser.name} completed first-time email verification and password setup.`,
+            status: 'success',
+          },
+        }).catch(() => {})
+        revalidatePath('/admin/students')
+        revalidatePath('/dashboard')
+        revalidatePath('/dashboard/profile')
+      } catch {}
+    })()
 
     // Re-issue JWT token
     const newToken = await createToken({

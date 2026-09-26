@@ -830,30 +830,35 @@ export function PortalLayout({
       return item
     })
   
-  // Filter nav items based on admin menu preferences
-  const resolvedNavItems = baseNavItems.filter((item) => {
-    const lower = item.href.toLowerCase()
-    let key = ''
-    if (lower.includes('profile')) key = 'profile'
-    else if (lower.includes('student')) key = 'students'
-    else if (lower.includes('faculty')) key = 'faculty'
-    else if (lower.includes('hod')) key = 'hod'
-    else if (lower.includes('admins')) key = 'admins'
-    else if (lower.includes('roles')) key = 'roles'
-    else if (lower.includes('academic') || lower.includes('subject')) key = 'academics'
-    else if (lower.includes('resource') || lower.includes('study')) key = 'resources'
-    else if (lower.includes('question')) key = 'questions'
-    else if (lower.includes('project')) key = 'projects'
-    else if (lower.includes('od-applications')) key = 'od-applications'
-    else if (lower.includes('event')) key = 'events'
-    else if (lower.includes('announcement')) key = 'announcements'
-    else if (lower.includes('achievement')) key = 'achievements'
-    else if (lower.includes('notification')) key = 'notifications'
-    else if (lower.includes('report')) key = 'reports'
-    else if (lower.includes('log') || lower.includes('activity')) key = 'logs'
-    else if (lower.includes('/files') || lower.endsWith('files')) key = 'files'
-    else if (lower.includes('setting')) key = 'settings'
+  const getAdminMenuKey = (href: string): string => {
+    if (!href.startsWith('/admin')) return ''
+    const clean = href.replace(/^\/admin\/?/, '').toLowerCase()
+    if (!clean || clean === 'dashboard') return 'dashboard'
+    if (clean.startsWith('students')) return 'students'
+    if (clean.startsWith('faculty')) return 'faculty'
+    if (clean.startsWith('hod')) return 'hod'
+    if (clean.startsWith('admins')) return 'admins'
+    if (clean.startsWith('roles')) return 'roles'
+    if (clean.startsWith('subjects') || clean.startsWith('academics')) return 'academics'
+    if (clean.startsWith('resources')) return 'resources'
+    if (clean.startsWith('question-papers') || clean.startsWith('question')) return 'questions'
+    if (clean.startsWith('projects')) return 'projects'
+    if (clean.startsWith('events')) return 'events'
+    if (clean.startsWith('announcements')) return 'announcements'
+    if (clean.startsWith('achievements')) return 'achievements'
+    if (clean.startsWith('notifications')) return 'notifications'
+    if (clean.startsWith('reports')) return 'reports'
+    if (clean.startsWith('activity-logs') || clean.startsWith('logs')) return 'logs'
+    if (clean.startsWith('files')) return 'files'
+    if (clean.startsWith('settings')) return 'settings'
+    if (clean.startsWith('profile')) return 'profile'
+    return ''
+  }
 
+  // Filter nav items based on admin menu preferences (strictly for admin portal items)
+  const resolvedNavItems = baseNavItems.filter((item) => {
+    if (role !== 'admin') return true
+    const key = getAdminMenuKey(item.href)
     if (key && visibleMenuMap[key] === false) {
       return false
     }
@@ -1150,29 +1155,9 @@ export function PortalLayout({
               : isRootDashboard
               ? current === item.href
               : current === item.href || current.startsWith(item.href + '/')
-            let key = ''
-            const lower = item.href.toLowerCase()
-            if (lower.includes('profile')) key = 'profile'
-            else if (lower.includes('student')) key = 'students'
-            else if (lower.includes('faculty')) key = 'faculty'
-            else if (lower.includes('hod')) key = 'hod'
-            else if (lower.includes('admins')) key = 'admins'
-            else if (lower.includes('roles')) key = 'roles'
-            else if (lower.includes('academic') || lower.includes('subject')) key = 'academics'
-            else if (lower.includes('resource') || lower.includes('study')) key = 'resources'
-            else if (lower.includes('question')) key = 'questions'
-            else if (lower.includes('project')) key = 'projects'
-            else if (lower.includes('event')) key = 'events'
-            else if (lower.includes('announcement')) key = 'announcements'
-            else if (lower.includes('achievement')) key = 'achievements'
-            else if (lower.includes('notification')) key = 'notifications'
-            else if (lower.includes('report')) key = 'reports'
-            else if (lower.includes('log') || lower.includes('activity')) key = 'logs'
-            else if (lower.includes('/files') || lower.endsWith('files')) key = 'files'
-            else if (lower.includes('setting')) key = 'settings'
-
+            const key = role === 'admin' ? getAdminMenuKey(item.href) : ''
             const meta = key ? menuMetaMap[key] : null
-            const displayLabel = meta?.label || item.label
+            const displayLabel = (role === 'admin' && meta?.label) ? meta.label : item.label
             const notifCount = getMenuNotificationCount(item.href, displayLabel)
 
             return (
@@ -1182,6 +1167,11 @@ export function PortalLayout({
                 prefetch={true}
                 data-active={isActive ? 'true' : 'false'}
                 onMouseEnter={() => {
+                  try {
+                    router.prefetch(item.href)
+                  } catch {}
+                }}
+                onFocus={() => {
                   try {
                     router.prefetch(item.href)
                   } catch {}
