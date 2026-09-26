@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       if (matches) {
         const contentType = matches[1]
         const buffer = Buffer.from(matches[2], 'base64')
-        return new NextResponse(buffer, {
+        return new NextResponse(new Uint8Array(buffer), {
           status: 200,
           headers: {
             'Content-Type': contentType,

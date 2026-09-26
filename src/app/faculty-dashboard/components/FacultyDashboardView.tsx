@@ -144,15 +144,6 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
             sessionStorage.setItem(`vsb_staff_onboarding_dismissed_${facultyKey}`, 'true')
           }
         }}
-        onComplete={() => {
-          setIsOnboardingOpen(false)
-          if (typeof window !== 'undefined') {
-            localStorage.setItem(`vsb_staff_onboarding_done_${facultyKey}`, 'true')
-            sessionStorage.setItem(`vsb_staff_onboarding_done_${facultyKey}`, 'true')
-            sessionStorage.removeItem(`vsb_staff_onboarding_dismissed_${facultyKey}`)
-            window.location.reload()
-          }
-        }}
         initialData={{
           name: data?.user?.name || 'Faculty Member',
           email: data?.user?.email || '',
@@ -175,6 +166,7 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
           if (typeof window !== 'undefined') {
             localStorage.setItem(`vsb_staff_onboarding_done_${facultyKey}`, 'true')
             sessionStorage.setItem(`vsb_staff_onboarding_done_${facultyKey}`, 'true')
+            sessionStorage.removeItem(`vsb_staff_onboarding_dismissed_${facultyKey}`)
           }
           if (updated?.name && data?.user) {
             data.user.name = updated.name
